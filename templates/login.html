@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In | MedTrack{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="auth-wrapper">
+    <div class="card">
+      <div class="auth-header">
+        <h1>Welcome Back</h1>
+        <p>Log in to access your MedTrack healthcare portal</p>
+      </div>
+
+      <form action="{{ url_for('login', next=request.args.get('next', '')) }}" method="POST" id="loginForm">
+        <!-- Email -->
+        <div class="form-group">
+          <label for="email" class="form-label">Email Address <span class="required">*</span></label>
+          <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required autofocus>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label for="password" class="form-label">Password <span class="required">*</span></label>
+          <input type="password" class="form-control" id="password" name="password" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="submitLoginBtn">
+          Sign In &rarr;
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Don't have an account yet? <a href="{{ url_for('register') }}">Register now</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

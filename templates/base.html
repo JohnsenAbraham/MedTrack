@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MedTrack - AWS Cloud-Enabled Healthcare Management System for patients, clinical staff, and modern appointment orchestration.">
+  <title>{% block title %}MedTrack | AWS Cloud Healthcare System{% endblock %}</title>
+
+  <!-- Preconnect & Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Core Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="site-header">
+    <div class="container nav-wrapper">
+      <a href="{{ url_for('index') }}" class="brand-logo" id="navBrandLogo">
+        <div class="brand-icon">✚</div>
+        <div>Med<span class="accent">Track</span></div>
+      </a>
+
+      <!-- Desktop & Mobile Nav Links -->
+      <ul class="nav-links" id="navLinks">
+        <li class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
+          <a href="{{ url_for('index') }}">Home</a>
+        </li>
+        {% if is_authenticated %}
+          <li class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+          </li>
+          <li class="nav-item {% if 'appointment' in request.endpoint %}active{% endif %}">
+            <a href="{{ url_for('appointments') }}">Appointments</a>
+          </li>
+          <li class="nav-item {% if 'diagnos' in request.endpoint %}active{% endif %}">
+            <a href="{{ url_for('diagnoses') }}">Diagnoses</a>
+          </li>
+        {% endif %}
+      </ul>
+
+      <!-- Nav Actions & AWS Status Indicator -->
+      <div class="nav-actions">
+        {% if mock_aws %}
+          <span class="mock-badge" title="Running locally with SQLite & Mock SNS simulation">Mock AWS Mode</span>
+        {% else %}
+          <span class="mock-badge live" title="Connected to AWS DynamoDB & SNS">AWS Live</span>
+        {% endif %}
+
+        {% if is_authenticated %}
+          <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-sm" id="userProfileBtn">
+            👤 {{ current_user.name }}
+          </a>
+          <a href="{{ url_for('logout') }}" class="btn btn-outline btn-sm" id="navLogoutBtn">Sign Out</a>
+        {% else %}
+          <a href="{{ url_for('login') }}" class="btn btn-outline btn-sm" id="navLoginBtn">Sign In</a>
+          <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm" id="navRegisterBtn">Register</a>
+        {% endif %}
+
+        <button class="mobile-toggle" id="mobileNavToggle" aria-label="Toggle navigation menu">
+          ☰
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Global Flash Messages -->
+  <div class="container flash-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}" role="alert">
+            <span>{{ message }}</span>
+            <button type="button" class="alert-close" aria-label="Dismiss alert">&times;</button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- Main Content Block -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>MedTrack System</h3>
+          <p style="font-size: 0.9rem; line-height: 1.6;">
+            A cloud-enabled patient record and appointment management system architected with Python Flask, AWS DynamoDB, AWS SNS, IAM least-privilege security, and EC2 deployment.
+          </p>
+        </div>
+        <div class="footer-links">
+          <h4>Navigation</h4>
+          <ul>
+            <li><a href="{{ url_for('index') }}">Home</a></li>
+            {% if is_authenticated %}
+              <li><a href="{{ url_for('dashboard') }}">Patient Dashboard</a></li>
+              <li><a href="{{ url_for('appointments') }}">My Appointments</a></li>
+              <li><a href="{{ url_for('diagnoses') }}">Clinical Diagnoses</a></li>
+            {% else %}
+              <li><a href="{{ url_for('login') }}">Patient Login</a></li>
+              <li><a href="{{ url_for('register') }}">Create Account</a></li>
+            {% endif %}
+          </ul>
+        </div>
+        <div class="footer-links">
+          <h4>AWS Architecture</h4>
+          <ul>
+            <li>DynamoDB NoSQL Data Store</li>
+            <li>SNS Real-time Notification Engine</li>
+            <li>IAM Role Security Policies</li>
+            <li>EC2 Cloud Hosting & Gunicorn</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        &copy; {{ current_year }} MedTrack Healthcare System. Developed for SkillWallet College Engineering Project.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Core JavaScript -->
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

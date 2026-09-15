@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Book Medical Appointment | MedTrack{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 760px; margin-top: 2rem; margin-bottom: 3rem;">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h1 style="font-size: 1.6rem; font-weight: 800; color: #0f172a;">
+          Schedule an Appointment
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
+          Select a specialist physician and choose your preferred date and time slot.
+        </p>
+      </div>
+      <a href="{{ url_for('appointments') }}" class="btn btn-secondary btn-sm">&larr; Back to List</a>
+    </div>
+
+    <form action="{{ url_for('new_appointment') }}" method="POST" id="appointmentForm">
+      <!-- Doctor Selection -->
+      <div class="form-group">
+        <label for="doctor" class="form-label">Specialist Physician <span class="required">*</span></label>
+        <select class="form-select" id="doctor" name="doctor" required>
+          <option value="">-- Choose a Healthcare Specialist --</option>
+          {% for doc in specialist_doctors %}
+            <option value="{{ doc.name }} ({{ doc.specialty }})" {% if form.get('doctor') == doc.name ~ ' (' ~ doc.specialty ~ ')' %}selected{% endif %}>
+              {{ doc.name }} — {{ doc.specialty }} [{{ doc.availability }}]
+            </option>
+          {% endfor %}
+        </select>
+        <div class="form-hint">All specialists are board-certified and affiliated with MedTrack.</div>
+      </div>
+
+      <!-- Date & Time Grid -->
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="appointmentDate" class="form-label">Preferred Date <span class="required">*</span></label>
+          <input type="date" class="form-control" id="appointmentDate" name="date" min="{{ today }}" value="{{ form.get('date', today) }}" required>
+        </div>
+
+        <div class="form-group">
+          <label for="time" class="form-label">Preferred Time Slot <span class="required">*</span></label>
+          <select class="form-select" id="time" name="time" required>
+            <option value="">-- Select Time --</option>
+            <option value="09:00 AM" {% if form.get('time') == '09:00 AM' %}selected{% endif %}>09:00 AM (Morning Slot)</option>
+            <option value="10:30 AM" {% if form.get('time') == '10:30 AM' %}selected{% endif %}>10:30 AM (Morning Slot)</option>
+            <option value="11:45 AM" {% if form.get('time') == '11:45 AM' %}selected{% endif %}>11:45 AM (Late Morning)</option>
+            <option value="02:00 PM" {% if form.get('time') == '02:00 PM' %}selected{% endif %}>02:00 PM (Afternoon Slot)</option>
+            <option value="03:30 PM" {% if form.get('time') == '03:30 PM' %}selected{% endif %}>03:30 PM (Afternoon Slot)</option>
+            <option value="04:45 PM" {% if form.get('time') == '04:45 PM' %}selected{% endif %}>04:45 PM (Evening Slot)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Reason for Visit -->
+      <div class="form-group">
+        <label for="reason" class="form-label">Reason for Consultation / Symptoms <span class="required">*</span></label>
+        <textarea class="form-control" id="reason" name="reason" rows="4" placeholder="Briefly describe your symptoms or reason for scheduling this visit (e.g. routine wellness checkup, persistent headache, cardiovascular screening)..." required>{{ form.get('reason', '') }}</textarea>
+      </div>
+
+      <div style="background: var(--bg-card-alt); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem; display: flex; gap: 0.75rem; align-items: center;">
+        <span style="font-size: 1.25rem;">🔔</span>
+        <div style="font-size: 0.85rem; color: var(--text-muted);">
+          <strong>AWS SNS Notification:</strong> Upon booking, an instant confirmation notification will be triggered via AWS SNS to your registered profile.
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary" id="confirmBookingBtn">
+          Confirm Appointment &rarr;
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

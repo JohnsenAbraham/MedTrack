@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Registration | MedTrack{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="auth-wrapper">
+    <div class="card">
+      <div class="auth-header">
+        <h1>Patient Registration</h1>
+        <p>Create your MedTrack digital healthcare account</p>
+      </div>
+
+      <form action="{{ url_for('register') }}" method="POST" id="registerForm">
+        <!-- Full Name -->
+        <div class="form-group">
+          <label for="name" class="form-label">Full Legal Name <span class="required">*</span></label>
+          <input type="text" class="form-control" id="name" name="name" placeholder="e.g. John Doe" value="{{ form.get('name', '') }}" required>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label for="email" class="form-label">Email Address <span class="required">*</span></label>
+          <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" value="{{ form.get('email', '') }}" required>
+          <div class="form-hint">Used for portal login and AWS SNS notifications.</div>
+        </div>
+
+        <!-- Password & Confirm Password Grid -->
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="password" class="form-label">Password <span class="required">*</span></label>
+            <input type="password" class="form-control" id="password" name="password" placeholder="Min. 6 characters" required>
+          </div>
+          <div class="form-group">
+            <label for="confirm_password" class="form-label">Confirm Password <span class="required">*</span></label>
+            <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Re-enter password" required>
+          </div>
+        </div>
+
+        <!-- Phone & DOB Grid -->
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="phone" class="form-label">Phone Number</label>
+            <input type="tel" class="form-control" id="phone" name="phone" placeholder="+1 (555) 000-0000" value="{{ form.get('phone', '') }}">
+          </div>
+          <div class="form-group">
+            <label for="date_of_birth" class="form-label">Date of Birth</label>
+            <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="{{ form.get('date_of_birth', '') }}">
+          </div>
+        </div>
+
+        <!-- Gender & Role Grid -->
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="gender" class="form-label">Gender</label>
+            <select class="form-select" id="gender" name="gender">
+              <option value="">Select Gender</option>
+              <option value="Male" {% if form.get('gender') == 'Male' %}selected{% endif %}>Male</option>
+              <option value="Female" {% if form.get('gender') == 'Female' %}selected{% endif %}>Female</option>
+              <option value="Non-Binary" {% if form.get('gender') == 'Non-Binary' %}selected{% endif %}>Non-Binary</option>
+              <option value="Other" {% if form.get('gender') == 'Other' %}selected{% endif %}>Other / Prefer not to say</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="role" class="form-label">Account Role</label>
+            <select class="form-select" id="role" name="role">
+              <option value="patient" {% if form.get('role') == 'patient' %}selected{% endif %}>Patient</option>
+              <option value="doctor" {% if form.get('role') == 'doctor' %}selected{% endif %}>Doctor / Healthcare Staff</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="submitRegisterBtn">
+          Create MedTrack Account &rarr;
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Already have an account? <a href="{{ url_for('login') }}">Sign In here</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

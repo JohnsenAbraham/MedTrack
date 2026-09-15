@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Record Clinical Diagnosis | MedTrack{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 760px; margin-top: 2rem; margin-bottom: 3rem;">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h1 style="font-size: 1.6rem; font-weight: 800; color: #0f172a;">
+          Record Clinical Diagnosis
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
+          Log medical diagnoses, clinical observations, and therapeutic regimens into the cloud patient history.
+        </p>
+      </div>
+      <a href="{{ url_for('diagnoses') }}" class="btn btn-secondary btn-sm">&larr; Back to History</a>
+    </div>
+
+    <form action="{{ url_for('new_diagnosis') }}" method="POST" id="diagnosisForm">
+      <!-- Patient Selector -->
+      <div class="form-group">
+        <label for="patient_id" class="form-label">Target Patient <span class="required">*</span></label>
+        <select class="form-select" id="patient_id" name="patient_id" required>
+          <option value="{{ current_user.user_id }}" selected>
+            {{ current_user.name }} (Current User / {{ current_user.email }})
+          </option>
+          {% for u in all_users %}
+            {% if u.user_id != current_user.user_id %}
+              <option value="{{ u.user_id }}">
+                {{ u.name }} ({{ u.email }})
+              </option>
+            {% endif %}
+          {% endfor %}
+        </select>
+        <div class="form-hint">Select the patient whose electronic healthcare record will be updated.</div>
+      </div>
+
+      <!-- Doctor Name & Date Grid -->
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="doctor" class="form-label">Attending Physician / Doctor <span class="required">*</span></label>
+          <input type="text" class="form-control" id="doctor" name="doctor" placeholder="e.g. Dr. Sarah Jenkins, MD" value="{{ form.get('doctor', current_user.name if current_user.role == 'doctor' else '') }}" required>
+        </div>
+
+        <div class="form-group">
+          <label for="date" class="form-label">Encounter Date <span class="required">*</span></label>
+          <input type="date" class="form-control" id="date" name="date" value="{{ form.get('date', today) }}" required>
+        </div>
+      </div>
+
+      <!-- Diagnosis Details -->
+      <div class="form-group">
+        <label for="diagnosis" class="form-label">Clinical Diagnosis & Treatment Plan <span class="required">*</span></label>
+        <textarea class="form-control" id="diagnosis" name="diagnosis" rows="5" placeholder="Enter diagnostic assessment, ICD-10 notes if applicable, prescribed medications, and recommended follow-up..." required>{{ form.get('diagnosis', '') }}</textarea>
+      </div>
+
+      <div style="background: var(--bg-card-alt); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem; display: flex; gap: 0.75rem; align-items: center;">
+        <span style="font-size: 1.25rem;">🩺</span>
+        <div style="font-size: 0.85rem; color: var(--text-muted);">
+          <strong>Electronic Medical Record:</strong> Saving this entry registers an immutable record in AWS DynamoDB and triggers an automated AWS SNS patient update alert.
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+        <a href="{{ url_for('diagnoses') }}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary" id="saveDiagnosisBtn">
+          Save Medical Record &rarr;
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

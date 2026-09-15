@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}MedTrack | AWS Cloud Healthcare Management System{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container">
+    <div class="hero-grid">
+      <div class="hero-content">
+        <div class="hero-tag">
+          <span>⚡ Next-Generation Healthcare</span>
+        </div>
+        <h1 class="hero-title">
+          Smart, Scalable Healthcare on <span>AWS Cloud</span>.
+        </h1>
+        <p class="hero-description">
+          MedTrack bridges patients and healthcare practitioners with high-reliability appointment scheduling, unified electronic medical records, and instantaneous AWS SNS notifications.
+        </p>
+        <div class="hero-actions">
+          {% if is_authenticated %}
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary" id="heroDashboardBtn">Open Patient Portal &rarr;</a>
+            <a href="{{ url_for('new_appointment') }}" class="btn btn-secondary" id="heroBookBtn">Schedule Visit</a>
+          {% else %}
+            <a href="{{ url_for('register') }}" class="btn btn-primary" id="heroRegisterBtn">Get Started as Patient</a>
+            <a href="{{ url_for('login') }}" class="btn btn-secondary" id="heroLoginBtn">Sign In to Portal</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Live Preview Card -->
+      <div class="hero-card-preview">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+          <span style="font-weight: 700; font-size: 1.1rem; color: #0f172a;">Patient Health Center</span>
+          <span class="badge badge-confirmed">Active Portal</span>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+          Unified access to clinical histories, specialist appointments, and real-time medical updates.
+        </p>
+        
+        <div class="preview-stat-grid">
+          <div class="preview-stat">
+            <div class="preview-stat-number">99.9%</div>
+            <div class="preview-stat-label">Cloud Availability</div>
+          </div>
+          <div class="preview-stat">
+            <div class="preview-stat-number">&lt; 10ms</div>
+            <div class="preview-stat-label">DynamoDB Latency</div>
+          </div>
+          <div class="preview-stat">
+            <div class="preview-stat-number">Real-Time</div>
+            <div class="preview-stat-label">AWS SNS Alerts</div>
+          </div>
+          <div class="preview-stat">
+            <div class="preview-stat-number">HIPAA/IAM</div>
+            <div class="preview-stat-label">Security Compliant</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Engineered for Modern Clinical Workflows</h2>
+      <p class="section-subtitle">
+        Combining modern web design with scalable AWS cloud building blocks for patient management.
+      </p>
+    </div>
+
+    <div class="features-grid">
+      <!-- Feature 1 -->
+      <div class="feature-box">
+        <div class="feature-icon-wrapper">📅</div>
+        <h3 class="feature-title">Frictionless Appointments</h3>
+        <p class="feature-text">
+          Select certified specialist physicians, choose available dates and times, and monitor appointment states with immediate confirmation.
+        </p>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="feature-box">
+        <div class="feature-icon-wrapper">📨</div>
+        <h3 class="feature-title">AWS SNS Notifications</h3>
+        <p class="feature-text">
+          Automated event-driven dispatches via AWS Simple Notification Service keep patients informed when appointments are booked or modified.
+        </p>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="feature-box">
+        <div class="feature-icon-wrapper">🗄️</div>
+        <h3 class="feature-title">AWS DynamoDB Storage</h3>
+        <p class="feature-text">
+          Fully managed, highly scalable NoSQL database architecture for patient profiles, medical encounters, and longitudinal diagnoses.
+        </p>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="feature-box">
+        <div class="feature-icon-wrapper">🔒</div>
+        <h3 class="feature-title">Robust Identity & Security</h3>
+        <p class="feature-text">
+          Encrypted sessions, salted and hashed passwords, strict form validations, and AWS IAM least-privilege role policies for EC2 deployment.
+        </p>
+      </div>
+
+      <!-- Feature 5 -->
+      <div class="feature-box">
+        <div class="feature-icon-wrapper">🩺</div>
+        <h3 class="feature-title">Diagnosis Management</h3>
+        <p class="feature-text">
+          Clinical record logging allows doctors to register clinical diagnoses, prescriptions, and follow-up guidance in the patient timeline.
+        </p>
+      </div>
+
+      <!-- Feature 6 -->
+      <div class="feature-box">
+        <div class="feature-icon-wrapper">☁️</div>
+        <h3 class="feature-title">AWS EC2 Cloud Ready</h3>
+        <p class="feature-text">
+          Containerized and production-ready WSGI service structured for seamless deployment onto AWS EC2 Ubuntu instances behind Nginx.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

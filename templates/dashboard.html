@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Dashboard | MedTrack{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- Dashboard Header -->
+  <div class="dashboard-header">
+    <div class="dash-user-meta">
+      <div class="user-avatar-large">
+        {{ patient.name[0] | upper }}
+      </div>
+      <div>
+        <h1 style="font-size: 1.75rem; font-weight: 800; color: #0f172a;">
+          {{ patient.name }}
+        </h1>
+        <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.25rem;">
+          <span class="badge badge-role">{{ patient.role | capitalize }}</span>
+          <span style="color: var(--text-muted); font-size: 0.85rem;">{{ patient.email }}</span>
+          {% if patient.phone %}
+            <span style="color: var(--text-muted); font-size: 0.85rem;">• {{ patient.phone }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+      <a href="{{ url_for('new_appointment') }}" class="btn btn-primary" id="dashBookBtn">
+        📅 Book Appointment
+      </a>
+      <a href="{{ url_for('new_diagnosis') }}" class="btn btn-secondary" id="dashDiagBtn">
+        🩺 Record Diagnosis
+      </a>
+    </div>
+  </div>
+
+  <!-- Key Metrics Statistics Grid -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon teal">📅</div>
+      <div>
+        <div class="stat-val">{{ stats.upcoming_count }}</div>
+        <div class="stat-label">Upcoming Visits</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon blue">🩺</div>
+      <div>
+        <div class="stat-val">{{ stats.total_appointments }}</div>
+        <div class="stat-label">Total Appointments</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon emerald">📋</div>
+      <div>
+        <div class="stat-val">{{ stats.diagnoses_count }}</div>
+        <div class="stat-label">Clinical Diagnoses</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon amber">🔔</div>
+      <div>
+        <div class="stat-val">{{ stats.notifications_count }}</div>
+        <div class="stat-label">SNS Notifications</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Dashboard Grid -->
+  <div class="dashboard-main-grid">
+    <!-- Left Column: Upcoming Appointments & Diagnoses -->
+    <div>
+      <!-- Upcoming Appointments Card -->
+      <div class="card" style="margin-bottom: 2rem;">
+        <div class="card-header">
+          <div class="card-title">
+            <span>📅</span> Upcoming Appointments
+          </div>
+          <a href="{{ url_for('appointments') }}" class="btn btn-outline btn-sm">View All &rarr;</a>
+        </div>
+
+        {% if upcoming_appointments %}
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Doctor / Specialist</th>
+                  <th>Date & Time</th>
+                  <th>Reason</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for appt in upcoming_appointments %}
+                  <tr>
+                    <td style="font-weight: 600;">{{ appt.doctor }}</td>
+                    <td>{{ appt.date }} <span style="color: var(--text-muted); font-size: 0.85rem;">at {{ appt.time }}</span></td>
+                    <td>{{ appt.reason }}</td>
+                    <td>
+                      <span class="badge badge-confirmed">{{ appt.status }}</span>
+                    </td>
+                    <td>
+                      <form action="{{ url_for('cancel_appointment', appointment_id=appt.appointment_id) }}" method="POST" class="cancel-appointment-form" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+                      </form>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🩺</div>
+            <p style="font-weight: 600;">No upcoming appointments scheduled.</p>
+            <p style="font-size: 0.85rem; margin-top: 0.25rem;">Book a consultation with one of our certified specialists.</p>
+            <a href="{{ url_for('new_appointment') }}" class="btn btn-primary btn-sm" style="margin-top: 1rem;">Schedule Now</a>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Recent Diagnoses Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>📋</span> Recent Clinical Diagnoses
+          </div>
+          <a href="{{ url_for('diagnoses') }}" class="btn btn-outline btn-sm">View History &rarr;</a>
+        </div>
+
+        {% if diagnoses %}
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Physician</th>
+                  <th>Diagnosis & Clinical Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for diag in diagnoses %}
+                  <tr>
+                    <td style="white-space: nowrap; font-weight: 600;">{{ diag.date }}</td>
+                    <td style="white-space: nowrap;">{{ diag.doctor }}</td>
+                    <td>{{ diag.diagnosis }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+            <p style="font-weight: 600;">No medical diagnoses on record yet.</p>
+            <p style="font-size: 0.85rem; margin-top: 0.25rem;">Physicians can record diagnosis notes after consultations.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Right Column: Profile & AWS SNS Feed -->
+    <div>
+      <!-- Profile Information Card -->
+      <div class="card" style="margin-bottom: 2rem;">
+        <div class="card-header">
+          <div class="card-title">
+            <span>👤</span> Patient Profile
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.9rem;">
+          <div>
+            <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">Full Name</span>
+            <strong>{{ patient.name }}</strong>
+          </div>
+          <div>
+            <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">Email Address</span>
+            <span>{{ patient.email }}</span>
+          </div>
+          <div>
+            <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">Phone Number</span>
+            <span>{{ patient.phone or 'Not Provided' }}</span>
+          </div>
+          <div>
+            <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">Date of Birth</span>
+            <span>{{ patient.date_of_birth or 'Not Provided' }}</span>
+          </div>
+          <div>
+            <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">Gender</span>
+            <span>{{ patient.gender or 'Not Specified' }}</span>
+          </div>
+          <div>
+            <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">Patient ID</span>
+            <code style="font-size: 0.75rem; background: var(--bg-card-alt); padding: 0.2rem 0.4rem; border-radius: 4px;">{{ patient.user_id }}</code>
+          </div>
+        </div>
+      </div>
+
+      <!-- AWS SNS Notifications Feed Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>🔔</span> SNS Alerts Feed
+          </div>
+          <span class="badge badge-role">{% if mock_aws %}Mock SNS{% else %}AWS SNS{% endif %}</span>
+        </div>
+
+        {% if notifications %}
+          <ul class="notif-list">
+            {% for n in notifications %}
+              <li class="notif-item">
+                <div class="notif-dot"></div>
+                <div>
+                  <div class="notif-msg">{{ n.message }}</div>
+                  <div class="notif-time">{{ n.created_at[:19].replace('T', ' ') }} UTC • <span style="font-weight: 600;">{{ n.status }}</span></div>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 1.5rem 0;">
+            No SNS notifications yet. Alerts will appear here when appointments are created or modified.
+          </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

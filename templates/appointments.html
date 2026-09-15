@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}My Appointments | MedTrack{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 2rem; margin-bottom: 3rem;">
+  <div class="card">
+    <div class="card-header" style="flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 1.6rem; font-weight: 800; color: #0f172a;">
+          Scheduled Appointments
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
+          Review, manage, or cancel your consultations with healthcare professionals.
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem;">
+        <a href="{{ url_for('new_appointment') }}" class="btn btn-primary btn-sm" id="bookNewApptBtn">
+          ✚ Book New Appointment
+        </a>
+      </div>
+    </div>
+
+    <!-- Filter Buttons -->
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+      <a href="{{ url_for('appointments', status='all') }}" class="btn btn-sm {% if current_filter == 'all' %}btn-primary{% else %}btn-secondary{% endif %}">
+        All ({{ total_count }})
+      </a>
+      <a href="{{ url_for('appointments', status='confirmed') }}" class="btn btn-sm {% if current_filter == 'confirmed' %}btn-primary{% else %}btn-secondary{% endif %}">
+        Confirmed
+      </a>
+      <a href="{{ url_for('appointments', status='cancelled') }}" class="btn btn-sm {% if current_filter == 'cancelled' %}btn-primary{% else %}btn-secondary{% endif %}">
+        Cancelled
+      </a>
+    </div>
+
+    {% if appointments %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Doctor / Specialist</th>
+              <th>Date & Time</th>
+              <th>Reason for Visit</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for appt in appointments %}
+              <tr>
+                <td style="font-weight: 600;">
+                  {{ appt.doctor }}
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">
+                    ID: {{ appt.appointment_id[:8] }}...
+                  </div>
+                </td>
+                <td>
+                  <strong>{{ appt.date }}</strong>
+                  <div style="font-size: 0.85rem; color: var(--text-muted);">at {{ appt.time }}</div>
+                </td>
+                <td>{{ appt.reason }}</td>
+                <td>
+                  {% if appt.status == 'Confirmed' %}
+                    <span class="badge badge-confirmed">Confirmed</span>
+                  {% elif appt.status == 'Cancelled' %}
+                    <span class="badge badge-cancelled">Cancelled</span>
+                  {% else %}
+                    <span class="badge badge-pending">{{ appt.status }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if appt.status == 'Confirmed' %}
+                    <form action="{{ url_for('cancel_appointment', appointment_id=appt.appointment_id) }}" method="POST" class="cancel-appointment-form" style="display:inline;">
+                      <button type="submit" class="btn btn-danger btn-sm">Cancel Visit</button>
+                    </form>
+                  {% else %}
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">No actions</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+        <div style="font-size: 3rem; margin-bottom: 0.5rem;">📅</div>
+        <p style="font-size: 1.1rem; font-weight: 600;">No appointments found for this filter.</p>
+        <p style="font-size: 0.9rem; margin-top: 0.25rem;">Would you like to schedule an appointment with a specialist?</p>
+        <a href="{{ url_for('new_appointment') }}" class="btn btn-primary" style="margin-top: 1rem;">
+          Schedule Consultation &rarr;
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
