@@ -33,14 +33,16 @@ class SNSService:
         In AWS mode: publishes message to the configured Amazon SNS topic.
         """
         if self.mock_aws:
+            safe_sub = subject.encode("ascii", "replace").decode("ascii")
+            safe_msg = message.strip().encode("ascii", "replace").decode("ascii")
             print("\n" + "=" * 55)
             print("[SIMULATED AMAZON SNS DISPATCH]")
             print(f"Topic ARN : {self.topic_arn}")
             print(f"Patient ID: {patient_id}")
-            print(f"Subject   : {subject}")
-            print(f"Message   : {message.strip()}")
+            print(f"Subject   : {safe_sub}")
+            print(f"Message   : {safe_msg}")
             print("=" * 55 + "\n")
-            logger.info("Simulated SNS dispatch to patient %s: %s", patient_id, subject)
+            logger.info("Simulated SNS dispatch to patient %s: %s", patient_id, safe_sub)
             return True
 
         try:
@@ -95,5 +97,35 @@ class SNSService:
             f"Hello {patient_name},\n\n"
             f"{doctor_name} has submitted a new clinical diagnosis for your consultation on {date}.\n"
             f"Please log in to your MedTrack patient dashboard to review your medical record."
+        )
+        return self.publish_notification(patient_id, message, subject)
+
+    # -------------------------------------------------------------
+    # Patient Medicine Intake & Dose Reminder Events
+    # -------------------------------------------------------------
+    def notify_dose_reminder(self, patient_id: str, patient_name: str, medicine_name: str, dosage: str, scheduled_time: str, meal_timing: str = "After Food"):
+        """Send automated medication intake dose reminder to patient."""
+        subject = f"[REMINDER] Time to take {medicine_name} ({dosage})"
+        message = (
+            f"Hello {patient_name},\n\n"
+            f"This is your MedTrack intake reminder!\n\n"
+            f"- Medicine: {medicine_name}\n"
+            f"- Dosage: {dosage}\n"
+            f"- Scheduled Time: {scheduled_time}\n"
+            f"- Instructions: {meal_timing}\n\n"
+            f"Please take your medicine as prescribed and mark it as TAKEN in your MedTrack dashboard."
+        )
+        return self.publish_notification(patient_id, message, subject)
+
+    def notify_medicine_added(self, patient_id: str, patient_name: str, medicine_name: str, dosage: str, scheduled_time: str):
+        """Notify patient when a new medicine is scheduled."""
+        subject = f"New Medication Scheduled: {medicine_name}"
+        message = (
+            f"Hello {patient_name},\n\n"
+            f"You have registered a new medication on MedTrack:\n\n"
+            f"- Medicine: {medicine_name}\n"
+            f"- Dosage: {dosage}\n"
+            f"- Schedule: {scheduled_time}\n\n"
+            f"MedTrack will monitor your schedule and alert you when it's time for each dose."
         )
         return self.publish_notification(patient_id, message, subject)

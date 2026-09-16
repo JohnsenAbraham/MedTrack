@@ -90,6 +90,40 @@ class DatabaseService:
                     FOREIGN KEY(patient_id) REFERENCES users(user_id)
                 )
             """)
+
+            # MEDICINES table (Patient Medication Cabinet)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS medicines (
+                    medicine_id TEXT PRIMARY KEY,
+                    patient_id TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    dosage TEXT NOT NULL,
+                    schedule_time TEXT NOT NULL,
+                    frequency TEXT NOT NULL DEFAULT 'Daily',
+                    meal_timing TEXT NOT NULL DEFAULT 'After Food',
+                    notes TEXT,
+                    created_at TEXT NOT NULL,
+                    FOREIGN KEY(patient_id) REFERENCES users(user_id)
+                )
+            """)
+
+            # INTAKE_LOGS table (Patient Daily Intake History)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS intake_logs (
+                    log_id TEXT PRIMARY KEY,
+                    patient_id TEXT NOT NULL,
+                    medicine_id TEXT NOT NULL,
+                    medicine_name TEXT NOT NULL,
+                    dosage TEXT NOT NULL,
+                    scheduled_time TEXT NOT NULL,
+                    taken_time TEXT NOT NULL,
+                    status TEXT NOT NULL CHECK(status IN ('TAKEN', 'SKIPPED', 'PENDING')),
+                    log_date TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    FOREIGN KEY(patient_id) REFERENCES users(user_id),
+                    FOREIGN KEY(medicine_id) REFERENCES medicines(medicine_id)
+                )
+            """)
             conn.commit()
 
         self._seed_demo_doctors()
@@ -418,3 +452,208 @@ class DatabaseService:
                 ORDER BY created_at DESC
             """, (patient_id,))
             return [dict(row) for row in cursor.fetchall()]
+
+    # -------------------------------------------------------------
+    # Patient Medicine Management & Dose Tracking
+    # -------------------------------------------------------------
+    def create_medicine(self, patient_id: str, name: str, dosage: str, schedule_time: str,
+                        frequency: str = "Daily", meal_timing: str = "After Food", notes: str = "") -> dict:
+        medicine_id = f"med-{uuid.uuid4().hex[:8]}"
+        created_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+        record = {
+            "medicine_id": medicine_id,
+            "patient_id": patient_id,
+            "name": name.strip(),
+            "dosage": dosage.strip(),
+            "schedule_time": schedule_time.strip(),
+            "frequency": frequency.strip(),
+            "meal_timing": meal_timing.strip(),
+            "notes": notes.strip() if notes else "",
+            "created_at": created_at
+        }
+
+        if not self.mock_aws:
+            return self.dynamo.create_medicine(record)
+
+        with self._get_sqlite_conn() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO medicines (medicine_id, patient_id, name, dosage, schedule_time, frequency, meal_timing, notes, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record["medicine_id"], record["patient_id"], record["name"],
+                record["dosage"], record["schedule_time"], record["frequency"],
+                record["meal_timing"], record["notes"], record["created_at"]
+            ))
+            conn.commit()
+        return record
+
+    def get_medicine_by_id(self, medicine_id: str):
+        if not self.mock_aws:
+            response = self.dynamo.medicines_table.get_item(Key={"medicine_id": medicine_id})
+            return response.get("Item")
+
+        with self._get_sqlite_conn() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM medicines WHERE medicine_id = ?", (medicine_id,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def get_medicines_by_patient(self, patient_id: str) -> list:
+        if not self.mock_aws:
+            return self.dynamo.get_medicines_by_patient(patient_id)
+
+        with self._get_sqlite_conn() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM medicines WHERE patient_id = ? ORDER BY schedule_time ASC", (patient_id,))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def delete_medicine(self, medicine_id: str, patient_id: str) -> bool:
+        med = self.get_medicine_by_id(medicine_id)
+        if not med or med["patient_id"] != patient_id:
+            return False
+
+        if not self.mock_aws:
+            return self.dynamo.delete_medicine(medicine_id)
+
+        with self._get_sqlite_conn() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM intake_logs WHERE medicine_id = ? AND patient_id = ?", (medicine_id, patient_id))
+            cursor.execute("DELETE FROM medicines WHERE medicine_id = ? AND patient_id = ?", (medicine_id, patient_id))
+            conn.commit()
+        return True
+
+    def record_intake(self, patient_id: str, medicine_id: str, status: str, log_date: str = None) -> dict:
+        if status not in ("TAKEN", "SKIPPED"):
+            raise ValueError("Status must be either 'TAKEN' or 'SKIPPED'.")
+
+        med = self.get_medicine_by_id(medicine_id)
+        if not med or med["patient_id"] != patient_id:
+            raise ValueError("Medication record not found.")
+
+        today_str = log_date or datetime.date.today().isoformat()
+        now_time = datetime.datetime.now().strftime("%I:%M %p")
+        created_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        log_id = f"log-{uuid.uuid4().hex[:8]}"
+
+        log_data = {
+            "log_id": log_id,
+            "patient_id": patient_id,
+            "medicine_id": medicine_id,
+            "medicine_name": med["name"],
+            "dosage": med["dosage"],
+            "scheduled_time": med["schedule_time"],
+            "taken_time": now_time,
+            "status": status,
+            "log_date": today_str,
+            "created_at": created_at
+        }
+
+        if not self.mock_aws:
+            self.dynamo.create_intake_log(log_data)
+            return log_data
+
+        with self._get_sqlite_conn() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT log_id FROM intake_logs
+                WHERE patient_id = ? AND medicine_id = ? AND log_date = ?
+            """, (patient_id, medicine_id, today_str))
+            existing = cursor.fetchone()
+
+            if existing:
+                cursor.execute("""
+                    UPDATE intake_logs
+                    SET status = ?, taken_time = ?, created_at = ?
+                    WHERE log_id = ?
+                """, (status, now_time, created_at, existing["log_id"]))
+                log_data["log_id"] = existing["log_id"]
+            else:
+                cursor.execute("""
+                    INSERT INTO intake_logs (log_id, patient_id, medicine_id, medicine_name, dosage, scheduled_time, taken_time, status, log_date, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    log_id, patient_id, medicine_id, med["name"], med["dosage"],
+                    med["schedule_time"], now_time, status, today_str, created_at
+                ))
+            conn.commit()
+        return log_data
+
+    def get_patient_schedule(self, patient_id: str, target_date: str = None) -> dict:
+        today_str = target_date or datetime.date.today().isoformat()
+        medicines = self.get_medicines_by_patient(patient_id)
+
+        if not self.mock_aws:
+            logs = self.dynamo.get_intake_logs_by_patient(patient_id, log_date=today_str)
+        else:
+            with self._get_sqlite_conn() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT * FROM intake_logs WHERE patient_id = ? AND log_date = ?", (patient_id, today_str))
+                logs = [dict(r) for r in cursor.fetchall()]
+
+        logs_by_med = {l["medicine_id"]: l for l in logs}
+
+        doses = []
+        taken_count = 0
+        skipped_count = 0
+        pending_count = 0
+
+        for med in medicines:
+            log = logs_by_med.get(med["medicine_id"])
+            if log:
+                status = log["status"]
+                taken_time = log.get("taken_time", "")
+                log_id = log["log_id"]
+            else:
+                status = "PENDING"
+                taken_time = ""
+                log_id = None
+
+            if status == "TAKEN":
+                taken_count += 1
+            elif status == "SKIPPED":
+                skipped_count += 1
+            else:
+                pending_count += 1
+
+            doses.append({
+                "medicine_id": med["medicine_id"],
+                "name": med["name"],
+                "dosage": med["dosage"],
+                "schedule_time": med["schedule_time"],
+                "frequency": med["frequency"],
+                "meal_timing": med["meal_timing"],
+                "notes": med.get("notes", ""),
+                "status": status,
+                "taken_time": taken_time,
+                "log_id": log_id
+            })
+
+        total_doses = len(medicines)
+        adherence_pct = round((taken_count / total_doses * 100)) if total_doses > 0 else 100
+
+        return {
+            "date": today_str,
+            "doses": doses,
+            "total_doses": total_doses,
+            "taken_count": taken_count,
+            "skipped_count": skipped_count,
+            "pending_count": pending_count,
+            "adherence_pct": adherence_pct
+        }
+
+    def get_intake_history(self, patient_id: str, limit: int = 50) -> list:
+        if not self.mock_aws:
+            logs = self.dynamo.get_intake_logs_by_patient(patient_id)
+            return logs[:limit]
+
+        with self._get_sqlite_conn() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT * FROM intake_logs
+                WHERE patient_id = ?
+                ORDER BY log_date DESC, scheduled_time DESC
+                LIMIT ?
+            """, (patient_id, limit))
+            return [dict(r) for r in cursor.fetchall()]

@@ -61,6 +61,7 @@
               <li><a href="{{ url_for('doctor_dashboard') }}" class="nav-link {% if request.endpoint == 'doctor_dashboard' %}active{% endif %}">Doctor Dashboard</a></li>
             {% else %}
               <li><a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">Dashboard</a></li>
+              <li><a href="{{ url_for('view_medicines') }}" class="nav-link {% if request.endpoint in ('view_medicines', 'add_medicine') %}active{% endif %}">💊 Medications</a></li>
               <li><a href="{{ url_for('book_appointment') }}" class="nav-link {% if request.endpoint == 'book_appointment' %}active{% endif %}">Book Appointment</a></li>
               <li><a href="{{ url_for('view_appointments') }}" class="nav-link {% if request.endpoint == 'view_appointments' %}active{% endif %}">My Appointments</a></li>
               <li><a href="{{ url_for('view_diagnoses') }}" class="nav-link {% if request.endpoint == 'view_diagnoses' %}active{% endif %}">My Diagnoses</a></li>

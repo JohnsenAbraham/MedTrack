@@ -59,6 +59,75 @@
         <div class="metric-label">Notifications</div>
       </div>
     </div>
+  <!-- Today's Medicine Intake Tracker & Dose Reminders -->
+  <div class="card" style="margin-bottom: 1.75rem; border-left: 4px solid var(--primary);">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;">
+      <div>
+        <div class="card-title" style="display: flex; align-items: center; gap: 8px; font-size: 1.15rem;">
+          <span>💊</span> Today's Prescriptions & Dose Schedule
+        </div>
+        <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">
+          Adherence: <strong style="color: var(--primary);">{{ medicine_schedule.adherence_pct }}%</strong> ({{ medicine_schedule.taken_count }} of {{ medicine_schedule.total_doses }} doses logged today)
+        </div>
+      </div>
+      <div style="display: flex; gap: 0.5rem;">
+        <a href="{{ url_for('add_medicine') }}" class="btn btn-primary btn-sm">+ Add Medicine</a>
+        <a href="{{ url_for('view_medicines') }}" class="btn btn-outline btn-sm">Manage Cabinet &rarr;</a>
+      </div>
+    </div>
+
+    {% if medicine_schedule.doses %}
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        {% for dose in medicine_schedule.doses %}
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: #ffffff; flex-wrap: wrap; gap: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="background: var(--primary-light); color: var(--primary); padding: 6px 10px; border-radius: var(--radius-sm); font-weight: 700; font-size: 0.8rem; text-align: center; min-width: 80px;">
+                ⏰ {{ dose.schedule_time }}
+              </div>
+              <div>
+                <strong style="font-size: 0.95rem; color: var(--text-main);">{{ dose.name }}</strong>
+                <span style="font-size: 0.8rem; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-left: 6px; color: #475569;">{{ dose.dosage }}</span>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">
+                  🍽️ {{ dose.meal_timing }} &bull; 🔄 {{ dose.frequency }}
+                  {% if dose.notes %} &bull; <em>{{ dose.notes }}</em>{% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 8px;">
+              {% if dose.status == 'TAKEN' %}
+                <span class="badge badge-completed" style="padding: 4px 10px;">✓ Taken at {{ dose.taken_time }}</span>
+              {% elif dose.status == 'SKIPPED' %}
+                <span class="badge badge-cancelled" style="padding: 4px 10px;">✕ Skipped</span>
+              {% else %}
+                <span class="badge badge-pending" style="padding: 4px 10px;">⏳ Pending</span>
+                <form action="{{ url_for('log_dose_intake') }}" method="POST" style="display: inline;">
+                  <input type="hidden" name="medicine_id" value="{{ dose.medicine_id }}">
+                  <input type="hidden" name="status" value="TAKEN">
+                  <button type="submit" class="btn btn-sm btn-success">✓ Mark Taken</button>
+                </form>
+                <form action="{{ url_for('log_dose_intake') }}" method="POST" style="display: inline;">
+                  <input type="hidden" name="medicine_id" value="{{ dose.medicine_id }}">
+                  <input type="hidden" name="status" value="SKIPPED">
+                  <button type="submit" class="btn btn-sm btn-outline">Skip</button>
+                </form>
+              {% endif %}
+
+              <!-- Amazon SNS Test Reminder Button -->
+              <form action="{{ url_for('trigger_dose_reminder', medicine_id=dose.medicine_id) }}" method="POST" style="display: inline;">
+                <button type="submit" class="btn btn-sm btn-secondary" title="Dispatch simulated Amazon SNS reminder">
+                  🔔 Test SNS Alert
+                </button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
+        No active medicines scheduled yet today. <a href="{{ url_for('add_medicine') }}">Add your first prescription</a> to track daily doses and receive Amazon SNS reminders!
+      </div>
+    {% endif %}
   </div>
 
   <!-- Main 2-Column Content Grid -->

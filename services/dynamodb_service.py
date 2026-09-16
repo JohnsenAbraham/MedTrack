@@ -19,6 +19,8 @@ class DynamoDBService:
         self.appointments_table = self.dynamodb.Table(Config.DYNAMODB_APPOINTMENTS_TABLE)
         self.diagnoses_table = self.dynamodb.Table(Config.DYNAMODB_DIAGNOSES_TABLE)
         self.notifications_table = self.dynamodb.Table(Config.DYNAMODB_NOTIFICATIONS_TABLE)
+        self.medicines_table = self.dynamodb.Table(Config.DYNAMODB_MEDICINES_TABLE)
+        self.intake_logs_table = self.dynamodb.Table(Config.DYNAMODB_INTAKE_LOGS_TABLE)
 
     # -------------------------------------------------------------
     # User Operations
@@ -148,4 +150,39 @@ class DynamoDBService:
             FilterExpression="patient_id = :pid",
             ExpressionAttributeValues={":pid": patient_id}
         )
+        return sorted(response.get("Items", []), key=lambda x: x.get("created_at", ""), reverse=True)
+
+    # -------------------------------------------------------------
+    # Patient Medicine & Intake Operations
+    # -------------------------------------------------------------
+    def create_medicine(self, medicine_data: dict) -> dict:
+        self.medicines_table.put_item(Item=medicine_data)
+        return medicine_data
+
+    def get_medicines_by_patient(self, patient_id: str) -> list:
+        response = self.medicines_table.scan(
+            FilterExpression="patient_id = :pid",
+            ExpressionAttributeValues={":pid": patient_id}
+        )
+        return sorted(response.get("Items", []), key=lambda x: x.get("schedule_time", ""))
+
+    def delete_medicine(self, medicine_id: str) -> bool:
+        self.medicines_table.delete_item(Key={"medicine_id": medicine_id})
+        return True
+
+    def create_intake_log(self, log_data: dict) -> dict:
+        self.intake_logs_table.put_item(Item=log_data)
+        return log_data
+
+    def get_intake_logs_by_patient(self, patient_id: str, log_date: str = None) -> list:
+        if log_date:
+            response = self.intake_logs_table.scan(
+                FilterExpression="patient_id = :pid AND log_date = :ldate",
+                ExpressionAttributeValues={":pid": patient_id, ":ldate": log_date}
+            )
+        else:
+            response = self.intake_logs_table.scan(
+                FilterExpression="patient_id = :pid",
+                ExpressionAttributeValues={":pid": patient_id}
+            )
         return sorted(response.get("Items", []), key=lambda x: x.get("created_at", ""), reverse=True)

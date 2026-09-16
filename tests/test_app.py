@@ -318,5 +318,51 @@ class MedTrackTestCase(unittest.TestCase):
         res4 = sns.notify_diagnosis_submitted(patient_id, patient_name, doctor_name, "2026-10-10")
         self.assertTrue(res4)
 
+    def test_17_patient_medicine_creation(self):
+        """17. Verify patient can add a medication prescription to their schedule."""
+        self.client.get("/demo-login/patient")
+        response = self.client.post("/medicines/new", data={
+            "name": "Paracetamol 500mg",
+            "dosage": "1 Tablet (500mg)",
+            "schedule_time": "08:00 AM",
+            "frequency": "Daily",
+            "meal_timing": "After Food",
+            "notes": "Take with breakfast"
+        }, follow_redirects=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Successfully scheduled Paracetamol 500mg", response.data)
+
+    def test_18_patient_medicine_cabinet_listing(self):
+        """18. Verify patient can view their medicine cabinet."""
+        self.client.get("/demo-login/patient")
+        response = self.client.get("/medicines")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"My Medicine Cabinet", response.data)
+
+    def test_19_dose_intake_logging(self):
+        """19. Verify patient can log a scheduled dose as TAKEN or SKIPPED."""
+        self.client.get("/demo-login/patient")
+        patient = db.get_user_by_email("patient.demo@medtrack.local")
+        med = db.create_medicine(patient["user_id"], "Vitamin C 500mg", "1 Tablet", "09:00 AM", "Daily", "With Food")
+
+        response = self.client.post("/medicines/intake/log", data={
+            "medicine_id": med["medicine_id"],
+            "status": "TAKEN"
+        }, follow_redirects=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"TAKEN", response.data)
+
+    def test_20_sns_dose_reminder_dispatch(self):
+        """20. Verify patient can trigger simulated Amazon SNS dose reminder."""
+        self.client.get("/demo-login/patient")
+        patient = db.get_user_by_email("patient.demo@medtrack.local")
+        med = db.create_medicine(patient["user_id"], "Amoxicillin 250mg", "1 Capsule", "08:00 PM", "Daily", "After Food")
+
+        response = self.client.post(f"/medicines/{med['medicine_id']}/remind", follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Amazon SNS Dose Reminder dispatched", response.data)
+
 if __name__ == "__main__":
     unittest.main()

@@ -23,6 +23,8 @@ class Config:
     DYNAMODB_APPOINTMENTS_TABLE = os.getenv("DYNAMODB_APPOINTMENTS_TABLE", "MedTrack_Appointments")
     DYNAMODB_DIAGNOSES_TABLE = os.getenv("DYNAMODB_DIAGNOSES_TABLE", "MedTrack_Diagnoses")
     DYNAMODB_NOTIFICATIONS_TABLE = os.getenv("DYNAMODB_NOTIFICATIONS_TABLE", "MedTrack_Notifications")
+    DYNAMODB_MEDICINES_TABLE = os.getenv("DYNAMODB_MEDICINES_TABLE", "MedTrack_Medicines")
+    DYNAMODB_INTAKE_LOGS_TABLE = os.getenv("DYNAMODB_INTAKE_LOGS_TABLE", "MedTrack_IntakeLogs")
 
     # Amazon SNS Topic ARN
     SNS_TOPIC_ARN = os.getenv("SNS_TOPIC_ARN", "arn:aws:sns:us-east-1:123456789012:MedTrack_Alerts")

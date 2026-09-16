@@ -257,6 +257,7 @@ def dashboard():
     today = datetime.date.today().isoformat()
     upcoming = [a for a in all_appointments if a.get("appointment_date", "") >= today and a.get("status") != "CANCELLED"]
     past = [a for a in all_appointments if a.get("appointment_date", "") < today or a.get("status") in ("COMPLETED", "CANCELLED")]
+    medicine_schedule = db.get_patient_schedule(patient_id)
 
     return render_template(
         "dashboard.html",
@@ -264,7 +265,8 @@ def dashboard():
         upcoming_appointments=upcoming,
         past_appointments=past,
         diagnoses=diagnoses,
-        notifications=notifications
+        notifications=notifications,
+        medicine_schedule=medicine_schedule
     )
 
 @app.route("/appointments")
@@ -483,6 +485,155 @@ def submit_diagnosis(appointment_id):
 
     today = datetime.date.today().isoformat()
     return render_template("diagnosis.html", appointment=appointment, today=today)
+
+# -----------------------------------------------------------------
+# Patient Medicine Tracking & Dose Reminders
+# -----------------------------------------------------------------
+@app.route("/medicines")
+@patient_required
+def view_medicines():
+    """View patient's personal medicine cabinet and prescription schedule."""
+    patient_id = g.user["user_id"]
+    medicines_list = db.get_medicines_by_patient(patient_id)
+    return render_template("medicines.html", medicines=medicines_list)
+
+@app.route("/medicines/new", methods=["GET", "POST"])
+@patient_required
+def add_medicine():
+    """Register a new prescription with dosage and scheduled intake time."""
+    patient_id = g.user["user_id"]
+
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        dosage = request.form.get("dosage", "").strip()
+        schedule_time = request.form.get("schedule_time", "").strip()
+        frequency = request.form.get("frequency", "Daily").strip()
+        meal_timing = request.form.get("meal_timing", "After Food").strip()
+        notes = request.form.get("notes", "").strip()
+
+        if not name or not dosage or not schedule_time:
+            flash("Please provide Medicine Name, Dosage, and Scheduled Intake Time.", "danger")
+            return render_template("medicine_form.html", form=request.form)
+
+        new_med = db.create_medicine(
+            patient_id=patient_id,
+            name=name,
+            dosage=dosage,
+            schedule_time=schedule_time,
+            frequency=frequency,
+            meal_timing=meal_timing,
+            notes=notes
+        )
+
+        # Notify via SNS and log
+        sns.notify_medicine_added(
+            patient_id=patient_id,
+            patient_name=g.user["name"],
+            medicine_name=name,
+            dosage=dosage,
+            scheduled_time=schedule_time
+        )
+        db.create_notification(
+            patient_id=patient_id,
+            message=f"Added {name} ({dosage}) to your medication schedule at {schedule_time}."
+        )
+
+        flash(f"Successfully scheduled {name} ({dosage}) at {schedule_time}.", "success")
+        return redirect(url_for("view_medicines"))
+
+    return render_template("medicine_form.html", form={
+        "schedule_time": "08:00 AM",
+        "frequency": "Daily",
+        "meal_timing": "After Food"
+    })
+
+@app.route("/medicines/<medicine_id>/delete", methods=["POST"])
+@patient_required
+def delete_medicine_route(medicine_id):
+    """Remove a medicine from the cabinet."""
+    patient_id = g.user["user_id"]
+    med = db.get_medicine_by_id(medicine_id)
+    if not med or med["patient_id"] != patient_id:
+        flash("Medication record not found.", "danger")
+        return redirect(url_for("view_medicines"))
+
+    med_name = med["name"]
+    db.delete_medicine(medicine_id, patient_id)
+    flash(f"Removed {med_name} from your medication cabinet.", "info")
+    return redirect(url_for("view_medicines"))
+
+@app.route("/medicines/<medicine_id>/remind", methods=["POST"])
+@patient_required
+def trigger_dose_reminder(medicine_id):
+    """
+    Evaluator Demonstration Trigger:
+    Instantly dispatches an Amazon SNS dose reminder for this medication.
+    """
+    patient_id = g.user["user_id"]
+    med = db.get_medicine_by_id(medicine_id)
+    if not med or med["patient_id"] != patient_id:
+        flash("Medication record not found.", "danger")
+        return redirect(url_for("dashboard"))
+
+    # Dispatch via SNS
+    sns.notify_dose_reminder(
+        patient_id=patient_id,
+        patient_name=g.user["name"],
+        medicine_name=med["name"],
+        dosage=med["dosage"],
+        scheduled_time=med["schedule_time"],
+        meal_timing=med.get("meal_timing", "After Food")
+    )
+
+    db.create_notification(
+        patient_id=patient_id,
+        message=f"[SNS Reminder] Time to take {med['name']} ({med['dosage']}) scheduled for {med['schedule_time']}."
+    )
+
+    flash(
+        f"Amazon SNS Dose Reminder dispatched for {med['name']}! (Simulated console alert broadcast).",
+        "success"
+    )
+    return redirect(request.referrer or url_for("dashboard"))
+
+@app.route("/medicines/intake/log", methods=["POST"])
+@patient_required
+def log_dose_intake():
+    """Record medicine intake as TAKEN or SKIPPED."""
+    patient_id = g.user["user_id"]
+    medicine_id = request.form.get("medicine_id")
+    status = request.form.get("status", "").upper()
+
+    if not medicine_id or status not in ("TAKEN", "SKIPPED"):
+        flash("Invalid intake logging request.", "danger")
+        return redirect(url_for("dashboard"))
+
+    try:
+        log_data = db.record_intake(patient_id, medicine_id, status)
+        now_time = log_data["taken_time"]
+
+        db.create_notification(
+            patient_id=patient_id,
+            message=f"Dose of {log_data['medicine_name']} marked as {status} at {now_time}."
+        )
+
+        if status == "TAKEN":
+            flash(f"Logged dose of {log_data['medicine_name']} ({log_data['dosage']}) as TAKEN at {now_time}.", "success")
+        else:
+            flash(f"Marked {log_data['medicine_name']} as SKIPPED for today.", "warning")
+
+    except Exception as e:
+        flash(f"Failed to record intake: {str(e)}", "danger")
+
+    return redirect(request.referrer or url_for("dashboard"))
+
+@app.route("/medicines/history")
+@patient_required
+def view_intake_history():
+    """Review past medicine intake compliance history."""
+    patient_id = g.user["user_id"]
+    logs = db.get_intake_history(patient_id)
+    return render_template("history.html", logs=logs)
 
 # -----------------------------------------------------------------
 # Entry Point

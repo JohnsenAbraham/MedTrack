@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Add Medicine – MedTrack{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 640px; padding-top: 2rem; padding-bottom: 3rem;">
+
+  <div class="card">
+    <div class="card-header" style="text-align: center; margin-bottom: 1.5rem;">
+      <div style="font-size: 2.2rem; margin-bottom: 0.25rem;">💊</div>
+      <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem;">
+        Add Prescribed Medication
+      </h1>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">
+        Add details and scheduled intake time to receive automated Amazon SNS reminders.
+      </p>
+    </div>
+
+    <form action="{{ url_for('add_medicine') }}" method="POST">
+      <!-- Medicine Name -->
+      <div class="form-group">
+        <label for="name" class="form-label">Medicine Name *</label>
+        <input type="text" class="form-control" id="name" name="name" placeholder="e.g. Paracetamol 500mg, Amoxicillin 250mg" value="{{ form.name if form and form.name else '' }}" required autofocus>
+      </div>
+
+      <!-- Dosage & Scheduled Time -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dosage" class="form-label">Dosage / Quantity *</label>
+          <input type="text" class="form-control" id="dosage" name="dosage" placeholder="e.g. 1 Tablet (500mg), 2 Drops" value="{{ form.dosage if form and form.dosage else '' }}" required>
+        </div>
+
+        <div class="form-group">
+          <label for="schedule_time" class="form-label">Intake Time *</label>
+          <input type="text" class="form-control" id="schedule_time" name="schedule_time" placeholder="e.g. 08:00 AM, 08:30 PM" value="{{ form.schedule_time if form and form.schedule_time else '08:00 AM' }}" required>
+        </div>
+      </div>
+
+      <!-- Frequency & Meal Timing -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="frequency" class="form-label">Frequency *</label>
+          <select class="form-select" id="frequency" name="frequency" required>
+            <option value="Daily" {% if form and form.frequency == 'Daily' %}selected{% endif %}>Daily (Every Day)</option>
+            <option value="Twice Daily" {% if form and form.frequency == 'Twice Daily' %}selected{% endif %}>Twice Daily</option>
+            <option value="Three Times Daily" {% if form and form.frequency == 'Three Times Daily' %}selected{% endif %}>Three Times Daily</option>
+            <option value="Every 8 Hours" {% if form and form.frequency == 'Every 8 Hours' %}selected{% endif %}>Every 8 Hours</option>
+            <option value="As Needed (PRN)" {% if form and form.frequency == 'As Needed (PRN)' %}selected{% endif %}>As Needed (PRN)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="meal_timing" class="form-label">Meal Instruction *</label>
+          <select class="form-select" id="meal_timing" name="meal_timing" required>
+            <option value="After Food" {% if form and form.meal_timing == 'After Food' %}selected{% endif %}>After Food</option>
+            <option value="Before Food" {% if form and form.meal_timing == 'Before Food' %}selected{% endif %}>Before Food</option>
+            <option value="With Food" {% if form and form.meal_timing == 'With Food' %}selected{% endif %}>With Food</option>
+            <option value="Empty Stomach" {% if form and form.meal_timing == 'Empty Stomach' %}selected{% endif %}>Empty Stomach</option>
+            <option value="Anytime" {% if form and form.meal_timing == 'Anytime' %}selected{% endif %}>Anytime</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Notes / Instructions -->
+      <div class="form-group">
+        <label for="notes" class="form-label">Special Instructions (Optional)</label>
+        <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="e.g. Take with a full glass of water. Complete full course.">{{ form.notes if form and form.notes else '' }}</textarea>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+        <button type="submit" class="btn btn-primary" style="flex: 1;">
+          Add Medication &rarr;
+        </button>
+        <a href="{{ url_for('view_medicines') }}" class="btn btn-outline">
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}
