@@ -26,8 +26,28 @@ class Config:
     DYNAMODB_DIAGNOSES_TABLE = os.getenv("DYNAMODB_DIAGNOSES_TABLE", "MedTrack_Diagnoses")
     DYNAMODB_NOTIFICATIONS_TABLE = os.getenv("DYNAMODB_NOTIFICATIONS_TABLE", "MedTrack_Notifications")
 
-    # AWS SNS Topic ARN
+    # AWS SNS Configuration
     SNS_TOPIC_ARN = os.getenv("SNS_TOPIC_ARN", "arn:aws:sns:us-east-1:123456789012:MedTrack-Alerts")
+    SNS_DLQ_ARN = os.getenv("SNS_DLQ_ARN", "arn:aws:sqs:us-east-1:123456789012:MedTrack-Alerts-DLQ")
+
+    # AWS CloudWatch Logging
+    CLOUDWATCH_LOG_GROUP = os.getenv("CLOUDWATCH_LOG_GROUP", "/aws/ec2/medtrack-production")
 
     # Local SQLite DB path for mock storage
     LOCAL_DB_PATH = BASE_DIR / "medtrack_local.db"
+
+    # Google Authentication Configuration
+    GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+    GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
+
+    # Hospital Branding & Clinical Specialty Configuration
+    HOSPITAL_NAME = os.getenv("HOSPITAL_NAME", "MedTrack Health System")
+    HOSPITAL_DEPARTMENTS = [
+        "Cardiology",
+        "Neurology",
+        "Internal Medicine",
+        "Orthopedics & Sports",
+        "Pediatrics & Child Health",
+        "Dermatology",
+        "General Medicine"
+    ]

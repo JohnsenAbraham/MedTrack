@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Longitudinal Medical Record | MedTrack{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 1.5rem; margin-bottom: 3rem;">
+
+  <!-- Patient Summary Banner -->
+  <div class="clinical-patient-banner">
+    <div style="display: flex; gap: 1.25rem; align-items: center;">
+      <div class="user-avatar-large">
+        {{ patient.name[0] | upper }}
+      </div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+          <h1 style="font-size: 1.75rem; font-weight: 800; color: #0f172a; margin: 0;">
+            {{ patient.name }}
+          </h1>
+          <span class="blood-type-badge">{{ patient.blood_group or 'O+' }}</span>
+          <span class="badge badge-role">EHR #{{ patient.user_id[:8] }}</span>
+        </div>
+        <div class="patient-vital-meta">
+          <span>📧 {{ patient.email }}</span>
+          <span>📞 {{ patient.phone or 'Not Provided' }}</span>
+          <span>🎂 DOB: {{ patient.date_of_birth or 'Not Provided' }}</span>
+          <span>⚧ Gender: {{ patient.gender or 'Not Specified' }}</span>
+          <span>🛡️ {{ patient.insurance_provider or 'Standard Coverage' }}</span>
+        </div>
+        {% if patient.allergies and patient.allergies != 'None' %}
+          <div style="margin-top: 0.5rem;">
+            <span class="allergy-alert-pill">⚠️ Known Drug Allergies: {{ patient.allergies }}</span>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 0.75rem;">
+      <button onclick="window.print()" class="btn btn-secondary btn-sm">
+        🖨️ Print Clinical Chart
+      </button>
+      <a href="{{ url_for('doctor_queue') }}" class="btn btn-outline btn-sm">
+        &larr; Back to Queue
+      </a>
+    </div>
+  </div>
+
+  <!-- Longitudinal Vitals History -->
+  <div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+      <div class="card-title">
+        <span>💓</span> Longitudinal Vital Signs Progression
+      </div>
+      <span class="badge badge-role">{{ vitals_history | length }} Recorded Snapshots</span>
+    </div>
+
+    {% if vitals_history %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Blood Pressure</th>
+              <th>Heart Rate</th>
+              <th>Temperature</th>
+              <th>SpO2</th>
+              <th>Blood Glucose</th>
+              <th>Recorded By</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for v in vitals_history %}
+              <tr>
+                <td><strong>{{ v.recorded_at[:10] }}</strong> <span style="font-size: 0.8rem; color: var(--text-muted);">{{ v.recorded_at[11:16] }}</span></td>
+                <td><span style="font-weight: 700; color: #0f172a;">{{ v.blood_pressure }} mmHg</span></td>
+                <td>{{ v.heart_rate }} bpm</td>
+                <td>{{ v.temperature }} °F</td>
+                <td><span style="font-weight: 600; color: #059669;">{{ v.spo2 }}%</span></td>
+                <td>{{ v.blood_sugar }} mg/dL</td>
+                <td style="font-size: 0.85rem; color: var(--text-muted);">{{ v.recorded_by }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p style="text-align: center; color: var(--text-muted); padding: 1.5rem 0;">No vitals history logged yet.</p>
+    {% endif %}
+  </div>
+
+  <!-- Complete Clinical Encounters Timeline -->
+  <div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+      <div class="card-title">
+        <span>🩺</span> Clinical Diagnoses & Encounter Timeline
+      </div>
+      <span class="badge badge-role">{{ diagnoses | length }} Encounters</span>
+    </div>
+
+    {% if diagnoses %}
+      <div style="display: flex; flex-direction: column; gap: 1.5rem; padding: 1rem 0;">
+        {% for diag in diagnoses %}
+          <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; background: #fdfdfd; border-left: 4px solid var(--primary);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+              <div>
+                <strong style="font-size: 1.1rem; color: #0f172a;">{{ diag.doctor }}</strong>
+                {% if diag.doctor_specialty %}
+                  <span style="color: var(--text-muted); font-size: 0.85rem;">({{ diag.doctor_specialty }})</span>
+                {% endif %}
+              </div>
+              <div style="font-size: 0.85rem; color: var(--text-muted);">
+                Consultation Date: <strong>{{ diag.date }}</strong>
+              </div>
+            </div>
+
+            {% if diag.icd10_code %}
+              <div style="margin-bottom: 0.5rem;">
+                <span class="badge" style="background: #0284c7; color: white;">ICD-10: {{ diag.icd10_code }}</span>
+              </div>
+            {% endif %}
+
+            <div style="margin-bottom: 0.75rem;">
+              <strong>Assessment:</strong>
+              <div style="font-size: 0.95rem; color: #0f172a; margin-top: 0.2rem; line-height: 1.5;">
+                {{ diag.diagnosis }}
+              </div>
+            </div>
+
+            {% if diag.symptoms %}
+              <div style="margin-bottom: 0.75rem; font-size: 0.88rem; color: var(--text-muted);">
+                <strong>Symptoms / Examination:</strong> {{ diag.symptoms }}
+              </div>
+            {% endif %}
+
+            {% if diag.prescriptions %}
+              <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-sm); padding: 0.85rem; margin-top: 0.75rem;">
+                <div style="font-size: 0.85rem; font-weight: 700; color: #166534; margin-bottom: 0.4rem;">
+                  💊 Prescribed Medications (e-Rx):
+                </div>
+                <ul style="margin-left: 1.25rem; font-size: 0.85rem; color: #166534; line-height: 1.6;">
+                  {% for rx in diag.prescriptions %}
+                    <li>
+                      <strong>{{ rx.medication }}</strong> – {{ rx.dosage }} | {{ rx.frequency }}
+                      {% if rx.duration %} (Duration: {{ rx.duration }}){% endif %}
+                      {% if rx.notes %} - <em>{{ rx.notes }}</em>{% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+
+            {% if diag.treatment_plan %}
+              <div style="margin-top: 0.75rem; font-size: 0.85rem; color: #1e293b;">
+                <strong>Treatment Plan:</strong> {{ diag.treatment_plan }}
+              </div>
+            {% endif %}
+
+            {% if diag.follow_up_date %}
+              <div style="margin-top: 0.5rem; font-size: 0.82rem; color: var(--primary); font-weight: 600;">
+                📅 Recommended Follow-Up: {{ diag.follow_up_date }}
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="text-align: center; color: var(--text-muted); padding: 2rem 0;">No clinical diagnoses on record.</p>
+    {% endif %}
+  </div>
+
+  <!-- Appointment History Log -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <span>📅</span> Complete Appointment History
+      </div>
+    </div>
+
+    {% if appointments %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Doctor</th>
+              <th>Department</th>
+              <th>Date & Time</th>
+              <th>Reason</th>
+              <th>Status</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for appt in appointments %}
+              <tr>
+                <td><strong>{{ appt.doctor }}</strong></td>
+                <td>{{ appt.department or 'General Medicine' }}</td>
+                <td>{{ appt.date }} at {{ appt.time }}</td>
+                <td>{{ appt.reason }}</td>
+                <td>
+                  {% if appt.status == 'Completed' %}
+                    <span class="badge badge-completed">Completed</span>
+                  {% elif appt.status == 'Cancelled' %}
+                    <span class="badge badge-cancelled">Cancelled</span>
+                  {% else %}
+                    <span class="badge badge-confirmed">{{ appt.status }}</span>
+                  {% endif %}
+                </td>
+                <td style="font-size: 0.82rem; color: var(--text-muted);">{{ appt.notes or '-' }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p style="text-align: center; color: var(--text-muted); padding: 2rem 0;">No appointments found.</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

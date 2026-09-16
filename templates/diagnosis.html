@@ -40,7 +40,7 @@
       <div class="form-grid-2">
         <div class="form-group">
           <label for="doctor" class="form-label">Attending Physician / Doctor <span class="required">*</span></label>
-          <input type="text" class="form-control" id="doctor" name="doctor" placeholder="e.g. Dr. Sarah Jenkins, MD" value="{{ form.get('doctor', current_user.name if current_user.role == 'doctor' else '') }}" required>
+          <input type="text" class="form-control" id="doctor" name="doctor" placeholder="Enter attending physician name" value="{{ form.get('doctor', current_user.name if current_user.role == 'doctor' else 'Dr. Sarah Jenkins, MD') }}" required>
         </div>
 
         <div class="form-group">
@@ -49,16 +49,27 @@
         </div>
       </div>
 
+      <!-- ICD-10 Category -->
+      <div class="form-group">
+        <label for="icd10_code" class="form-label">ICD-10 Diagnostic Classification</label>
+        <select class="form-select" id="icd10_code" name="icd10_code">
+          <option value="">-- Optional ICD-10 Code --</option>
+          {% for item in icd10_reference %}
+            <option value="{{ item.code }}">{{ item.code }} - {{ item.name }} ({{ item.department }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
       <!-- Diagnosis Details -->
       <div class="form-group">
         <label for="diagnosis" class="form-label">Clinical Diagnosis & Treatment Plan <span class="required">*</span></label>
-        <textarea class="form-control" id="diagnosis" name="diagnosis" rows="5" placeholder="Enter diagnostic assessment, ICD-10 notes if applicable, prescribed medications, and recommended follow-up..." required>{{ form.get('diagnosis', '') }}</textarea>
+        <textarea class="form-control" id="diagnosis" name="diagnosis" rows="4" placeholder="Enter diagnostic assessment, clinical notes, and treatment plan..." required>{{ form.get('diagnosis', '') }}</textarea>
       </div>
 
       <div style="background: var(--bg-card-alt); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem; display: flex; gap: 0.75rem; align-items: center;">
         <span style="font-size: 1.25rem;">🩺</span>
         <div style="font-size: 0.85rem; color: var(--text-muted);">
-          <strong>Electronic Medical Record:</strong> Saving this entry registers an immutable record in AWS DynamoDB and triggers an automated AWS SNS patient update alert.
+          <strong>Electronic Medical Record:</strong> Saving this entry records an entry in the patient record and dispatches an automated notification alert.
         </div>
       </div>
 

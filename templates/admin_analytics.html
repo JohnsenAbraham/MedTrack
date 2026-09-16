@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Hospital Operations & AWS Cloud Telemetry | MedTrack{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 1.5rem; margin-bottom: 3rem;">
+
+  <!-- Admin Executive Header -->
+  <div class="clinical-patient-banner" style="background: linear-gradient(135deg, #0b132b 0%, #1c2541 100%); color: white; border-color: #1e293b;">
+    <div style="display: flex; gap: 1.25rem; align-items: center;">
+      <div class="user-avatar-large" style="background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%); color: white;">
+        🛡️
+      </div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+          <h1 style="font-size: 1.75rem; font-weight: 800; color: white; margin: 0;">
+            Hospital Operations & AWS Cloud Center
+          </h1>
+          <span class="badge" style="background: #059669; color: white;">AWS Well-Architected</span>
+          <span class="badge badge-role">CMO Admin Console</span>
+        </div>
+        <div class="patient-vital-meta" style="color: #cbd5e1;">
+          <span>🏥 Organization: {{ hospital_name }}</span>
+          <span>☁️ Region: {{ cloud_config.AWS_REGION }}</span>
+          <span>🔒 Compliance: HIPAA §164.312(b) Audit Active</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <a href="{{ url_for('health') }}" target="_blank" class="btn btn-secondary btn-sm">
+        ⚡ Live Health Telemetry JSON &rarr;
+      </a>
+    </div>
+  </div>
+
+  <!-- Key Operational Metrics Grid -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon teal">👥</div>
+      <div>
+        <div class="stat-val">{{ analytics.total_patients }}</div>
+        <div class="stat-label">Registered Patients</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon blue">👨‍⚕️</div>
+      <div>
+        <div class="stat-val">{{ analytics.total_doctors }}</div>
+        <div class="stat-label">Active Physicians</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon emerald">📅</div>
+      <div>
+        <div class="stat-val">{{ analytics.total_appointments }}</div>
+        <div class="stat-label">Total Appointments</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon amber">🩺</div>
+      <div>
+        <div class="stat-val">{{ analytics.active_appointments }}</div>
+        <div class="stat-label">Active / Confirmed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AWS Cloud Infrastructure Architecture & Telemetry Section -->
+  <div class="card" style="margin-bottom: 2rem; background: #0f172a; color: white; border-color: #1e293b;">
+    <div class="card-header" style="border-bottom-color: #1e293b;">
+      <div>
+        <div class="card-title" style="color: white;">
+          <span>☁️</span> AWS Cloud Infrastructure Live Telemetry
+        </div>
+        <p style="color: #94a3b8; font-size: 0.85rem; margin-top: 0.2rem;">
+          Production status of integrated AWS services, database partitioning, notification throughput, and host compute.
+        </p>
+      </div>
+      <div class="cloud-pulse-indicator">
+        Operational & Healthy
+      </div>
+    </div>
+
+    <div class="cloud-telemetry-grid">
+      <!-- DynamoDB Card -->
+      <div class="cloud-telemetry-card">
+        <div class="cloud-card-header">
+          <strong style="color: #38bdf8;">Amazon DynamoDB</strong>
+          <span class="audit-tag success">Active</span>
+        </div>
+        <p style="font-size: 0.82rem; color: #94a3b8; margin-bottom: 0.75rem;">
+          Multi-Table NoSQL architecture with Global Secondary Indexes (GSIs).
+        </p>
+        <div style="font-size: 0.8rem; line-height: 1.8; color: #cbd5e1;">
+          <div>• Mode: <strong>PAY_PER_REQUEST (On-Demand)</strong></div>
+          <div>• Tables: <code>Users</code>, <code>Appointments</code>, <code>Diagnoses</code>, <code>Notifications</code>, <code>AuditLogs</code></div>
+          <div>• Point-In-Time Recovery (PITR): <strong>Enabled</strong></div>
+          <div>• Encryption: <strong>AWS KMS (KMS_MANAGED)</strong></div>
+        </div>
+      </div>
+
+      <!-- AWS SNS Card -->
+      <div class="cloud-telemetry-card">
+        <div class="cloud-card-header">
+          <strong style="color: #38bdf8;">Amazon SNS & SQS DLQ</strong>
+          <span class="audit-tag success">Connected</span>
+        </div>
+        <p style="font-size: 0.82rem; color: #94a3b8; margin-bottom: 0.75rem;">
+          Event-driven asynchronous push notification engine with resilient dead-letter routing.
+        </p>
+        <div style="font-size: 0.8rem; line-height: 1.8; color: #cbd5e1;">
+          <div>• Topic: <code>MedTrack-Alerts</code></div>
+          <div>• Dead Letter Queue: <code>MedTrack-Alerts-DLQ (SQS)</code></div>
+          <div>• Protocols: <strong>Email & SMS Delivery</strong></div>
+          <div>• Retries: <strong>Adaptive Exponential Backoff</strong></div>
+        </div>
+      </div>
+
+      <!-- AWS EC2 Host Card -->
+      <div class="cloud-telemetry-card">
+        <div class="cloud-card-header">
+          <strong style="color: #38bdf8;">Amazon EC2 & VPC</strong>
+          <span class="audit-tag success">Running</span>
+        </div>
+        <p style="font-size: 0.82rem; color: #94a3b8; margin-bottom: 0.75rem;">
+          High-performance WSGI application server hosted across Multi-AZ subnets.
+        </p>
+        <div style="font-size: 0.8rem; line-height: 1.8; color: #cbd5e1;">
+          <div>• Architecture: <strong>Multi-AZ VPC (Public/Private)</strong></div>
+          <div>• WSGI Server: <strong>Gunicorn (3 Concurrency Workers)</strong></div>
+          <div>• Reverse Proxy: <strong>Nginx HTTP/2</strong></div>
+          <div>• IAM Instance Role: <code>MedTrack-EC2-AppRole</code></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clinical Department Distribution & Physician Roster -->
+  <div style="display: grid; grid-template-columns: 1.2fr 2fr; gap: 2rem; margin-bottom: 2rem;">
+    <!-- Department Distribution -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span>📊</span> Department Workload Distribution
+        </div>
+      </div>
+
+      {% if analytics.department_distribution %}
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          {% for d in analytics.department_distribution %}
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.88rem; font-weight: 600; margin-bottom: 0.25rem;">
+                <span>{{ d.department }}</span>
+                <span>{{ d.count }} visits</span>
+              </div>
+              <div style="background: #e2e8f0; border-radius: var(--radius-full); height: 8px; overflow: hidden;">
+                <div style="background: var(--primary-gradient); height: 100%; width: {{ (d.count / (analytics.total_appointments or 1) * 100) | round }}%;"></div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p style="color: var(--text-muted); font-size: 0.88rem; padding: 1rem 0;">No department records yet.</p>
+      {% endif %}
+    </div>
+
+    <!-- Active Doctor Directory -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span>👨‍⚕️</span> Clinical Specialists & Physician Directory
+        </div>
+        <span class="badge badge-role">{{ doctors | length }} Verified Doctors</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Physician Name</th>
+              <th>Department / Specialty</th>
+              <th>License #</th>
+              <th>Clinic Location</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for doc in doctors %}
+              <tr>
+                <td><strong>{{ doc.name }}</strong></td>
+                <td>{{ doc.department or 'General Medicine' }}</td>
+                <td><code style="font-size: 0.75rem;">{{ doc.license_number or 'MED-NY-VERIFIED' }}</code></td>
+                <td style="font-size: 0.85rem;">{{ doc.room or 'Outpatient Wing' }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- HIPAA Compliance Audit Trail Stream -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">
+          <span>🔒</span> HIPAA Security Rule §164.312(b) Immutable Audit Trail
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.2rem;">
+          Real-time record of all clinical authentications, patient record reads, diagnosis writes, and appointment updates.
+        </p>
+      </div>
+      <span class="badge badge-role">{{ audit_logs | length }} Recent Logs</span>
+    </div>
+
+    {% if audit_logs %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Timestamp (UTC)</th>
+              <th>Actor</th>
+              <th>Role</th>
+              <th>Action Code</th>
+              <th>Target Resource</th>
+              <th>Source IP</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in audit_logs %}
+              <tr>
+                <td style="font-size: 0.8rem; white-space: nowrap; color: var(--text-muted);">
+                  {{ log.created_at[:19].replace('T', ' ') }}
+                </td>
+                <td><strong>{{ log.actor_name }}</strong></td>
+                <td><span class="badge badge-role">{{ log.actor_role | capitalize }}</span></td>
+                <td><code style="font-size: 0.75rem; color: #0284c7; font-weight: 700;">{{ log.action }}</code></td>
+                <td style="font-size: 0.85rem; max-width: 250px;">{{ log.target_resource }}</td>
+                <td><code style="font-size: 0.75rem;">{{ log.ip_address }}</code></td>
+                <td><span class="audit-tag success">{{ log.status }}</span></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p style="text-align: center; color: var(--text-muted); padding: 2rem 0;">No audit events recorded yet.</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

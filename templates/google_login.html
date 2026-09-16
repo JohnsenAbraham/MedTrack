@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Sign in with Google | MedTrack{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="auth-wrapper">
+    <div class="card auth-card" style="max-width: 480px;">
+      <!-- Google Header -->
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <svg viewBox="0 0 24 24" width="42" height="42" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 0.75rem;">
+          <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+          <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.29 21.43 7.37 24 12 24z"/>
+          <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.97 0 12s.46 3.84 1.26 5.42l4.02-3.15z"/>
+          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.37 0 3.29 2.57 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+        </svg>
+        <h1 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 0.25rem;">Sign in with Google</h1>
+        <p style="font-size: 0.9rem; color: var(--text-muted);">Choose or enter your Google Account to continue to MedTrack</p>
+      </div>
+
+      <form action="{{ url_for('auth_google') }}" method="POST" id="googleAuthForm">
+        <!-- Google Email -->
+        <div class="form-group">
+          <label for="google_email" class="form-label">Google Account Email <span class="required">*</span></label>
+          <input type="email" class="form-control" id="google_email" name="google_email" placeholder="Enter Google email address" value="{{ suggested_email or '' }}" required autofocus>
+          <div class="form-hint">Sign in securely using your verified Google Identity.</div>
+        </div>
+
+        <!-- Google Display Name -->
+        <div class="form-group">
+          <label for="google_name" class="form-label">Full Name (as in Google Profile)</label>
+          <input type="text" class="form-control" id="google_name" name="google_name" placeholder="Enter full name (optional)">
+        </div>
+
+        <!-- Privacy & Terms note -->
+        <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.5rem; background: var(--bg-card-alt); padding: 0.75rem; border-radius: var(--radius-sm);">
+          🔒 MedTrack uses your Google account email to securely verify your healthcare identity and synchronize patient records.
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;" id="submitGoogleAuthBtn">
+          <span>Continue to MedTrack</span> &rarr;
+        </button>
+      </form>
+
+      <div class="auth-footer" style="margin-top: 1.5rem;">
+        <a href="{{ url_for('login') }}">Cancel and return to Sign In</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

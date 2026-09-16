@@ -11,7 +11,7 @@
           Scheduled Appointments
         </h1>
         <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
-          Review, manage, or cancel your consultations with healthcare professionals.
+          Review, manage, or cancel your consultations with certified clinical healthcare professionals.
         </p>
       </div>
 
@@ -23,12 +23,15 @@
     </div>
 
     <!-- Filter Buttons -->
-    <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
       <a href="{{ url_for('appointments', status='all') }}" class="btn btn-sm {% if current_filter == 'all' %}btn-primary{% else %}btn-secondary{% endif %}">
         All ({{ total_count }})
       </a>
       <a href="{{ url_for('appointments', status='confirmed') }}" class="btn btn-sm {% if current_filter == 'confirmed' %}btn-primary{% else %}btn-secondary{% endif %}">
         Confirmed
+      </a>
+      <a href="{{ url_for('appointments', status='completed') }}" class="btn btn-sm {% if current_filter == 'completed' %}btn-primary{% else %}btn-secondary{% endif %}">
+        Completed
       </a>
       <a href="{{ url_for('appointments', status='cancelled') }}" class="btn btn-sm {% if current_filter == 'cancelled' %}btn-primary{% else %}btn-secondary{% endif %}">
         Cancelled
@@ -52,6 +55,11 @@
               <tr>
                 <td style="font-weight: 600;">
                   {{ appt.doctor }}
+                  {% if appt.department %}
+                    <div style="font-size: 0.75rem; color: var(--primary); font-weight: 500;">
+                      {{ appt.department }}
+                    </div>
+                  {% endif %}
                   <div style="font-size: 0.75rem; color: var(--text-muted);">
                     ID: {{ appt.appointment_id[:8] }}...
                   </div>
@@ -64,6 +72,12 @@
                 <td>
                   {% if appt.status == 'Confirmed' %}
                     <span class="badge badge-confirmed">Confirmed</span>
+                  {% elif appt.status == 'Checked-In' %}
+                    <span class="badge badge-checkedin">Checked-In</span>
+                  {% elif appt.status == 'In-Consultation' %}
+                    <span class="badge badge-inconsultation">In Consultation</span>
+                  {% elif appt.status == 'Completed' %}
+                    <span class="badge badge-completed">Completed</span>
                   {% elif appt.status == 'Cancelled' %}
                     <span class="badge badge-cancelled">Cancelled</span>
                   {% else %}
@@ -71,10 +85,12 @@
                   {% endif %}
                 </td>
                 <td>
-                  {% if appt.status == 'Confirmed' %}
+                  {% if appt.status in ['Confirmed', 'Checked-In'] %}
                     <form action="{{ url_for('cancel_appointment', appointment_id=appt.appointment_id) }}" method="POST" class="cancel-appointment-form" style="display:inline;">
                       <button type="submit" class="btn btn-danger btn-sm">Cancel Visit</button>
                     </form>
+                  {% elif appt.status == 'Completed' %}
+                    <a href="{{ url_for('diagnoses') }}" class="btn btn-outline btn-sm">View Summary</a>
                   {% else %}
                     <span style="font-size: 0.85rem; color: var(--text-muted);">No actions</span>
                   {% endif %}

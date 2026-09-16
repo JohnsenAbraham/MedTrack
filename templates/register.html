@@ -3,49 +3,96 @@
 {% block title %}Patient Registration | MedTrack{% endblock %}
 
 {% block content %}
-<div class="container">
-  <div class="auth-wrapper">
-    <div class="card">
+<div class="container" style="max-width: 800px; margin-top: 2rem; margin-bottom: 3rem;">
+  <div class="auth-wrapper" style="max-width: 100%;">
+    <div class="card auth-card" style="max-width: 100%;">
       <div class="auth-header">
-        <h1>Patient Registration</h1>
-        <p>Create your MedTrack digital healthcare account</p>
+        <h1>Patient & Clinician Registration</h1>
+        <p>Create your MedTrack digital healthcare and clinical account</p>
+      </div>
+
+      <!-- Google Sign Up Button -->
+      <a href="{{ url_for('auth_google') }}" class="btn-google" id="googleSignUpBtn">
+        <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+          <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.29 21.43 7.37 24 12 24z"/>
+          <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.97 0 12s.46 3.84 1.26 5.42l4.02-3.15z"/>
+          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.37 0 3.29 2.57 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+        </svg>
+        <span>Sign up with Google</span>
+      </a>
+
+      <!-- Divider -->
+      <div class="auth-divider">
+        <span>or register with email</span>
       </div>
 
       <form action="{{ url_for('register') }}" method="POST" id="registerForm">
-        <!-- Full Name -->
-        <div class="form-group">
-          <label for="name" class="form-label">Full Legal Name <span class="required">*</span></label>
-          <input type="text" class="form-control" id="name" name="name" placeholder="e.g. John Doe" value="{{ form.get('name', '') }}" required>
-        </div>
-
-        <!-- Email -->
-        <div class="form-group">
-          <label for="email" class="form-label">Email Address <span class="required">*</span></label>
-          <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" value="{{ form.get('email', '') }}" required>
-          <div class="form-hint">Used for portal login and AWS SNS notifications.</div>
+        <!-- Full Name & Email Grid -->
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="name" class="form-label">Full Legal Name <span class="required">*</span></label>
+            <input type="text" class="form-control" id="name" name="name" placeholder="e.g. Jane Doe" value="{{ form.get('name', '') }}" required>
+          </div>
+          <div class="form-group">
+            <label for="email" class="form-label">Email Address <span class="required">*</span></label>
+            <input type="email" class="form-control" id="email" name="email" placeholder="e.g. jane@example.com" value="{{ form.get('email', '') }}" required>
+          </div>
         </div>
 
         <!-- Password & Confirm Password Grid -->
         <div class="form-grid-2">
           <div class="form-group">
             <label for="password" class="form-label">Password <span class="required">*</span></label>
-            <input type="password" class="form-control" id="password" name="password" placeholder="Min. 6 characters" required>
+            <div class="password-input-group">
+              <input type="password" class="form-control" id="password" name="password" placeholder="Enter password (min. 6 characters)" required>
+              <button type="button" class="password-toggle-btn" data-target="password" aria-label="Toggle password visibility" title="Show/Hide password">
+                👁️
+              </button>
+            </div>
           </div>
           <div class="form-group">
             <label for="confirm_password" class="form-label">Confirm Password <span class="required">*</span></label>
-            <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Re-enter password" required>
+            <div class="password-input-group">
+              <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Confirm password" required>
+              <button type="button" class="password-toggle-btn" data-target="confirm_password" aria-label="Toggle password visibility" title="Show/Hide password">
+                👁️
+              </button>
+            </div>
           </div>
         </div>
 
         <!-- Phone & DOB Grid -->
         <div class="form-grid-2">
           <div class="form-group">
-            <label for="phone" class="form-label">Phone Number</label>
-            <input type="tel" class="form-control" id="phone" name="phone" placeholder="+1 (555) 000-0000" value="{{ form.get('phone', '') }}">
+            <label for="phone" class="form-label">Contact Phone Number</label>
+            <input type="tel" class="form-control" id="phone" name="phone" placeholder="+1 (555) 234-5678" value="{{ form.get('phone', '') }}">
           </div>
           <div class="form-group">
             <label for="date_of_birth" class="form-label">Date of Birth</label>
             <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="{{ form.get('date_of_birth', '') }}">
+          </div>
+        </div>
+
+        <!-- Clinical Metadata: Blood Group & Allergies -->
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="blood_group" class="form-label">Blood Group</label>
+            <select class="form-select" id="blood_group" name="blood_group">
+              <option value="O+" {% if form.get('blood_group') == 'O+' %}selected{% endif %}>O Positive (O+)</option>
+              <option value="O-" {% if form.get('blood_group') == 'O-' %}selected{% endif %}>O Negative (O-)</option>
+              <option value="A+" {% if form.get('blood_group') == 'A+' %}selected{% endif %}>A Positive (A+)</option>
+              <option value="A-" {% if form.get('blood_group') == 'A-' %}selected{% endif %}>A Negative (A-)</option>
+              <option value="B+" {% if form.get('blood_group') == 'B+' %}selected{% endif %}>B Positive (B+)</option>
+              <option value="B-" {% if form.get('blood_group') == 'B-' %}selected{% endif %}>B Negative (B-)</option>
+              <option value="AB+" {% if form.get('blood_group') == 'AB+' %}selected{% endif %}>AB Positive (AB+)</option>
+              <option value="AB-" {% if form.get('blood_group') == 'AB-' %}selected{% endif %}>AB Negative (AB-)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="allergies" class="form-label">Known Allergies (Drugs / Foods)</label>
+            <input type="text" class="form-control" id="allergies" name="allergies" placeholder="e.g. Penicillin, Shellfish (or 'None')" value="{{ form.get('allergies', '') }}">
           </div>
         </div>
 
@@ -54,30 +101,42 @@
           <div class="form-group">
             <label for="gender" class="form-label">Gender</label>
             <select class="form-select" id="gender" name="gender">
-              <option value="">Select Gender</option>
-              <option value="Male" {% if form.get('gender') == 'Male' %}selected{% endif %}>Male</option>
               <option value="Female" {% if form.get('gender') == 'Female' %}selected{% endif %}>Female</option>
+              <option value="Male" {% if form.get('gender') == 'Male' %}selected{% endif %}>Male</option>
               <option value="Non-Binary" {% if form.get('gender') == 'Non-Binary' %}selected{% endif %}>Non-Binary</option>
               <option value="Other" {% if form.get('gender') == 'Other' %}selected{% endif %}>Other / Prefer not to say</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label for="role" class="form-label">Account Role</label>
+            <label for="role" class="form-label">Portal Account Role</label>
             <select class="form-select" id="role" name="role">
-              <option value="patient" {% if form.get('role') == 'patient' %}selected{% endif %}>Patient</option>
-              <option value="doctor" {% if form.get('role') == 'doctor' %}selected{% endif %}>Doctor / Healthcare Staff</option>
+              <option value="patient" {% if form.get('role') == 'patient' %}selected{% endif %}>Patient (Self-Service Health Portal)</option>
+              <option value="doctor" {% if form.get('role') == 'doctor' %}selected{% endif %}>Doctor / Attending Physician (Consultation Queue)</option>
+              <option value="admin" {% if form.get('role') == 'admin' %}selected{% endif %}>Hospital Administrator & AWS Ops</option>
             </select>
           </div>
         </div>
 
-        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="submitRegisterBtn">
-          Create MedTrack Account &rarr;
+        <!-- Emergency Contact & Insurance -->
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="emergency_contact" class="form-label">Emergency Contact Name & Phone</label>
+            <input type="text" class="form-control" id="emergency_contact" name="emergency_contact" placeholder="e.g. Robert Doe - 555-987-6543" value="{{ form.get('emergency_contact', '') }}">
+          </div>
+          <div class="form-group">
+            <label for="insurance_provider" class="form-label">Health Insurance Policy / Provider</label>
+            <input type="text" class="form-control" id="insurance_provider" name="insurance_provider" placeholder="e.g. BlueCross Premier PPO #9482" value="{{ form.get('insurance_provider', '') }}">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1.25rem;" id="submitRegisterBtn">
+          Complete Registration &rarr;
         </button>
       </form>
 
       <div class="auth-footer">
-        Already have an account? <a href="{{ url_for('login') }}">Sign In here</a>
+        Already have an account? <a href="{{ url_for('login') }}">Sign in here</a>
       </div>
     </div>
   </div>

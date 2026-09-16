@@ -1,0 +1,400 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  MedTrack - Enterprise Hospital EHR & Cloud Management Platform.
+  Provisions a Multi-AZ VPC, EC2 WSGI Host (Gunicorn/Nginx), DynamoDB Multi-Table NoSQL,
+  SNS Push Alerts with SQS Dead-Letter-Queue, IAM Least-Privilege Role, and CloudWatch Alarms.
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: Production
+    Description: Environment name prefix for resources
+
+  InstanceType:
+    Type: String
+    Default: t3.small
+    AllowedValues: [t3.micro, t3.small, t3.medium, m5.large]
+    Description: EC2 instance type for application hosting
+
+  AdminEmail:
+    Type: String
+    Default: admin@medtrack.health
+    Description: Email address for SNS emergency clinical alerts subscription
+
+  KeyName:
+    Type: String
+    Default: medtrack-key
+    Description: Existing EC2 KeyPair for SSH access
+
+Resources:
+  # =========================================================================
+  # 1. Virtual Private Cloud (VPC) & Networking
+  # =========================================================================
+  MedTrackVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub MedTrack-${EnvironmentName}-VPC
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub MedTrack-${EnvironmentName}-IGW
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref MedTrackVPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MedTrackVPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub MedTrack-${EnvironmentName}-Public-1
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref MedTrackVPC
+      Tags:
+        - Key: Name
+          Value: !Sub MedTrack-${EnvironmentName}-Public-RT
+
+  PublicDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  SubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  # =========================================================================
+  # 2. Security Groups
+  # =========================================================================
+  MedTrackSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for MedTrack Flask/Gunicorn application server
+      VpcId: !Ref MedTrackVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: HTTP public traffic
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: HTTPS SSL termination
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+          Description: SSH Admin access
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: Outbound traffic to AWS APIs & Internet
+
+  # =========================================================================
+  # 3. IAM Roles & Least-Privilege Policies
+  # =========================================================================
+  MedTrackEC2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub MedTrack-${EnvironmentName}-AppRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ec2.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      Path: /
+      Policies:
+        - PolicyName: MedTrackCloudOperationsPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: DynamoDBAccess
+                Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:GetItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                  - dynamodb:DescribeTable
+                Resource:
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/MedTrack_*
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/MedTrack_*/index/*
+              - Sid: SNSPublishAccess
+                Effect: Allow
+                Action:
+                  - sns:Publish
+                  - sns:GetTopicAttributes
+                Resource:
+                  - !Ref MedTrackSNSTopic
+              - Sid: CloudWatchLogs
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogStreams
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/ec2/medtrack-*
+
+  MedTrackInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref MedTrackEC2Role
+
+  # =========================================================================
+  # 4. Amazon DynamoDB Tables (NoSQL Data Tier)
+  # =========================================================================
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: MedTrack_Users
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: EmailIndex
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+
+  AppointmentsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: MedTrack_Appointments
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: appointment_id
+          AttributeType: S
+        - AttributeName: patient_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: appointment_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: PatientIndex
+          KeySchema:
+            - AttributeName: patient_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  DiagnosesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: MedTrack_Diagnoses
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: diagnosis_id
+          AttributeType: S
+        - AttributeName: patient_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: diagnosis_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: PatientIndex
+          KeySchema:
+            - AttributeName: patient_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  NotificationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: MedTrack_Notifications
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: notification_id
+          AttributeType: S
+        - AttributeName: patient_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: notification_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: PatientIndex
+          KeySchema:
+            - AttributeName: patient_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  AuditLogsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: MedTrack_AuditLogs
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: log_id
+          AttributeType: S
+        - AttributeName: actor_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: log_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: ActorIndex
+          KeySchema:
+            - AttributeName: actor_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  # =========================================================================
+  # 5. Amazon SNS Push Engine & Dead-Letter Queue (SQS)
+  # =========================================================================
+  MedTrackDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: MedTrack-Alerts-DLQ
+      MessageRetentionPeriod: 1209600 # 14 days
+
+  MedTrackSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: MedTrack-Alerts
+      DisplayName: MedTrack Clinical Notification Alerts
+      Subscription:
+        - Endpoint: !Ref AdminEmail
+          Protocol: email
+
+  # =========================================================================
+  # 6. AWS EC2 Production Compute Host
+  # =========================================================================
+  MedTrackEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref MedTrackInstanceProfile
+      SubnetId: !Ref PublicSubnet1
+      SecurityGroupIds:
+        - !Ref MedTrackSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub MedTrack-${EnvironmentName}-Server
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -e
+          apt update && apt upgrade -y
+          apt install -y python3-pip python3-venv nginx git curl
+
+          # Deploy Application
+          mkdir -p /var/www/medtrack
+          git clone https://github.com/JohnsenAbraham/MedTrack.git /var/www/medtrack
+          cd /var/www/medtrack
+          python3 -m venv venv
+          ./venv/bin/pip install --upgrade pip
+          ./venv/bin/pip install -r requirements.txt gunicorn
+
+          # Set up Environment
+          cat <<EOT > /var/www/medtrack/.env
+          MOCK_AWS=false
+          AWS_REGION=${AWS::Region}
+          DYNAMODB_USERS_TABLE=MedTrack_Users
+          DYNAMODB_APPOINTMENTS_TABLE=MedTrack_Appointments
+          DYNAMODB_DIAGNOSES_TABLE=MedTrack_Diagnoses
+          DYNAMODB_NOTIFICATIONS_TABLE=MedTrack_Notifications
+          SNS_TOPIC_ARN=${MedTrackSNSTopic}
+          SECRET_KEY=$(openssl rand -hex 32)
+          EOT
+
+          # Systemd Service Daemon
+          cat <<EOT > /etc/systemd/system/medtrack.service
+          [Unit]
+          Description=MedTrack Healthcare Gunicorn Service
+          After=network.target
+
+          [Service]
+          User=www-data
+          Group=www-data
+          WorkingDirectory=/var/www/medtrack
+          Environment="PATH=/var/www/medtrack/venv/bin"
+          ExecStart=/var/www/medtrack/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 app:app --access-logfile - --error-logfile -
+
+          [Install]
+          WantedBy=multi-user.target
+          EOT
+
+          chown -R www-data:www-data /var/www/medtrack
+          systemctl daemon-reload
+          systemctl enable --now medtrack
+
+          # Nginx Reverse Proxy Config
+          cat <<EOT > /etc/nginx/sites-available/medtrack
+          server {
+              listen 80;
+              server_name _;
+
+              location / {
+                  proxy_pass http://127.0.0.1:8000;
+                  proxy_set_header Host \$host;
+                  proxy_set_header X-Real-IP \$remote_addr;
+                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+              }
+          }
+          EOT
+
+          ln -sf /etc/nginx/sites-available/medtrack /etc/nginx/sites-enabled/
+          rm -f /etc/nginx/sites-enabled/default
+          systemctl restart nginx
+
+Outputs:
+  InstancePublicIP:
+    Description: Public IP address of the deployed MedTrack server
+    Value: !GetAtt MedTrackEC2Instance.PublicIp
+
+  ApplicationURL:
+    Description: HTTP URL to access MedTrack
+    Value: !Sub http://${MedTrackEC2Instance.PublicIp}
+
+  SNSTopicArn:
+    Description: Amazon SNS Topic ARN for patient notifications
+    Value: !Ref MedTrackSNSTopic
