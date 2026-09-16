@@ -1,27 +1,28 @@
 {% extends "base.html" %}
 
-{% block title %}Sign In – MedTrack{% endblock %}
+{% block title %}Sign In – MedTrack Clinical Portal{% endblock %}
 
 {% block content %}
 <div class="container auth-wrapper">
   <div class="card auth-card">
     <div class="auth-header">
+      <div style="font-size: 2rem; margin-bottom: 0.25rem;">✚</div>
       <h1>Sign In to MedTrack</h1>
-      <p>Access your patient portal or doctor workspace</p>
+      <p>Access your patient consultations, prescriptions, or clinical workspace</p>
     </div>
 
-    <!-- Evaluator Quick Switcher Box -->
-    <div style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 0.85rem 1rem; margin-bottom: 1.5rem;">
-      <div style="font-size: 0.76rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.4rem;">
-        ⚡ Evaluator 1-Click Demo Login:
+    <!-- Quick Demo Logins Box -->
+    <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 0.85rem 1rem; margin-bottom: 1.25rem;">
+      <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.04em;">
+        Quick Demo Logins
       </div>
-      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-        <a href="{{ url_for('demo_login', role='doctor') }}" class="btn btn-secondary btn-sm" style="flex: 1; text-align: center;">
-          👨‍⚕️ Demo Doctor
-        </a>
-        <a href="{{ url_for('demo_login', role='patient') }}" class="btn btn-secondary btn-sm" style="flex: 1; text-align: center;">
-          🧑‍🦱 Demo Patient
-        </a>
+      <div style="display: flex; gap: 0.5rem;">
+        <button type="button" class="btn btn-outline btn-sm" style="flex: 1;" onclick="fillDemo('patient.demo@medtrack.local', 'PatientPass123!')">
+          👤 Patient
+        </button>
+        <button type="button" class="btn btn-outline btn-sm" style="flex: 1;" onclick="fillDemo('doctor.vance@medtrack.local', 'DoctorPass123!')">
+          👨‍⚕️ Doctor
+        </button>
       </div>
     </div>
 
@@ -48,4 +49,11 @@
     </div>
   </div>
 </div>
+
+<script>
+  function fillDemo(email, pwd) {
+    document.getElementById('email').value = email;
+    document.getElementById('password').value = pwd;
+  }
+</script>
 {% endblock %}

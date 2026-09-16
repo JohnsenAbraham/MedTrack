@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}MedTrack – AWS Cloud-Enabled Healthcare Management System{% endblock %}
+{% block title %}MedTrack — Connected Healthcare & Clinical Portal{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
@@ -8,24 +8,24 @@
   <div class="container">
     <div class="hero-content">
       <div class="hero-tag">
-        AWS Cloud Practitioner &bull; SkillWallet College Project
+        Modern Clinical Care &bullet; Patient Adherence
       </div>
       <h1 class="hero-title">
-        MedTrack – <span>AWS Cloud-Enabled</span> Healthcare Management System
+        Connected Healthcare & <span>Patient Portal</span>
       </h1>
       <p class="hero-desc">
-        A demonstration healthcare web application designed to showcase cloud integration with Python Flask, Amazon DynamoDB, Amazon SNS, and AWS EC2 with role-based access for Patients and Doctors.
+        Empowering patients and accredited physicians with unified appointment scheduling, verified clinical records, and automated daily medicine dose tracking in one reliable healthcare platform.
       </p>
       <div class="hero-actions">
         {% if is_authenticated %}
           {% if user_role == 'doctor' %}
-            <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-primary">Go to Doctor Dashboard &rarr;</a>
+            <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-primary">Doctor Workspace &rarr;</a>
           {% else %}
-            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Go to Patient Dashboard &rarr;</a>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Patient Dashboard &rarr;</a>
             <a href="{{ url_for('book_appointment') }}" class="btn btn-secondary">Book an Appointment</a>
           {% endif %}
         {% else %}
-          <a href="{{ url_for('register') }}" class="btn btn-primary">Register as Patient &rarr;</a>
+          <a href="{{ url_for('register') }}" class="btn btn-primary">Join Us &rarr;</a>
           <a href="{{ url_for('login') }}" class="btn btn-outline">Sign In</a>
         {% endif %}
       </div>
@@ -33,65 +33,139 @@
   </div>
 </section>
 
-<!-- System Feature Cards -->
-<section class="container" style="padding-top: 1.5rem; padding-bottom: 2rem;">
-  <div class="features-grid">
+<!-- Services Section -->
+<section id="services" class="container" style="padding: 3.5rem 1.5rem;">
+  <div style="text-align: center; max-width: 600px; margin: 0 auto 2.5rem;">
+    <span style="color: var(--primary); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Our Core Services</span>
+    <h2 style="font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin-top: 4px;">Comprehensive Patient & Clinical Care</h2>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">Streamlined medical workflows connecting patients directly with accredited doctors.</p>
+  </div>
+
+  <div class="features-grid" style="margin: 0;">
     <div class="feature-card">
-      <div class="feature-icon">📅</div>
-      <h3 class="feature-title">Appointment Scheduling</h3>
+      <div class="feature-icon">🩺</div>
+      <h3 class="feature-title">Physician Consultations</h3>
       <p class="feature-text">
-        Patients easily select an attending doctor, preferred date, and time slot with real-time status tracking (Pending, Confirmed, Completed, Cancelled).
+        Connect with accredited doctors across multiple specialties for clinical evaluations, diagnosis consultations, and follow-ups.
       </p>
     </div>
 
     <div class="feature-card">
-      <div class="feature-icon">🩺</div>
-      <h3 class="feature-title">Doctor Consultation Workspace</h3>
+      <div class="feature-icon">📅</div>
+      <h3 class="feature-title">Appointment Scheduling</h3>
       <p class="feature-text">
-        Accredited physicians review assigned patient appointments, confirm bookings, and record clinical diagnosis notes upon consultation completion.
+        Book consultations in real time with preferred dates and slots. Track visit status from Pending to Confirmed without telephone delays.
+      </p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">💊</div>
+      <h3 class="feature-title">Prescriptions & Dose Reminders</h3>
+      <p class="feature-text">
+        Log prescribed medicines, meal instructions, and scheduled times. Monitor daily adherence with 1-click dose tracking and alert notifications.
       </p>
     </div>
 
     <div class="feature-card">
       <div class="feature-icon">📋</div>
-      <h3 class="feature-title">Personal Medical Records</h3>
+      <h3 class="feature-title">Verified Medical Records</h3>
       <p class="feature-text">
-        Confidential diagnosis records are accessible strictly by the patient and their consulting physician using secure role-based authorization.
-      </p>
-    </div>
-
-    <div class="feature-card">
-      <div class="feature-icon">🔔</div>
-      <h3 class="feature-title">Amazon SNS Alerts</h3>
-      <p class="feature-text">
-        Automated event-driven notifications dispatched for appointment bookings, confirmations, cancellations, and doctor diagnosis submissions.
+        Confidential clinical diagnosis reports and medical visit histories stored securely with role-isolated access for patients and doctors.
       </p>
     </div>
   </div>
+</section>
 
-  <!-- System Architecture Explanation -->
-  <div class="arch-callout">
-    <div class="arch-header">
-      <h3>System Architecture & AWS Cloud Integration</h3>
-      <p>
-        Engineered with a repository abstraction layer supporting dual-mode execution: local SQLite for offline development and Amazon DynamoDB + Amazon SNS for AWS cloud deployment.
-      </p>
+<!-- About Us Section -->
+<section id="about-us" style="background: #ffffff; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding: 4rem 0;">
+  <div class="container">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 3rem; align-items: center;">
+      <div>
+        <span style="color: var(--primary); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">About MedTrack</span>
+        <h2 style="font-size: 2rem; font-weight: 800; color: var(--text-main); margin: 0.4rem 0 1rem; line-height: 1.25;">
+          Bridging Patients and Accredited Physicians Seamlessly
+        </h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.65; margin-bottom: 1rem;">
+          MedTrack was created to bring institutional healthcare coordination into a modern, responsive environment. By integrating appointment scheduling with medication adherence tracking, we eliminate the administrative overhead common to modern medical offices.
+        </p>
+        <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.65; margin-bottom: 1.5rem;">
+          Our platform enforces role-based access control (RBAC), cryptographic password hashing, and event-driven communication to ensure reliable, confidential healthcare management.
+        </p>
+        <a href="{{ url_for('register') }}" class="btn btn-primary">Create Your Patient Account &rarr;</a>
+      </div>
+      <div style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 2rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 1rem;">Why Patients Choose MedTrack</h3>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span style="color: var(--primary); font-size: 1.2rem;">✔</span>
+            <div>
+              <strong style="font-size: 0.92rem; color: var(--text-main);">Zero Scheduling Delays</strong>
+              <p style="font-size: 0.84rem; color: var(--text-muted); margin: 2px 0 0;">Select your consulting physician and lock in time slots with instant confirmation updates.</p>
+            </div>
+          </div>
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span style="color: var(--primary); font-size: 1.2rem;">✔</span>
+            <div>
+              <strong style="font-size: 0.92rem; color: var(--text-main);">Daily Medication Compliance</strong>
+              <p style="font-size: 0.84rem; color: var(--text-muted); margin: 2px 0 0;">Never miss a dose with our automated intake tracking and reminder alerts.</p>
+            </div>
+          </div>
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span style="color: var(--primary); font-size: 1.2rem;">✔</span>
+            <div>
+              <strong style="font-size: 0.92rem; color: var(--text-main);">Role-Isolated Security</strong>
+              <p style="font-size: 0.84rem; color: var(--text-muted); margin: 2px 0 0;">Strict privilege boundaries prevent cross-patient record visibility.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Clinical Departments Section -->
+<section id="departments" class="container" style="padding: 3.5rem 1.5rem;">
+  <div style="text-align: center; max-width: 600px; margin: 0 auto 2.5rem;">
+    <span style="color: var(--primary); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Medical Specialties</span>
+    <h2 style="font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin-top: 4px;">Clinical Departments</h2>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">Consult with accredited specialists across diverse clinical practices.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
+    <div class="card" style="padding: 1.5rem;">
+      <div style="font-size: 1.8rem; margin-bottom: 0.5rem;">❤️</div>
+      <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem;">Cardiology</h3>
+      <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin: 0;">Cardiovascular evaluations, ECG reviews, blood pressure management, and preventive vascular care.</p>
     </div>
 
-    <div class="arch-flow">
-      <div class="arch-node">Client Browser</div>
-      <div class="arch-arrow">&rarr;</div>
-      <div class="arch-node">AWS EC2 (Flask Web Tier)</div>
-      <div class="arch-arrow">&rarr;</div>
-      <div class="arch-node">Service Abstraction</div>
-      <div class="arch-arrow">&rarr;</div>
-      <div class="arch-node">Amazon DynamoDB</div>
-      <div class="arch-arrow">&amp;</div>
-      <div class="arch-node">Amazon SNS</div>
+    <div class="card" style="padding: 1.5rem;">
+      <div style="font-size: 1.8rem; margin-bottom: 0.5rem;">🩺</div>
+      <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem;">General Practice</h3>
+      <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin: 0;">Comprehensive primary healthcare, routine diagnostic checkups, and wellness screenings.</p>
     </div>
 
-    <div style="margin-top: 1.5rem; text-align: center; font-size: 0.82rem; color: var(--text-muted);">
-      <strong>Local Execution:</strong> <code>MOCK_AWS=true</code> runs all operations locally with zero AWS credential requirements.
+    <div class="card" style="padding: 1.5rem;">
+      <div style="font-size: 1.8rem; margin-bottom: 0.5rem;">👶</div>
+      <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem;">Pediatrics</h3>
+      <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin: 0;">Infant, child, and adolescent developmental checkups, immunizations, and pediatric care.</p>
+    </div>
+
+    <div class="card" style="padding: 1.5rem;">
+      <div style="font-size: 1.8rem; margin-bottom: 0.5rem;">🔬</div>
+      <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem;">Dermatology</h3>
+      <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin: 0;">Skin health evaluations, allergen assessments, and specialized dermatological treatments.</p>
+    </div>
+
+    <div class="card" style="padding: 1.5rem;">
+      <div style="font-size: 1.8rem; margin-bottom: 0.5rem;">🦴</div>
+      <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem;">Orthopedics</h3>
+      <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin: 0;">Bone, joint, and musculoskeletal diagnostics, rehabilitation guidance, and mobility therapy.</p>
+    </div>
+
+    <div class="card" style="padding: 1.5rem;">
+      <div style="font-size: 1.8rem; margin-bottom: 0.5rem;">🧠</div>
+      <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem;">Neurology</h3>
+      <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin: 0;">Central nervous system assessments, cognitive health consultations, and nerve evaluations.</p>
     </div>
   </div>
 </section>

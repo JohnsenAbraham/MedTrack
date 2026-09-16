@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications & Alerts – MedTrack{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 1.5rem; padding-bottom: 3rem; max-width: 860px;">
+
+  <div class="card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+    <div>
+      <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem;">
+        Patient Portal &bull; Communication Stream
+      </div>
+      <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.35rem;">
+        Clinical Alerts & Notifications
+      </h1>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">
+        Real-time appointment updates, diagnosis logs, and Amazon SNS dose reminders.
+      </p>
+    </div>
+    <div>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-outline">&larr; Back to Dashboard</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <span>🔔</span> Message Inbox ({{ notifications | length }})
+      </div>
+      <span class="badge badge-confirmed">Live Updates</span>
+    </div>
+
+    {% if notifications %}
+      <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+        {% for ntf in notifications %}
+          <div style="display: flex; align-items: flex-start; gap: 14px; padding: 1rem 1.15rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: #ffffff;">
+            <div style="width: 36px; height: 36px; border-radius: 8px; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; margin-top: 2px;">
+              {% if 'Appointment' in ntf.message or 'visit' in ntf.message %}
+                📅
+              {% elif 'diagnosis' in ntf.message or 'Diagnosis' in ntf.message %}
+                📋
+              {% elif 'Dose' in ntf.message or 'Reminder' in ntf.message or 'medicine' in ntf.message or 'Medication' in ntf.message %}
+                💊
+              {% else %}
+                🔔
+              {% endif %}
+            </div>
+            <div style="flex: 1;">
+              <div style="font-size: 0.92rem; color: var(--text-main); line-height: 1.5; font-weight: 500;">
+                {{ ntf.message }}
+              </div>
+              <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 5px;">
+                {{ ntf.created_at[:19].replace('T', ' ') }} UTC
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📭</div>
+        <h3>No Notifications Yet</h3>
+        <p style="margin: 0.5rem auto 1.25rem; max-width: 400px; font-size: 0.9rem;">
+          When your appointments are confirmed, diagnoses are submitted, or medication reminders trigger, alerts will appear here.
+        </p>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

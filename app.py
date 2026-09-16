@@ -232,6 +232,13 @@ def demo_login(role):
                 "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
             })
 
+        # Ensure initial demo medicines exist for live evaluation
+        meds = db.get_medicines_by_patient(patient["user_id"])
+        if not meds:
+            db.create_medicine(patient["user_id"], "Paracetamol 500mg", "1 Tablet (500mg)", "08:00 AM", "Daily", "After Food", "Take with breakfast")
+            db.create_medicine(patient["user_id"], "Vitamin D3 1000 IU", "1 Softgel", "01:00 PM", "Daily", "With Food", "Fat-soluble vitamin with lunch")
+            db.create_medicine(patient["user_id"], "Amoxicillin 250mg", "1 Capsule (250mg)", "08:00 PM", "Daily", "After Food", "Complete antibiotic course")
+
         session.clear()
         session["user_id"] = patient["user_id"]
         session["user_name"] = patient["name"]
@@ -268,6 +275,14 @@ def dashboard():
         notifications=notifications,
         medicine_schedule=medicine_schedule
     )
+
+@app.route("/notifications")
+@patient_required
+def view_notifications():
+    """View patient clinical and dose notifications."""
+    patient_id = g.user["user_id"]
+    notifications = db.get_notifications_by_patient(patient_id)
+    return render_template("notifications.html", notifications=notifications)
 
 @app.route("/appointments")
 @patient_required

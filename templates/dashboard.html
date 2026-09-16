@@ -6,7 +6,7 @@
 <div class="container" style="padding-top: 1.5rem; padding-bottom: 3rem;">
 
   <!-- Patient Header Card -->
-  <div class="card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+  <div class="card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
     <div>
       <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem;">
         Patient Portal
@@ -52,13 +52,15 @@
       </div>
     </div>
 
-    <div class="metric-card">
+    <a href="{{ url_for('view_notifications') }}" class="metric-card" style="text-decoration: none; color: inherit;">
       <div class="metric-icon amber">🔔</div>
       <div>
         <div class="metric-val">{{ notifications | length }}</div>
         <div class="metric-label">Notifications</div>
       </div>
-    </div>
+    </a>
+  </div>
+
   <!-- Today's Medicine Intake Tracker & Dose Reminders -->
   <div class="card" style="margin-bottom: 1.75rem; border-left: 4px solid var(--primary);">
     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;">

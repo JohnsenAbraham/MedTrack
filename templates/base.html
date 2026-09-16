@@ -17,30 +17,6 @@
 </head>
 <body>
 
-  <!-- Quick Evaluator 1-Click Role Switcher Bar -->
-  <div class="demo-bar" aria-label="Demo Role Switcher">
-    <div class="container demo-bar-inner">
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="color: #38bdf8; font-weight: 700;">⚡ Evaluator Quick Login:</span>
-        <div class="demo-chips">
-          <a href="{{ url_for('demo_login', role='doctor') }}" class="demo-chip" title="Log in as Doctor">
-            👨‍⚕️ Demo Doctor (Dr. Marcus Vance)
-          </a>
-          <a href="{{ url_for('demo_login', role='patient') }}" class="demo-chip" title="Log in as Patient">
-            🧑‍🦱 Demo Patient
-          </a>
-        </div>
-      </div>
-      <div>
-        {% if is_authenticated %}
-          <span>Signed in as: <strong style="color: #ffffff;">{{ current_user.name }}</strong> ({{ user_role | capitalize }})</span>
-        {% else %}
-          <span>Mode: <em>Guest / Not Authenticated</em></span>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
   <!-- Main Navigation Bar -->
   <header class="site-header">
     <div class="container nav-wrapper">
@@ -48,24 +24,29 @@
         <div class="brand-badge">✚</div>
         <div class="brand-text">
           <span class="brand-title">MedTrack</span>
-          <span class="brand-sub">AWS Healthcare System</span>
+          <span class="brand-sub">Healthcare Portal</span>
         </div>
       </a>
 
       <!-- Navigation Links -->
       <nav>
         <ul class="nav-links">
-          <li><a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">Home</a></li>
           {% if is_authenticated %}
             {% if user_role == 'doctor' %}
               <li><a href="{{ url_for('doctor_dashboard') }}" class="nav-link {% if request.endpoint == 'doctor_dashboard' %}active{% endif %}">Doctor Dashboard</a></li>
             {% else %}
               <li><a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">Dashboard</a></li>
               <li><a href="{{ url_for('view_medicines') }}" class="nav-link {% if request.endpoint in ('view_medicines', 'add_medicine') %}active{% endif %}">💊 Medications</a></li>
-              <li><a href="{{ url_for('book_appointment') }}" class="nav-link {% if request.endpoint == 'book_appointment' %}active{% endif %}">Book Appointment</a></li>
-              <li><a href="{{ url_for('view_appointments') }}" class="nav-link {% if request.endpoint == 'view_appointments' %}active{% endif %}">My Appointments</a></li>
-              <li><a href="{{ url_for('view_diagnoses') }}" class="nav-link {% if request.endpoint == 'view_diagnoses' %}active{% endif %}">My Diagnoses</a></li>
+              <li><a href="{{ url_for('book_appointment') }}" class="nav-link {% if request.endpoint == 'book_appointment' %}active{% endif %}">Book Visit</a></li>
+              <li><a href="{{ url_for('view_appointments') }}" class="nav-link {% if request.endpoint == 'view_appointments' %}active{% endif %}">Appointments</a></li>
+              <li><a href="{{ url_for('view_diagnoses') }}" class="nav-link {% if request.endpoint == 'view_diagnoses' %}active{% endif %}">Records</a></li>
+              <li><a href="{{ url_for('view_notifications') }}" class="nav-link {% if request.endpoint == 'view_notifications' %}active{% endif %}">🔔 Notifications</a></li>
             {% endif %}
+          {% else %}
+            <li><a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">Home</a></li>
+            <li><a href="/#about-us" class="nav-link">About Us</a></li>
+            <li><a href="/#services" class="nav-link">Services</a></li>
+            <li><a href="/#departments" class="nav-link">Departments</a></li>
           {% endif %}
         </ul>
       </nav>
@@ -108,13 +89,13 @@
   <footer class="site-footer">
     <div class="container footer-inner">
       <div>
-        <strong>MedTrack</strong> &mdash; AWS Cloud-Enabled Healthcare Management System
+        <strong>MedTrack</strong> &mdash; Connected Healthcare & Clinical Portal
         <div class="footer-note">
-          Student demonstration project for AWS Cloud Practitioner / SkillWallet. Built with Flask, SQLite / DynamoDB, and Amazon SNS.
+          Unified patient appointment scheduling, confidential clinical records, and daily medication tracking.
         </div>
       </div>
       <div class="footer-note">
-        Synthetic / demo data only. Not intended for production clinical use.
+        &copy; 2026 MedTrack Healthcare. All rights reserved.
       </div>
     </div>
   </footer>
