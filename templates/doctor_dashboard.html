@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Doctor Dashboard – MedTrack{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 1.5rem; padding-bottom: 3rem;">
+
+  <!-- Doctor Header Card -->
+  <div class="card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem;">
+        Physician Clinical Console
+      </div>
+      <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.35rem;">
+        {{ doctor.name }}
+      </h1>
+      <div style="font-size: 0.88rem; color: var(--text-muted);">
+        <span>📧 {{ doctor.email }}</span> &bull; 
+        <span>Role: <strong style="color: var(--primary);">Attending Physician</strong></span>
+      </div>
+    </div>
+    <div>
+      <span class="badge badge-role" style="font-size: 0.85rem; padding: 6px 14px;">
+        Total Assigned Visits: {{ appointments | length }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Appointments Management Table -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <span>📅</span> Assigned Patient Appointments
+      </div>
+      <div style="font-size: 0.82rem; color: var(--text-muted);">
+        Review schedule, update status, and record clinical diagnoses
+      </div>
+    </div>
+
+    {% if appointments %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Patient Name</th>
+              <th>Date & Time</th>
+              <th>Contact / Info</th>
+              <th>Consultation Reason</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for apt in appointments %}
+              <tr>
+                <td>
+                  <strong>{{ apt.patient_name }}</strong>
+                </td>
+                <td>
+                  {{ apt.appointment_date }}<br>
+                  <small style="color: var(--text-muted);">{{ apt.appointment_time }}</small>
+                </td>
+                <td>
+                  <small style="color: var(--text-muted);">
+                    📞 {{ apt.patient_phone or 'No phone' }}<br>
+                    👤 {{ apt.patient_gender or 'N/A' }} | DOB: {{ apt.patient_dob or 'N/A' }}
+                  </small>
+                </td>
+                <td style="max-width: 260px;">
+                  <span style="font-size: 0.88rem; color: #334155;">{{ apt.reason }}</span>
+                </td>
+                <td>
+                  <span class="badge badge-{{ apt.status | lower }}">{{ apt.status }}</span>
+                </td>
+                <td>
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    {% if apt.status == 'PENDING' %}
+                      <!-- Confirm Action -->
+                      <form action="{{ url_for('update_appointment_status', appointment_id=apt.appointment_id) }}" method="POST" style="display:inline;">
+                        <input type="hidden" name="status" value="CONFIRMED">
+                        <button type="submit" class="btn btn-primary btn-sm">Confirm</button>
+                      </form>
+                      <!-- Cancel Action -->
+                      <form action="{{ url_for('update_appointment_status', appointment_id=apt.appointment_id) }}" method="POST" onsubmit="return confirm('Cancel this appointment?');" style="display:inline;">
+                        <input type="hidden" name="status" value="CANCELLED">
+                        <button type="submit" class="btn btn-danger-outline btn-sm">Cancel</button>
+                      </form>
+                    {% elif apt.status == 'CONFIRMED' %}
+                      <!-- Complete Action (Mark Completed or Submit Diagnosis) -->
+                      <a href="{{ url_for('submit_diagnosis', appointment_id=apt.appointment_id) }}" class="btn btn-success btn-sm">
+                        Complete &amp; Diagnose &rarr;
+                      </a>
+                      <form action="{{ url_for('update_appointment_status', appointment_id=apt.appointment_id) }}" method="POST" onsubmit="return confirm('Cancel this appointment?');" style="display:inline;">
+                        <input type="hidden" name="status" value="CANCELLED">
+                        <button type="submit" class="btn btn-danger-outline btn-sm">Cancel</button>
+                      </form>
+                    {% elif apt.status == 'COMPLETED' %}
+                      <a href="{{ url_for('submit_diagnosis', appointment_id=apt.appointment_id) }}" class="btn btn-outline btn-sm">
+                        + Add / Review Diagnosis
+                      </a>
+                    {% else %}
+                      <span style="color: var(--text-light); font-size: 0.8rem;">No actions</span>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">📅</div>
+        <p>No patient appointments are currently assigned to your schedule.</p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

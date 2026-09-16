@@ -1,292 +1,97 @@
 {% extends "base.html" %}
 
-{% block title %}MedTrack — Connected Healthcare & Clinical Portal{% endblock %}
+{% block title %}MedTrack – AWS Cloud-Enabled Healthcare Management System{% endblock %}
 
 {% block content %}
-<!-- Hero Section (Split Layout with Real Doctor Image and Indicator Dots) -->
-<section class="mt-society-hero">
-  <div class="mt-society-hero-container">
-    <div class="mt-society-hero-left">
-      <!-- Vertical Indicator Dots -->
-      <div class="mt-hero-dots" aria-hidden="true">
-        <span class="mt-dot active"></span>
-        <span class="mt-dot"></span>
-        <span class="mt-dot"></span>
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-tag">
+        AWS Cloud Practitioner &bull; SkillWallet College Project
       </div>
-
-      <div class="mt-hero-content">
-        <div class="mt-hero-society-tag">
-          <span class="mt-tag-line"></span>
-          WELCOME TO MEDTRACK HEALTHCARE &bull; Smart, Scalable Healthcare
-        </div>
-
-        <h1 class="mt-hero-society-title">
-          CONNECT WITH<br>
-          <span class="mt-title-accent">HIGHLY EXPERIENCED</span><br>
-          DOCTORS
-        </h1>
-
-        <p class="mt-hero-society-desc">
-          Empowering patients at the MedTrack Patient Health Center with unified appointment scheduling, verified diagnostic exchanges, and accredited physician care in one reliable medical portal.
-        </p>
-
-        <div class="mt-hero-society-buttons">
-          {% if is_authenticated %}
-            <a href="{{ url_for('dashboard') }}" class="mt-btn-society-hero" id="heroDashboardBtn">
-              OPEN MY PORTAL <i class="bi bi-arrow-right-short"></i>
-            </a>
-            <a href="{{ url_for('new_appointment') }}" class="mt-btn-society-google" id="heroBookBtn">
-              <i class="bi bi-calendar2-plus"></i> Schedule Doctor Visit
-            </a>
+      <h1 class="hero-title">
+        MedTrack – <span>AWS Cloud-Enabled</span> Healthcare Management System
+      </h1>
+      <p class="hero-desc">
+        A demonstration healthcare web application designed to showcase cloud integration with Python Flask, Amazon DynamoDB, Amazon SNS, and AWS EC2 with role-based access for Patients and Doctors.
+      </p>
+      <div class="hero-actions">
+        {% if is_authenticated %}
+          {% if user_role == 'doctor' %}
+            <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-primary">Go to Doctor Dashboard &rarr;</a>
           {% else %}
-            <a href="{{ url_for('register') }}" class="mt-btn-society-hero" id="heroRegisterBtn">
-              JOIN US <i class="bi bi-arrow-right-short"></i>
-            </a>
-            <a href="{{ url_for('auth_google') }}" class="mt-btn-society-google" id="heroGoogleBtn">
-              <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
-              Continue with Google
-            </a>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Go to Patient Dashboard &rarr;</a>
+            <a href="{{ url_for('book_appointment') }}" class="btn btn-secondary">Book an Appointment</a>
           {% endif %}
-        </div>
-      </div>
-    </div>
-
-    <div class="mt-society-hero-right">
-      <div class="mt-hero-image-frame">
-        <img src="{{ url_for('static', filename='img/hero_medical.jpg') }}" alt="MedTrack Chief Medical Officer & Clinical Diagnostics" class="mt-hero-main-img">
-        <div class="mt-hero-image-overlay"></div>
-        <div class="mt-hero-trust-badge">
-          <i class="bi bi-shield-fill-check"></i>
-          <div>
-            <strong>Board-Certified Staff</strong>
-            <span>Verified Physicians &bull; Patient Health Center</span>
-          </div>
-        </div>
+        {% else %}
+          <a href="{{ url_for('register') }}" class="btn btn-primary">Register as Patient &rarr;</a>
+          <a href="{{ url_for('login') }}" class="btn btn-outline">Sign In</a>
+        {% endif %}
       </div>
     </div>
   </div>
 </section>
 
-<!-- 4-Column Color-Blocked Medical Feature Bar -->
-<section class="mt-color-blocks-bar">
-  <div class="mt-block-col mt-block-navy">
-    <div class="mt-block-icon">
-      <i class="bi bi-heart-pulse"></i>
-    </div>
-    <h3 class="mt-block-title">PHYSICIAN CARE</h3>
-    <div class="mt-block-line"></div>
-    <p class="mt-block-desc">
-      Consult with board-certified clinical specialists across cardiology, dermatology, pediatrics, and family medicine.
-    </p>
-    <a href="{{ url_for('register') }}" class="mt-block-action">
-      Learn More <i class="bi bi-arrow-right"></i>
-    </a>
-  </div>
-
-  <div class="mt-block-col mt-block-royal">
-    <div class="mt-block-icon">
-      <i class="bi bi-file-earmark-medical"></i>
-    </div>
-    <h3 class="mt-block-title">PATIENT RECORDS</h3>
-    <div class="mt-block-line"></div>
-    <p class="mt-block-desc">
-      Securely maintain encrypted historical diagnostic reports, clinical summaries, and physician prescriptions.
-    </p>
-    <a href="{{ url_for('login') }}" class="mt-block-action">
-      Access Portal <i class="bi bi-arrow-right"></i>
-    </a>
-  </div>
-
-  <div class="mt-block-col mt-block-cerulean">
-    <div class="mt-block-icon">
-      <i class="bi bi-clipboard2-pulse"></i>
-    </div>
-    <h3 class="mt-block-title">CLINICAL DIAGNOSTICS</h3>
-    <div class="mt-block-line"></div>
-    <p class="mt-block-desc">
-      Upload pathology tests and scans with rigorous MIME validation and role-isolated doctor evaluations.
-    </p>
-    <a href="{{ url_for('register') }}" class="mt-block-action">
-      Upload Files <i class="bi bi-arrow-right"></i>
-    </a>
-  </div>
-
-  <div class="mt-block-col mt-block-cyan">
-    <div class="mt-block-icon">
-      <i class="bi bi-calendar2-check"></i>
-    </div>
-    <h3 class="mt-block-title">INSTANT SCHEDULING</h3>
-    <div class="mt-block-line"></div>
-    <p class="mt-block-desc">
-      Book real-time appointments with verified clinical doctors with immediate status updates and zero delays.
-    </p>
-    <a href="{{ url_for('login') }}" class="mt-block-action">
-      Book Visit <i class="bi bi-arrow-right"></i>
-    </a>
-  </div>
-</section>
-
-<!-- About Us Section (Split Layout on Deep Navy Background) -->
-<section class="mt-society-about" id="about-us">
-  <div class="mt-about-container">
-    <div class="mt-about-text-col">
-      <div class="mt-about-header">
-        <h2 class="mt-about-tag">ABOUT US</h2>
-        <div class="mt-about-accent-line"></div>
-      </div>
-
-      <h3 class="mt-about-heading">
-        Excellence in Connected Healthcare, Diagnostic Privacy & Patient Wellness
-      </h3>
-
-      <p class="mt-about-paragraph">
-        MedTrack was created to bring institutional clinical coordination into a modern, unified environment. By bridging accredited physicians and patients, we eliminate the administrative overhead and telephone delays common to modern medical offices.
+<!-- System Feature Cards -->
+<section class="container" style="padding-top: 1.5rem; padding-bottom: 2rem;">
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">📅</div>
+      <h3 class="feature-title">Appointment Scheduling</h3>
+      <p class="feature-text">
+        Patients easily select an attending doctor, preferred date, and time slot with real-time status tracking (Pending, Confirmed, Completed, Cancelled).
       </p>
+    </div>
 
-      <p class="mt-about-paragraph">
-        Our platform guarantees end-to-end security through cryptographic password hashing, role-isolated health data access, and verified diagnostic document storage. Whether conducting routine consultations or managing complex multi-specialty evaluations, MedTrack upholds the highest benchmarks of clinical integrity and patient trust.
+    <div class="feature-card">
+      <div class="feature-icon">🩺</div>
+      <h3 class="feature-title">Doctor Consultation Workspace</h3>
+      <p class="feature-text">
+        Accredited physicians review assigned patient appointments, confirm bookings, and record clinical diagnosis notes upon consultation completion.
       </p>
-
-      <div class="mt-about-stats-row">
-        <div class="mt-about-stat-item">
-          <span class="mt-about-stat-num">100%</span>
-          <span class="mt-about-stat-lbl">Role-Enforced Privacy</span>
-        </div>
-        <div class="mt-about-stat-item">
-          <span class="mt-about-stat-num">24/7</span>
-          <span class="mt-about-stat-lbl">Clinical Availability</span>
-        </div>
-        <div class="mt-about-stat-item">
-          <span class="mt-about-stat-num">Instant</span>
-          <span class="mt-about-stat-lbl">Diagnosis Dispatch</span>
-        </div>
-      </div>
-
-      <div class="mt-about-cta">
-        <a href="#departments" class="mt-btn-about-readmore">
-          EXPLORE SERVICES <i class="bi bi-arrow-right"></i>
-        </a>
-      </div>
     </div>
 
-    <div class="mt-about-image-col">
-      <div class="mt-about-image-card">
-        <img src="{{ url_for('static', filename='img/about_hospital.jpg') }}" alt="MedTrack Modern clinical hospital corridor and facility" class="mt-about-photo">
-        <div class="mt-about-card-badge">
-          <i class="bi bi-hospital"></i>
-          <span>State-of-the-Art Medical Infrastructure</span>
-        </div>
-      </div>
+    <div class="feature-card">
+      <div class="feature-icon">📋</div>
+      <h3 class="feature-title">Personal Medical Records</h3>
+      <p class="feature-text">
+        Confidential diagnosis records are accessible strictly by the patient and their consulting physician using secure role-based authorization.
+      </p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🔔</div>
+      <h3 class="feature-title">Amazon SNS Alerts</h3>
+      <p class="feature-text">
+        Automated event-driven notifications dispatched for appointment bookings, confirmations, cancellations, and doctor diagnosis submissions.
+      </p>
     </div>
   </div>
-</section>
 
-<!-- Medical Departments Showcase -->
-<section class="mt-section" id="departments">
-  <div class="mt-section-center">
-    <span class="mt-section-eyebrow">SPECIALIZED MEDICINE</span>
-    <h2>Medical Departments & Clinical Practices</h2>
-    <p>Connect with accredited specialists across diverse clinical practices for comprehensive consultations and diagnostic reviews.</p>
-  </div>
-  <div class="mt-dept-grid">
-    <div class="mt-dept-card">
-      <div class="mt-dept-icon"><i class="bi bi-heart-pulse-fill"></i></div>
-      <h3>Cardiology</h3>
-      <p>Cardiovascular health, ECG evaluations & preventive vascular therapy</p>
-    </div>
-    <div class="mt-dept-card">
-      <div class="mt-dept-icon"><i class="bi bi-bandaid-fill"></i></div>
-      <h3>Dermatology</h3>
-      <p>Skin condition management, biopsy evaluations & clinical therapies</p>
-    </div>
-    <div class="mt-dept-card">
-      <div class="mt-dept-icon"><i class="bi bi-prescription2"></i></div>
-      <h3>General Medicine</h3>
-      <p>Comprehensive primary care, diagnostic screenings & preventive checkups</p>
-    </div>
-    <div class="mt-dept-card">
-      <div class="mt-dept-icon"><i class="bi bi-emoji-smile-fill"></i></div>
-      <h3>Pediatrics</h3>
-      <p>Infant, child & adolescent developmental health, checkups & immunizations</p>
-    </div>
-    <div class="mt-dept-card">
-      <div class="mt-dept-icon"><i class="bi bi-person-walking"></i></div>
-      <h3>Orthopedics</h3>
-      <p>Joint, bone & musculoskeletal assessments, sports injuries & rehab</p>
-    </div>
-    <div class="mt-dept-card">
-      <div class="mt-dept-icon"><i class="bi bi-diagram-3-fill"></i></div>
-      <h3>Neurology</h3>
-      <p>Central nervous system diagnostics, nerve assessments & neuro consultations</p>
-    </div>
-  </div>
-</section>
-
-<!-- Clinical Journey Steps (Services) -->
-<section class="mt-section" id="services" style="background: var(--mt-surface);">
-  <div class="mt-section-center">
-    <span class="mt-section-eyebrow">HOW MEDTRACK OPERATES</span>
-    <h2>Streamlined Clinical Workflow</h2>
-    <p>A rigorous four-step pathway engineered to eliminate paperwork delays and place patient care first.</p>
-  </div>
-  <div class="mt-steps-grid">
-    <div class="mt-step-card">
-      <div class="mt-step-badge">1</div>
-      <h3>Register or Authenticate</h3>
-      <p>Sign up securely with your email and password, or authenticate instantly with verified Google OAuth.</p>
-    </div>
-    <div class="mt-step-card">
-      <div class="mt-step-badge">2</div>
-      <h3>Select Physician & Time</h3>
-      <p>Browse accredited medical specialists by clinical department and pick your ideal appointment slot.</p>
-    </div>
-    <div class="mt-step-card">
-      <div class="mt-step-badge">3</div>
-      <h3>Attach Diagnostic Records</h3>
-      <p>Upload pathology tests, radiological scans, or prior prescriptions directly for doctor pre-consultation review.</p>
-    </div>
-    <div class="mt-step-card">
-      <div class="mt-step-badge">4</div>
-      <h3>Consultation & Tracking</h3>
-      <p>Receive consultation confirmations, track historical records, and manage doctor follow-ups effortlessly.</p>
-    </div>
-  </div>
-</section>
-
-<!-- Security & Compliance Section -->
-<section class="mt-section">
-  <div class="mt-security-box">
-    <div>
-      <div class="mt-hero-tag" style="background:rgba(255,255,255,0.12); color:#fff; border-color:rgba(255,255,255,0.2); margin-bottom: 12px; display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 9999px; font-size: 0.8rem; font-weight: 600;">
-        <i class="bi bi-shield-lock-fill"></i> Enterprise Health Security
-      </div>
-      <h2>Patient Privacy & Clinical Data Protection First</h2>
+  <!-- System Architecture Explanation -->
+  <div class="arch-callout">
+    <div class="arch-header">
+      <h3>System Architecture & AWS Cloud Integration</h3>
       <p>
-        Every healthcare interaction in MedTrack is guarded by role-enforced access controls. Patients maintain ownership of their records, doctors access only authorized consultations, and file storage enforces cryptographic verification.
+        Engineered with a repository abstraction layer supporting dual-mode execution: local SQLite for offline development and Amazon DynamoDB + Amazon SNS for AWS cloud deployment.
       </p>
-      <div class="mt-hero-actions" style="margin-top: 20px;">
-        <a href="{{ url_for('register') }}" class="mt-btn-nav-primary" style="padding: 12px 24px; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 8px;">
-          <i class="bi bi-shield-check"></i> Register Confidentially
-        </a>
-      </div>
     </div>
-    <div class="mt-security-pill-list">
-      <div class="mt-security-pill">
-        <i class="bi bi-check-circle-fill"></i>
-        <span>Cryptographically hashed credentials (PBKDF2/SHA-256)</span>
-      </div>
-      <div class="mt-security-pill">
-        <i class="bi bi-check-circle-fill"></i>
-        <span>Server-side verified HTTP-only session cookies</span>
-      </div>
-      <div class="mt-security-pill">
-        <i class="bi bi-check-circle-fill"></i>
-        <span>Role-isolated endpoints for Patients, Doctors & Admins</span>
-      </div>
-      <div class="mt-security-pill">
-        <i class="bi bi-check-circle-fill"></i>
-        <span>Strict MIME validation on all medical file uploads</span>
-      </div>
+
+    <div class="arch-flow">
+      <div class="arch-node">Client Browser</div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-node">AWS EC2 (Flask Web Tier)</div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-node">Service Abstraction</div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-node">Amazon DynamoDB</div>
+      <div class="arch-arrow">&amp;</div>
+      <div class="arch-node">Amazon SNS</div>
+    </div>
+
+    <div style="margin-top: 1.5rem; text-align: center; font-size: 0.82rem; color: var(--text-muted);">
+      <strong>Local Execution:</strong> <code>MOCK_AWS=true</code> runs all operations locally with zero AWS credential requirements.
     </div>
   </div>
 </section>

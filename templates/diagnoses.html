@@ -1,113 +1,52 @@
 {% extends "base.html" %}
 
-{% block title %}Clinical History & Medical Records | MedTrack{% endblock %}
+{% block title %}My Diagnosis Records – MedTrack{% endblock %}
 
 {% block content %}
-<div class="container" style="margin-top: 2rem; margin-bottom: 3rem;">
+<div class="container" style="padding-top: 1.5rem; padding-bottom: 3rem;">
   <div class="card">
-    <div class="card-header" style="flex-wrap: wrap; gap: 1rem;">
-      <div>
-        <h1 style="font-size: 1.6rem; font-weight: 800; color: #0f172a;">
-          Clinical History & Electronic Medical Records
-        </h1>
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
-          Longitudinal physician findings, vital signs history, and issued electronic prescriptions.
-        </p>
+    <div class="card-header">
+      <div class="card-title">
+        <span>📋</span> Confidential Medical Diagnoses
       </div>
-
-      <div style="display: flex; gap: 0.75rem;">
-        <button onclick="window.print()" class="btn btn-secondary btn-sm">
-          🖨️ Print Records
-        </button>
-        <a href="{{ url_for('new_diagnosis') }}" class="btn btn-primary btn-sm" id="recordNewDiagnosisBtn">
-          ✚ Log Clinical Record
-        </a>
-      </div>
+      <a href="{{ url_for('dashboard') }}" style="font-size: 0.85rem;">&larr; Return to Dashboard</a>
     </div>
 
     {% if diagnoses %}
-      <div style="display: flex; flex-direction: column; gap: 1.75rem;">
+      <div style="display: flex; flex-direction: column; gap: 1.25rem;">
         {% for diag in diagnoses %}
-          <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; background: var(--bg-card); border-left: 4px solid var(--primary); transition: var(--transition);">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+          <div style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
               <div>
-                <div style="font-weight: 700; font-size: 1.15rem; color: #0f172a;">
-                  Attending Physician: {{ diag.doctor }}
-                </div>
-                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
-                  Consultation Date: <strong>{{ diag.date }}</strong>
-                </div>
-              </div>
-              <div style="display: flex; gap: 0.5rem; align-items: center;">
-                {% if diag.icd10_code %}
-                  <span class="badge" style="background: #0284c7; color: white;">ICD-10: {{ diag.icd10_code }}</span>
-                {% endif %}
-                <span class="badge badge-role" style="font-size: 0.75rem;">
-                  Record ID: {{ diag.diagnosis_id[:8] }}
+                <strong style="font-size: 1.05rem; color: var(--text-main);">
+                  {{ diag.doctor_name or 'Attending Physician' }}
+                </strong>
+                <span style="font-size: 0.78rem; color: var(--text-muted); margin-left: 8px;">
+                  Record ID: <code>{{ diag.diagnosis_id }}</code>
                 </span>
+              </div>
+              <div style="font-size: 0.82rem; font-weight: 600; color: var(--primary);">
+                Date: {{ diag.date }}
               </div>
             </div>
 
-            <!-- Diagnosis Text Body -->
-            <div style="background: var(--bg-card-alt); padding: 1rem; border-radius: var(--radius-sm); font-size: 0.95rem; line-height: 1.6; color: #1e293b; white-space: pre-line; margin-bottom: 0.75rem;">
+            <div style="font-size: 0.92rem; color: #334155; line-height: 1.6; white-space: pre-line;">
               {{ diag.diagnosis }}
             </div>
 
-            <!-- Vitals Snapshot if Available -->
-            {% if diag.vitals and diag.vitals.get('blood_pressure') %}
-              <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem; font-size: 0.82rem; background: #f8fafc; padding: 0.6rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
-                <span>💓 <strong>BP:</strong> {{ diag.vitals.blood_pressure }}</span>
-                {% if diag.vitals.heart_rate %}<span>🩺 <strong>HR:</strong> {{ diag.vitals.heart_rate }} bpm</span>{% endif %}
-                {% if diag.vitals.temperature %}<span>🌡️ <strong>Temp:</strong> {{ diag.vitals.temperature }} °F</span>{% endif %}
-                {% if diag.vitals.spo2 %}<span>🫁 <strong>SpO2:</strong> {{ diag.vitals.spo2 }}%</span>{% endif %}
-                {% if diag.vitals.blood_sugar %}<span>🩸 <strong>Glucose:</strong> {{ diag.vitals.blood_sugar }} mg/dL</span>{% endif %}
-              </div>
-            {% endif %}
-
-            <!-- Prescriptions if Available -->
-            {% if diag.prescriptions %}
-              <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-sm); padding: 0.85rem; margin-top: 0.75rem;">
-                <div style="font-size: 0.85rem; font-weight: 700; color: #166534; margin-bottom: 0.4rem;">
-                  💊 Prescribed Medications (e-Rx):
-                </div>
-                <ul style="margin-left: 1.25rem; font-size: 0.85rem; color: #166534; line-height: 1.6;">
-                  {% for rx in diag.prescriptions %}
-                    <li>
-                      <strong>{{ rx.medication }}</strong> – {{ rx.dosage }} | {{ rx.frequency }}
-                      {% if rx.duration %} (Duration: {{ rx.duration }}){% endif %}
-                      {% if rx.notes %} - <em>{{ rx.notes }}</em>{% endif %}
-                    </li>
-                  {% endfor %}
-                </ul>
-              </div>
-            {% endif %}
-
-            {% if diag.treatment_plan %}
-              <div style="margin-top: 0.75rem; font-size: 0.85rem; color: #1e293b;">
-                <strong>Treatment Plan:</strong> {{ diag.treatment_plan }}
-              </div>
-            {% endif %}
-
-            {% if diag.follow_up_date %}
-              <div style="margin-top: 0.4rem; font-size: 0.82rem; color: var(--primary); font-weight: 600;">
-                📅 Follow-Up: {{ diag.follow_up_date }}
-              </div>
-            {% endif %}
-
-            <div style="font-size: 0.75rem; color: var(--text-light); margin-top: 0.75rem; text-align: right;">
-              Recorded on {{ diag.created_at[:19].replace('T', ' ') }} UTC
+            <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-light); text-align: right;">
+              Recorded on {{ diag.created_at[:10] }} at {{ diag.created_at[11:16] }} UTC
             </div>
           </div>
         {% endfor %}
       </div>
     {% else %}
-      <div style="text-align: center; padding: 3.5rem 1rem; color: var(--text-muted);">
-        <div style="font-size: 3rem; margin-bottom: 0.5rem;">📋</div>
-        <p style="font-size: 1.1rem; font-weight: 600;">No clinical diagnoses recorded yet.</p>
-        <p style="font-size: 0.9rem; margin-top: 0.25rem;">Physicians log clinical diagnoses, vitals, and medications here.</p>
-        <a href="{{ url_for('new_diagnosis') }}" class="btn btn-primary" style="margin-top: 1rem;">
-          Log Clinical Encounter &rarr;
-        </a>
+      <div class="empty-state">
+        <div class="empty-icon">🩺</div>
+        <p>No diagnosis records have been logged in your patient file yet.</p>
+        <p style="font-size: 0.82rem; color: var(--text-light);">
+          Diagnosis records are published by your attending doctor following completed clinical consultations.
+        </p>
       </div>
     {% endif %}
   </div>

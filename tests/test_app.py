@@ -1,508 +1,322 @@
-import os
+"""
+MedTrack Automated Test Suite
+Covers all 16 mandatory scenarios specified in the SkillWallet project requirements:
+1. Home page
+2. Registration
+3. Duplicate registration
+4. Login
+5. Invalid login
+6. Logout
+7. Patient dashboard
+8. Appointment creation
+9. Appointment listing
+10. Appointment cancellation
+11. Doctor dashboard
+12. Doctor appointment confirmation
+13. Diagnosis creation
+14. Diagnosis viewing (patient viewing own records)
+15. Unauthorized record access (protection against cross-patient data access)
+16. Mock SNS notification
+"""
+
 import unittest
 import datetime
 from app import app, db, sns
 from config import Config
 
 class MedTrackTestCase(unittest.TestCase):
-    """Automated integration and end-to-end tests for MedTrack healthcare application."""
+    """Integration and scenario tests for MedTrack healthcare application."""
 
     def setUp(self):
-        # Configure app for testing
         app.config["TESTING"] = True
         app.config["WTF_CSRF_ENABLED"] = False
-        app.config["SECRET_KEY"] = "test-secret-key-123"
+        app.config["SECRET_KEY"] = "test-secret-key-college-demo"
         self.client = app.test_client()
 
-        # Generate unique test email to keep tests isolated
         self.test_email = f"patient_{int(datetime.datetime.now().timestamp())}@example.com"
         self.test_password = "SecurePassword123!"
-        self.test_name = "Jane Doe"
+        self.test_name = "Alex Taylor"
 
-    def test_01_syntax_and_config(self):
-        """Verify configuration values and mock mode."""
-        self.assertTrue(Config.MOCK_AWS)
-        self.assertIsNotNone(Config.DYNAMODB_USERS_TABLE)
-        self.assertIsNotNone(Config.SNS_TOPIC_ARN)
-
-    def test_02_home_page(self):
-        """Verify Home/Landing page renders with MedTrack branding and navigation."""
+    def test_01_home_page(self):
+        """1. Verify home landing page renders MedTrack branding and navigation."""
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"MedTrack", response.data)
-        self.assertIn(b"Smart, Scalable Healthcare", response.data)
-        self.assertIn(b"Patient Health Center", response.data)
+        self.assertIn(b"AWS Cloud-Enabled", response.data)
+        self.assertIn(b"Appointment Scheduling", response.data)
 
-
-    def test_03_health_check_endpoint(self):
-        """Verify the health check endpoint returns 200 and healthy JSON."""
-        response = self.client.get("/health")
-        self.assertEqual(response.status_code, 200)
-        json_data = response.get_json()
-        self.assertEqual(json_data.get("status"), "healthy")
-        self.assertTrue(json_data.get("mock_aws"))
-
-    def test_04_patient_registration_success(self):
-        """Verify patient registration creates user and triggers mock welcome SNS."""
+    def test_02_registration_success(self):
+        """2. Verify patient registration creates record with hashed password."""
         response = self.client.post("/register", data={
             "name": self.test_name,
             "email": self.test_email,
             "password": self.test_password,
-            "confirm_password": self.test_password,
-            "phone": "+1 (555) 234-5678",
-            "date_of_birth": "1995-06-15",
-            "gender": "Female",
-            "role": "patient"
+            "phone": "+1-555-0199",
+            "date_of_birth": "1995-04-20",
+            "gender": "Female"
         }, follow_redirects=True)
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Account registered successfully", response.data)
+        self.assertIn(b"Registration successful", response.data)
 
-        # Verify in database
+        # Verify record in database
         user = db.get_user_by_email(self.test_email)
         self.assertIsNotNone(user)
         self.assertEqual(user["name"], self.test_name)
         self.assertEqual(user["role"], "patient")
-        self.assertNotEqual(user["password_hash"], self.test_password)  # Must be hashed
+        self.assertNotEqual(user["password_hash"], self.test_password)
 
-        # Verify welcome notification
-        notifications = db.get_notifications_by_patient(user["user_id"])
-        self.assertGreaterEqual(len(notifications), 1)
-        self.assertIn("Welcome to MedTrack", notifications[0]["message"])
-
-    def test_05_patient_registration_duplicate_email(self):
-        """Verify duplicate email registration is rejected."""
-        # First registration
+    def test_03_duplicate_registration_prevention(self):
+        """3. Verify duplicate email registration is rejected."""
         email = f"dup_{int(datetime.datetime.now().timestamp())}@example.com"
+        # First registration
         self.client.post("/register", data={
-            "name": "First User",
+            "name": "First Patient",
             "email": email,
-            "password": "Password123",
-            "confirm_password": "Password123",
-            "phone": "",
-            "date_of_birth": "",
-            "gender": "Male",
-            "role": "patient"
+            "password": "Password123!",
+            "phone": "555-0100",
+            "date_of_birth": "1990-01-01",
+            "gender": "Male"
         })
 
-        # Second registration with same email
+        # Second registration with identical email
         response = self.client.post("/register", data={
-            "name": "Second User",
+            "name": "Second Patient",
             "email": email,
-            "password": "Password123",
-            "confirm_password": "Password123",
-            "phone": "",
-            "date_of_birth": "",
-            "gender": "Male",
-            "role": "patient"
+            "password": "Password456!",
+            "phone": "555-0200",
+            "date_of_birth": "1992-02-02",
+            "gender": "Female"
         }, follow_redirects=True)
 
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"already exists", response.data)
 
-    def test_06_login_invalid_credentials(self):
-        """Verify login rejects invalid passwords."""
+    def test_04_login_success(self):
+        """4. Verify successful authentication establishes session."""
+        # Create user
+        email = f"login_user_{int(datetime.datetime.now().timestamp())}@example.com"
+        self.client.post("/register", data={
+            "name": "Login Tester",
+            "email": email,
+            "password": "Password123!",
+            "phone": "555-0103",
+            "date_of_birth": "1994-06-15",
+            "gender": "Other"
+        })
+
         response = self.client.post("/login", data={
-            "email": self.test_email,
+            "email": email,
+            "password": "Password123!"
+        }, follow_redirects=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Welcome back", response.data)
+        self.assertIn(b"Patient Portal", response.data)
+
+    def test_05_invalid_login_rejection(self):
+        """5. Verify invalid password or unknown email is rejected."""
+        response = self.client.post("/login", data={
+            "email": "unknown_patient@example.com",
             "password": "WrongPassword!"
         }, follow_redirects=True)
 
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Invalid email address or password", response.data)
 
-    def test_07_login_and_logout_flow(self):
-        """Verify login establishes session and logout clears session."""
-        # Ensure user exists
-        email = f"auth_{int(datetime.datetime.now().timestamp())}@example.com"
-        self.client.post("/register", data={
-            "name": "Auth Tester",
-            "email": email,
-            "password": "Password123",
-            "confirm_password": "Password123",
-            "phone": "",
-            "date_of_birth": "",
-            "gender": "Male",
-            "role": "patient"
-        })
-
-        # Login
-        response = self.client.post("/login", data={
-            "email": email,
-            "password": "Password123"
-        }, follow_redirects=True)
-
+    def test_06_logout(self):
+        """6. Verify logout terminates user session."""
+        self.client.get("/demo-login/patient")
+        response = self.client.get("/logout", follow_redirects=True)
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Welcome back", response.data)
-        self.assertIn(b"Auth Tester", response.data)
+        self.assertIn(b"signed out safely", response.data)
 
-        # Logout
-        logout_res = self.client.get("/logout", follow_redirects=True)
-        self.assertEqual(logout_res.status_code, 200)
-        self.assertIn(b"signed out safely", logout_res.data)
+        # Attempting to access dashboard should now redirect to login
+        dash_res = self.client.get("/dashboard", follow_redirects=True)
+        self.assertIn(b"Please sign in", dash_res.data)
 
-    def test_08_dashboard_access_control(self):
-        """Verify unauthenticated dashboard access is redirected to login."""
+    def test_07_patient_dashboard(self):
+        """7. Verify patient dashboard displays personal info and widgets."""
+        self.client.get("/demo-login/patient")
         response = self.client.get("/dashboard")
-        self.assertEqual(response.status_code, 302)
-        self.assertIn("/login", response.headers["Location"])
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Welcome,", response.data)
+        self.assertIn(b"Upcoming Visits", response.data)
+        self.assertIn(b"Patient Information", response.data)
 
-    def test_09_appointment_workflow_and_sns(self):
-        """Full appointment lifecycle: schedule, verify, list, cancel, and test SNS alerts."""
-        email = f"appt_{int(datetime.datetime.now().timestamp())}@example.com"
-        # Register & Login
-        self.client.post("/register", data={
-            "name": "Appointment Patient",
-            "email": email,
-            "password": "Password123",
-            "confirm_password": "Password123",
-            "phone": "555-111-2222",
-            "date_of_birth": "1990-01-01",
-            "gender": "Male",
-            "role": "patient"
-        })
-        self.client.post("/login", data={"email": email, "password": "Password123"})
+    def test_08_appointment_creation(self):
+        """8. Verify patient can select doctor, date, time, and book appointment."""
+        self.client.get("/demo-login/patient")
+        doctors = db.get_doctors()
+        self.assertGreater(len(doctors), 0)
+        doctor_id = doctors[0]["user_id"]
 
-        user = db.get_user_by_email(email)
         tomorrow = (datetime.date.today() + datetime.timedelta(days=1)).isoformat()
-
-        # 1. Book Appointment
-        book_res = self.client.post("/appointments/new", data={
-            "doctor": "Dr. Sarah Jenkins (Cardiology)",
-            "date": tomorrow,
-            "time": "10:30 AM",
-            "reason": "Routine cardiovascular consultation"
-        }, follow_redirects=True)
-
-        self.assertEqual(book_res.status_code, 200)
-        self.assertIn(b"appointment has been scheduled successfully", book_res.data)
-
-        # 2. Verify Appointment in database
-        appts = db.get_appointments_by_patient(user["user_id"])
-        self.assertEqual(len(appts), 1)
-        appt = appts[0]
-        self.assertEqual(appt["doctor"], "Dr. Sarah Jenkins (Cardiology)")
-        self.assertEqual(appt["status"], "Confirmed")
-
-        # 3. Verify Appointments List Page
-        list_res = self.client.get("/appointments")
-        self.assertEqual(list_res.status_code, 200)
-        self.assertIn(b"Dr. Sarah Jenkins (Cardiology)", list_res.data)
-        self.assertIn(b"Confirmed", list_res.data)
-
-        # 4. Cancel Appointment
-        cancel_res = self.client.post(f"/appointments/{appt['appointment_id']}/cancel", follow_redirects=True)
-        self.assertEqual(cancel_res.status_code, 200)
-        self.assertIn(b"Appointment has been cancelled successfully", cancel_res.data)
-
-        # Verify status is Cancelled
-        updated_appt = db.get_appointment_by_id(appt["appointment_id"])
-        self.assertEqual(updated_appt["status"], "Cancelled")
-
-        # Verify notifications include booking and cancellation
-        notifications = db.get_notifications_by_patient(user["user_id"])
-        messages_text = " ".join([n["message"] for n in notifications])
-        self.assertIn("Appointment Confirmed", messages_text)
-        self.assertIn("Appointment Cancelled", messages_text)
-
-    def test_10_diagnosis_workflow_and_sns(self):
-        """Full diagnosis lifecycle: create diagnosis record, view timeline, check SNS alerts."""
-        email = f"diag_{int(datetime.datetime.now().timestamp())}@example.com"
-        # Register & Login
-        self.client.post("/register", data={
-            "name": "Diagnosis Patient",
-            "email": email,
-            "password": "Password123",
-            "confirm_password": "Password123",
-            "phone": "555-333-4444",
-            "date_of_birth": "1988-03-20",
-            "gender": "Female",
-            "role": "patient"
-        })
-        self.client.post("/login", data={"email": email, "password": "Password123"})
-
-        user = db.get_user_by_email(email)
-        today = datetime.date.today().isoformat()
-
-        # 1. Record Diagnosis
-        diag_res = self.client.post("/diagnoses/new", data={
-            "patient_id": user["user_id"],
-            "doctor": "Dr. Mark Thorne, MD",
-            "date": today,
-            "diagnosis": "Mild Migraine with aura. Prescribed Sumatriptan 50mg and rest."
-        }, follow_redirects=True)
-
-        self.assertEqual(diag_res.status_code, 200)
-        self.assertIn(b"Clinical diagnosis record has been logged successfully", diag_res.data)
-
-        # 2. Verify Diagnosis in database
-        diagnoses = db.get_diagnoses_by_patient(user["user_id"])
-        self.assertEqual(len(diagnoses), 1)
-        self.assertEqual(diagnoses[0]["doctor"], "Dr. Mark Thorne, MD")
-        self.assertIn("Mild Migraine with aura", diagnoses[0]["diagnosis"])
-
-        # 3. Verify Diagnoses Page displays record
-        view_res = self.client.get("/diagnoses")
-        self.assertEqual(view_res.status_code, 200)
-        self.assertIn(b"Dr. Mark Thorne, MD", view_res.data)
-        self.assertIn(b"Sumatriptan 50mg", view_res.data)
-
-        # 4. Verify SNS Notification dispatched
-        notifications = db.get_notifications_by_patient(user["user_id"])
-        messages_text = " ".join([n["message"] for n in notifications])
-        self.assertIn("Medical Record Update", messages_text)
-
-    def test_11_mock_sns_dispatch_direct(self):
-        """Direct verification of SNSService in mock mode."""
-        res = sns.publish_notification(
-            patient_id="mock-patient-123",
-            message="Test mock SNS dispatch notification.",
-            subject="Test Alert"
-        )
-        self.assertEqual(res.get("Status"), "MOCK_DISPATCHED")
-        self.assertTrue(res.get("MessageId").startswith("mock-sns-"))
-        self.assertEqual(res.get("ResponseMetadata", {}).get("HTTPStatusCode"), 200)
-
-    def test_12_forgot_password_and_reset_workflow(self):
-        """Verify password reset request, token validation, and password update."""
-        email = f"reset_test_{int(datetime.datetime.now().timestamp())}@example.com"
-        # Register user
-        self.client.post("/register", data={
-            "name": "Reset Test User",
-            "email": email,
-            "password": "OldPassword123",
-            "confirm_password": "OldPassword123",
-            "phone": "",
-            "date_of_birth": "",
-            "gender": "Male",
-            "role": "patient"
-        })
-
-        # Request reset
-        forgot_res = self.client.post("/forgot-password", data={"email": email})
-        self.assertEqual(forgot_res.status_code, 200)
-        self.assertIn(b"Password reset instructions", forgot_res.data)
-
-        # Generate token using serializer
-        from app import get_serializer
-        s = get_serializer()
-        token = s.dumps(email, salt="password-reset-salt")
-
-        # Open reset page
-        get_reset = self.client.get(f"/reset-password/{token}")
-        self.assertEqual(get_reset.status_code, 200)
-        self.assertIn(b"Set New Password", get_reset.data)
-
-        # Submit new password
-        post_reset = self.client.post(f"/reset-password/{token}", data={
-            "password": "NewSecretPassword456",
-            "confirm_password": "NewSecretPassword456"
-        }, follow_redirects=True)
-        self.assertEqual(post_reset.status_code, 200)
-        self.assertIn(b"Your password has been reset successfully", post_reset.data)
-
-        # Verify old password fails
-        bad_login = self.client.post("/login", data={"email": email, "password": "OldPassword123"}, follow_redirects=True)
-        self.assertIn(b"Invalid email address or password", bad_login.data)
-
-        # Verify new password succeeds
-        good_login = self.client.post("/login", data={"email": email, "password": "NewSecretPassword456"}, follow_redirects=True)
-        self.assertIn(b"Welcome back", good_login.data)
-
-    def test_13_google_authentication_workflow(self):
-        """Verify Google authentication auto-provisions patient and creates session."""
-        g_email = f"google_test_{int(datetime.datetime.now().timestamp())}@gmail.com"
-        g_name = "Google User Test"
-
-        response = self.client.post("/auth/google", data={
-            "google_email": g_email,
-            "google_name": g_name
+        response = self.client.post("/appointments/new", data={
+            "doctor_id": doctor_id,
+            "appointment_date": tomorrow,
+            "appointment_time": "10:00 AM",
+            "reason": "Routine clinical checkup and consultation"
         }, follow_redirects=True)
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Signed in successfully with Google", response.data)
-        self.assertIn(b"Dashboard", response.data)
+        self.assertIn(b"Appointment scheduled successfully", response.data)
 
-        # Verify in database
-        user = db.get_user_by_email(g_email)
-        self.assertIsNotNone(user)
-        self.assertEqual(user["name"], g_name)
-        self.assertEqual(user["auth_provider"], "google")
-
-    def test_14_evaluator_demo_login_personas(self):
-        """Verify 1-click evaluator demo login switches cleanly between Doctor, Patient, and Admin."""
-        # 1. Doctor Login
-        doc_res = self.client.get("/demo-login/doctor", follow_redirects=True)
-        self.assertEqual(doc_res.status_code, 200)
-        self.assertIn(b"Dr. Sarah Jenkins", doc_res.data)
-        self.assertIn(b"Consultation Queue", doc_res.data)
-
-        # 2. Admin Login
-        admin_res = self.client.get("/demo-login/admin", follow_redirects=True)
-        self.assertEqual(admin_res.status_code, 200)
-        self.assertIn(b"Hospital Operations", admin_res.data)
-        self.assertIn(b"AWS Cloud", admin_res.data)
-
-        # 3. Patient Login
-        pat_res = self.client.get("/demo-login/patient", follow_redirects=True)
-        self.assertEqual(pat_res.status_code, 200)
-        self.assertIn(b"Jane Doe", pat_res.data)
-        self.assertIn(b"Upcoming", pat_res.data)
-
-    def test_15_role_based_access_control(self):
-        """Verify non-doctors cannot access the doctor consultation queue."""
-        # Sign in as regular patient
+    def test_09_appointment_listing(self):
+        """9. Verify patient can view their list of booked appointments."""
         self.client.get("/demo-login/patient")
-        res = self.client.get("/doctor/queue", follow_redirects=True)
-        self.assertEqual(res.status_code, 200)
-        self.assertIn(b"Access restricted", res.data)
+        response = self.client.get("/appointments")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"My Appointments History", response.data)
 
-    def test_16_doctor_clinical_consultation_full_lifecycle(self):
-        """Full clinical intake: vital signs, ICD-10 diagnosis, e-prescription generation, and status change."""
-        # 1. Book an appointment as patient
+    def test_10_appointment_cancellation(self):
+        """10. Verify patient can cancel an appointment."""
         self.client.get("/demo-login/patient")
-        patient_user = db.get_user_by_email("jane.doe@example.com")
-        tomorrow = (datetime.date.today() + datetime.timedelta(days=1)).isoformat()
+        patient_user = db.get_user_by_email("patient.demo@medtrack.local")
+        doctors = db.get_doctors()
 
-        appt_res = self.client.post("/appointments/new", data={
-            "doctor": "Dr. Sarah Jenkins, MD (Cardiology)",
-            "department": "Cardiology",
-            "date": tomorrow,
-            "time": "10:30 AM",
-            "reason": "Post-exertion chest tightness and palpitations"
-        }, follow_redirects=True)
-        self.assertEqual(appt_res.status_code, 200)
+        # Create appointment to cancel
+        appt = db.create_appointment({
+            "patient_id": patient_user["user_id"],
+            "doctor_id": doctors[0]["user_id"],
+            "appointment_date": (datetime.date.today() + datetime.timedelta(days=3)).isoformat(),
+            "appointment_time": "02:00 PM",
+            "reason": "Headache consultation",
+            "status": "PENDING"
+        })
 
-        appts = db.get_appointments_by_patient(patient_user["user_id"])
-        target_appt = next(a for a in appts if a.get("date") == tomorrow)
+        response = self.client.post(f"/appointments/{appt['appointment_id']}/cancel", follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Appointment has been cancelled", response.data)
 
-        # 2. Doctor logs in and performs consultation
+        # Verify status in database
+        updated = db.get_appointment_by_id(appt["appointment_id"])
+        self.assertEqual(updated["status"], "CANCELLED")
+
+    def test_11_doctor_dashboard(self):
+        """11. Verify doctor dashboard displays assigned patient appointments."""
         self.client.get("/demo-login/doctor")
-        consult_url = f"/doctor/consultation/{target_appt['appointment_id']}"
-        consult_view = self.client.get(consult_url)
-        self.assertEqual(consult_view.status_code, 200)
-        self.assertIn(b"Objective Vital Signs Intake", consult_view.data)
+        response = self.client.get("/doctor/dashboard")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Physician Clinical Console", response.data)
+        self.assertIn(b"Assigned Patient Appointments", response.data)
 
-        # 3. Submit Consultation with vitals and multi-drug prescription
-        post_consult = self.client.post(consult_url, data={
-            "blood_pressure": "128/84",
-            "heart_rate": "78",
-            "temperature": "98.7",
-            "spo2": "99",
-            "blood_sugar": "94",
-            "symptoms": "Bilateral chest discomfort relieved by rest. Clear lungs on auscultation.",
-            "icd10_code": "I10",
-            "diagnosis": "Stage 1 Essential Hypertension with exertional palpitations.",
-            "treatment_plan": "Rest, reduce caffeine, low sodium diet.",
-            "follow_up_date": (datetime.date.today() + datetime.timedelta(days=30)).isoformat(),
-            "med_name[]": ["Metoprolol Tartrate", "CoQ10"],
-            "med_dosage[]": ["25 mg", "100 mg"],
-            "med_frequency[]": ["Twice daily", "Once daily"],
-            "med_duration[]": ["30 days", "60 days"],
-            "med_notes[]": ["Take with morning meal", "Dietary supplement"]
+    def test_12_doctor_appointment_confirmation(self):
+        """12. Verify doctor can confirm an assigned appointment."""
+        doc = db.get_user_by_email("doctor.vance@medtrack.local")
+        self.client.get("/demo-login/patient")
+        patient = db.get_user_by_email("patient.demo@medtrack.local")
+
+        # Book appointment
+        appt = db.create_appointment({
+            "patient_id": patient["user_id"],
+            "doctor_id": doc["user_id"],
+            "appointment_date": (datetime.date.today() + datetime.timedelta(days=2)).isoformat(),
+            "appointment_time": "11:00 AM",
+            "reason": "Joint pain assessment",
+            "status": "PENDING"
+        })
+
+        # Doctor logs in and confirms
+        self.client.get("/demo-login/doctor")
+        response = self.client.post(f"/doctor/appointments/{appt['appointment_id']}/status", data={
+            "status": "CONFIRMED"
         }, follow_redirects=True)
 
-        self.assertEqual(post_consult.status_code, 200)
-        self.assertIn(b"finalized successfully", post_consult.data)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Appointment confirmed successfully", response.data)
 
-        # 4. Verify Appointment status updated to Completed
-        updated_appt = db.get_appointment_by_id(target_appt["appointment_id"])
-        self.assertEqual(updated_appt["status"], "Completed")
+        updated = db.get_appointment_by_id(appt["appointment_id"])
+        self.assertEqual(updated["status"], "CONFIRMED")
 
-        # 5. Verify Longitudinal Vitals recorded
-        vitals = db.get_vitals_by_patient(patient_user["user_id"])
-        self.assertGreaterEqual(len(vitals), 1)
-        self.assertEqual(vitals[0]["blood_pressure"], "128/84")
+    def test_13_diagnosis_creation(self):
+        """13. Verify doctor can submit clinical diagnosis upon visit completion."""
+        doc = db.get_user_by_email("doctor.vance@medtrack.local")
+        self.client.get("/demo-login/patient")
+        patient = db.get_user_by_email("patient.demo@medtrack.local")
 
-        # 6. Verify Diagnosis and e-Prescriptions
-        diags = db.get_diagnoses_by_patient(patient_user["user_id"])
-        latest_diag = diags[0]
-        self.assertEqual(latest_diag["icd10_code"], "I10")
-        self.assertEqual(len(latest_diag["prescriptions"]), 2)
-        self.assertEqual(latest_diag["prescriptions"][0]["medication"], "Metoprolol Tartrate")
+        appt = db.create_appointment({
+            "patient_id": patient["user_id"],
+            "doctor_id": doc["user_id"],
+            "appointment_date": datetime.date.today().isoformat(),
+            "appointment_time": "09:00 AM",
+            "reason": "Respiratory checkup",
+            "status": "CONFIRMED"
+        })
 
-    def test_17_patient_record_view_ehr(self):
-        """Verify physician can view longitudinal patient electronic health record."""
         self.client.get("/demo-login/doctor")
-        patient_user = db.get_user_by_email("jane.doe@example.com")
-        res = self.client.get(f"/doctor/patient/{patient_user['user_id']}")
-        self.assertEqual(res.status_code, 200)
-        self.assertIn(b"Longitudinal Vital Signs Progression", res.data)
-        self.assertIn(b"Prescribed Medications", res.data)
+        response = self.client.post(f"/doctor/diagnosis/new/{appt['appointment_id']}", data={
+            "date": datetime.date.today().isoformat(),
+            "diagnosis": "Mild allergic rhinitis. Advised saline nasal spray and hydration."
+        }, follow_redirects=True)
 
-    def test_18_admin_analytics_and_hipaa_audit_trail(self):
-        """Verify hospital administration can review hospital metrics and HIPAA audit logs."""
-        self.client.get("/demo-login/admin")
-        res = self.client.get("/admin/analytics")
-        self.assertEqual(res.status_code, 200)
-        self.assertIn(b"AWS Cloud Infrastructure Live Telemetry", res.data)
-        self.assertIn(b"HIPAA Security Rule", res.data)
-        self.assertIn(b"Registered Patients", res.data)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Clinical diagnosis saved", response.data)
 
-    def test_19_deep_cloud_health_check_payload(self):
-        """Verify deep health check returns structured JSON with component status."""
-        res = self.client.get("/health")
-        self.assertEqual(res.status_code, 200)
-        data = res.get_json()
-        self.assertEqual(data["status"], "healthy")
-        self.assertIn("dynamodb", data["components"])
-        self.assertIn("sns", data["components"])
-        self.assertEqual(data["components"]["dynamodb"]["status"], "healthy")
+        # Verify appointment updated to COMPLETED
+        updated_appt = db.get_appointment_by_id(appt["appointment_id"])
+        self.assertEqual(updated_appt["status"], "COMPLETED")
 
-    def test_20_signup_route_alias(self):
-        """Verify /signup route aliases seamlessly to registration page."""
-        res = self.client.get("/signup")
-        self.assertEqual(res.status_code, 200)
-        self.assertIn(b"Clinician Registration", res.data)
-        self.assertIn(b"Blood Group", res.data)
+        # Verify diagnosis created
+        diags = db.get_diagnoses_by_patient(patient["user_id"])
+        self.assertGreaterEqual(len(diags), 1)
+        self.assertIn("Mild allergic rhinitis", diags[0]["diagnosis"])
 
-    def test_21_diagnostic_document_vault_flow(self):
-        """Verify authenticated patient can access vault, upload a diagnostic PDF, and download it."""
-        import io
+    def test_14_diagnosis_viewing(self):
+        """14. Verify patient can view their own diagnosis records."""
         self.client.get("/demo-login/patient")
-        
-        # 1. View vault
-        res = self.client.get("/reports")
-        self.assertEqual(res.status_code, 200)
-        self.assertIn(b"Diagnostic Document & Pathology Vault", res.data)
+        response = self.client.get("/diagnoses")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Confidential Medical Diagnoses", response.data)
 
-        # 2. Upload valid mock PDF
-        dummy_pdf = io.BytesIO(b"%PDF-1.4 mock content %%EOF")
-        upload_data = {
-            "title": "Complete Blood Count (CBC) Panel",
-            "category": "Pathology / Lab",
-            "notes": "Hemoglobin 14.2 g/dL, Platelets 260k/uL.",
-            "report_file": (dummy_pdf, "Jane_Doe_CBC_Panel.pdf")
-        }
-        res_upload = self.client.post("/reports/upload", data=upload_data, content_type="multipart/form-data", follow_redirects=True)
-        self.assertEqual(res_upload.status_code, 200)
-        self.assertIn(b"Complete Blood Count (CBC) Panel", res_upload.data)
-
-        # 3. Retrieve uploaded report ID
-        patient = db.get_user_by_email("jane.doe@example.com")
-        reports = db.get_reports_by_patient(patient["user_id"])
-        cbc_report = next((r for r in reports if r["title"] == "Complete Blood Count (CBC) Panel"), None)
-        self.assertIsNotNone(cbc_report)
-
-        # 4. Download file
-        res_dl = self.client.get(f"/reports/{cbc_report['report_id']}/download")
-        self.assertEqual(res_dl.status_code, 200)
-        self.assertIn(b"%PDF-1.4 mock content %%EOF", res_dl.data)
-
-    def test_22_diagnostic_vault_mime_validation(self):
-        """Verify invalid file extensions are blocked by MIME & extension validation."""
-        import io
+    def test_15_unauthorized_record_access_prevention(self):
+        """15. Verify role boundaries and cross-patient isolation."""
+        # Patient cannot access doctor dashboard
         self.client.get("/demo-login/patient")
-        bad_file = io.BytesIO(b"malicious script contents")
-        upload_data = {
-            "title": "Unauthorized Script",
-            "category": "Other",
-            "report_file": (bad_file, "payload.exe")
-        }
-        res = self.client.post("/reports/upload", data=upload_data, content_type="multipart/form-data", follow_redirects=True)
-        self.assertEqual(res.status_code, 200)
-        self.assertIn(b"Invalid file extension", res.data)
+        doc_dash = self.client.get("/doctor/dashboard", follow_redirects=True)
+        self.assertIn(b"Access restricted", doc_dash.data)
+
+        # Patient cannot cancel another patient's appointment
+        other_patient = db.create_user({
+            "name": "Other Patient",
+            "email": f"other_{int(datetime.datetime.now().timestamp())}@example.com",
+            "password_hash": "dummyhash",
+            "role": "patient"
+        })
+        doctors = db.get_doctors()
+        other_appt = db.create_appointment({
+            "patient_id": other_patient["user_id"],
+            "doctor_id": doctors[0]["user_id"],
+            "appointment_date": "2026-10-01",
+            "appointment_time": "10:00 AM",
+            "reason": "Checkup",
+            "status": "PENDING"
+        })
+
+        cancel_attempt = self.client.post(f"/appointments/{other_appt['appointment_id']}/cancel", follow_redirects=True)
+        self.assertIn(b"Unauthorized", cancel_attempt.data)
+
+    def test_16_mock_sns_notifications(self):
+        """16. Verify mock SNS notification dispatch for all 4 application events."""
+        patient_id = "test-patient-sns"
+        patient_name = "Alex Taylor"
+        doctor_name = "Dr. Marcus Vance"
+
+        # 1. Appointment Booked
+        res1 = sns.notify_appointment_booked(patient_id, patient_name, doctor_name, "2026-10-10", "10:00 AM")
+        self.assertTrue(res1)
+
+        # 2. Appointment Confirmed
+        res2 = sns.notify_appointment_confirmed(patient_id, patient_name, doctor_name, "2026-10-10", "10:00 AM")
+        self.assertTrue(res2)
+
+        # 3. Appointment Cancelled
+        res3 = sns.notify_appointment_cancelled(patient_id, patient_name, doctor_name, "2026-10-10", "10:00 AM")
+        self.assertTrue(res3)
+
+        # 4. Diagnosis Submitted
+        res4 = sns.notify_diagnosis_submitted(patient_id, patient_name, doctor_name, "2026-10-10")
+        self.assertTrue(res4)
 
 if __name__ == "__main__":
     unittest.main()
-
-

@@ -1,91 +1,62 @@
 {% extends "base.html" %}
 
-{% block title %}Schedule Clinical Consultation | MedTrack{% endblock %}
+{% block title %}Book Appointment – MedTrack{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 760px; margin-top: 2rem; margin-bottom: 3rem;">
+<div class="container" style="max-width: 680px; padding-top: 2rem; padding-bottom: 3rem;">
   <div class="card">
     <div class="card-header">
-      <div>
-        <h1 style="font-size: 1.6rem; font-weight: 800; color: #0f172a;">
-          Schedule Clinical Consultation
-        </h1>
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
-          Select a board-certified physician and choose your preferred date and time slot.
-        </p>
+      <div class="card-title">
+        <span>📅</span> Book a Medical Consultation
       </div>
-      <a href="{{ url_for('appointments') }}" class="btn btn-secondary btn-sm">&larr; Back to List</a>
+      <a href="{{ url_for('view_appointments') }}" style="font-size: 0.85rem;">My Appointments &rarr;</a>
     </div>
 
-    <form action="{{ url_for('new_appointment') }}" method="POST" id="appointmentForm">
-      <!-- Department Selector -->
+    <form action="{{ url_for('book_appointment') }}" method="POST">
+      <!-- Select Doctor -->
       <div class="form-group">
-        <label for="department" class="form-label">Clinical Department</label>
-        <select class="form-select" id="department" name="department">
-          {% for dept in hospital_departments %}
-            <option value="{{ dept }}" {% if form.get('department') == dept %}selected{% endif %}>
-              {{ dept }}
+        <label for="doctor_id" class="form-label">Select Attending Doctor *</label>
+        <select class="form-select" id="doctor_id" name="doctor_id" required autofocus>
+          <option value="" disabled {% if not form.get('doctor_id') %}selected{% endif %}>Choose a physician...</option>
+          {% for doc in doctors %}
+            <option value="{{ doc.user_id }}" {% if form.get('doctor_id') == doc.user_id %}selected{% endif %}>
+              {{ doc.name }} ({{ doc.phone or 'General Service' }})
             </option>
           {% endfor %}
         </select>
       </div>
 
-      <!-- Doctor Selection -->
-      <div class="form-group">
-        <label for="doctor" class="form-label">Attending Specialist Physician <span class="required">*</span></label>
-        <select class="form-select" id="doctor" name="doctor" required>
-          <option value="">-- Choose a Healthcare Specialist --</option>
-          {% for doc in specialist_doctors %}
-            {% set doc_val = doc.name ~ ' (' ~ (doc.specialty or doc.department or 'General Medicine') ~ ')' %}
-            <option value="{{ doc_val }}" {% if form.get('doctor') == doc_val or form.get('doctor') == doc.name %}selected{% endif %}>
-              {{ doc.name }} — {{ doc.specialty or doc.department }} {% if doc.room %}[{{ doc.room }}]{% endif %}
-            </option>
-          {% endfor %}
-        </select>
-        <div class="form-hint">All specialists are board-certified and affiliated with {{ hospital_name }}.</div>
-      </div>
-
-      <!-- Date & Time Grid -->
-      <div class="form-grid-2">
+      <!-- Date & Time -->
+      <div class="form-row">
         <div class="form-group">
-          <label for="appointmentDate" class="form-label">Preferred Date <span class="required">*</span></label>
-          <input type="date" class="form-control" id="appointmentDate" name="date" min="{{ today }}" value="{{ form.get('date', today) }}" required>
+          <label for="appointment_date" class="form-label">Consultation Date *</label>
+          <input type="date" class="form-control" id="appointment_date" name="appointment_date" value="{{ form.get('appointment_date', '') }}" required>
         </div>
 
         <div class="form-group">
-          <label for="time" class="form-label">Preferred Consultation Slot <span class="required">*</span></label>
-          <select class="form-select" id="time" name="time" required>
-            <option value="">-- Select Time Slot --</option>
-            <option value="09:00 AM" {% if form.get('time') == '09:00 AM' %}selected{% endif %}>09:00 AM (Morning Slot)</option>
-            <option value="10:00 AM" {% if form.get('time') == '10:00 AM' %}selected{% endif %}>10:00 AM (Morning Slot)</option>
-            <option value="10:30 AM" {% if form.get('time') == '10:30 AM' %}selected{% endif %}>10:30 AM (Morning Slot)</option>
-            <option value="11:15 AM" {% if form.get('time') == '11:15 AM' %}selected{% endif %}>11:15 AM (Late Morning)</option>
-            <option value="02:00 PM" {% if form.get('time') == '02:00 PM' %}selected{% endif %}>02:00 PM (Afternoon Slot)</option>
-            <option value="02:30 PM" {% if form.get('time') == '02:30 PM' %}selected{% endif %}>02:30 PM (Afternoon Slot)</option>
-            <option value="03:30 PM" {% if form.get('time') == '03:30 PM' %}selected{% endif %}>03:30 PM (Afternoon Slot)</option>
-            <option value="04:45 PM" {% if form.get('time') == '04:45 PM' %}selected{% endif %}>04:45 PM (Evening Slot)</option>
+          <label for="appointment_time" class="form-label">Consultation Time *</label>
+          <select class="form-select" id="appointment_time" name="appointment_time" required>
+            <option value="" disabled {% if not form.get('appointment_time') %}selected{% endif %}>Select Time Slot</option>
+            <option value="09:00 AM" {% if form.get('appointment_time') == '09:00 AM' %}selected{% endif %}>09:00 AM</option>
+            <option value="10:00 AM" {% if form.get('appointment_time') == '10:00 AM' %}selected{% endif %}>10:00 AM</option>
+            <option value="11:00 AM" {% if form.get('appointment_time') == '11:00 AM' %}selected{% endif %}>11:00 AM</option>
+            <option value="02:00 PM" {% if form.get('appointment_time') == '02:00 PM' %}selected{% endif %}>02:00 PM</option>
+            <option value="03:00 PM" {% if form.get('appointment_time') == '03:00 PM' %}selected{% endif %}>03:00 PM</option>
+            <option value="04:00 PM" {% if form.get('appointment_time') == '04:00 PM' %}selected{% endif %}>04:00 PM</option>
           </select>
         </div>
       </div>
 
-      <!-- Reason for Visit -->
+      <!-- Reason for Consultation -->
       <div class="form-group">
-        <label for="reason" class="form-label">Reason for Consultation / Symptoms <span class="required">*</span></label>
-        <textarea class="form-control" id="reason" name="reason" rows="3" placeholder="Describe symptoms, chief complaint, or reason for specialist visit..." required>{{ form.get('reason', '') }}</textarea>
+        <label for="reason" class="form-label">Reason for Consultation / Chief Complaint *</label>
+        <textarea class="form-control" id="reason" name="reason" rows="3" placeholder="Briefly describe your symptoms or reason for scheduling..." required>{{ form.get('reason', '') }}</textarea>
       </div>
 
-      <!-- Instant Clinical Confirmation Notice -->
-      <div style="background: var(--bg-card-alt); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem; display: flex; gap: 0.75rem; align-items: center;">
-        <span style="font-size: 1.25rem;">🔔</span>
-        <div style="font-size: 0.85rem; color: var(--text-muted);">
-          <strong>Instant Clinical Confirmation:</strong> Upon booking, an immediate confirmation alert will be dispatched to your notifications feed and recorded in your patient file.
-        </div>
-      </div>
-
-      <div style="display: flex; justify-content: flex-end; gap: 1rem;">
-        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
-        <button type="submit" class="btn btn-primary" id="confirmBookingBtn">
-          Confirm Appointment &rarr;
+      <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline">Cancel</a>
+        <button type="submit" class="btn btn-primary">
+          Confirm &amp; Book Appointment &rarr;
         </button>
       </div>
     </form>

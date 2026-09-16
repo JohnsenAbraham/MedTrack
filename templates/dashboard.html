@@ -1,157 +1,78 @@
 {% extends "base.html" %}
 
-{% block title %}Patient Health Portal | MedTrack{% endblock %}
+{% block title %}Patient Dashboard – MedTrack{% endblock %}
 
 {% block content %}
-<div class="container" style="margin-top: 1.5rem; margin-bottom: 3rem;">
+<div class="container" style="padding-top: 1.5rem; padding-bottom: 3rem;">
 
-  <!-- Patient Medical Profile Header Banner -->
-  <div class="clinical-patient-banner">
-    <div style="display: flex; gap: 1.25rem; align-items: center;">
-      <div class="user-avatar-large">
-        {{ patient.name[0] | upper }}
-      </div>
-      <div>
-        <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
-          <h1 style="font-size: 1.75rem; font-weight: 800; color: #0f172a; margin: 0;">
-            {{ patient.name }}
-          </h1>
-          <span class="blood-type-badge">{{ patient.blood_group or 'O+' }}</span>
-          <span class="badge badge-role">{{ patient.role | capitalize }}</span>
-        </div>
-        <div class="patient-vital-meta">
-          <span>📧 {{ patient.email }}</span>
-          {% if patient.phone %}<span>📞 {{ patient.phone }}</span>{% endif %}
-          {% if patient.date_of_birth %}<span>🎂 DOB: {{ patient.date_of_birth }}</span>{% endif %}
-          <span>🛡️ {{ patient.insurance_provider or 'Standard Health Coverage' }}</span>
-        </div>
-        {% if patient.allergies and patient.allergies != 'None' %}
-          <div style="margin-top: 0.6rem;">
-            <span class="allergy-alert-pill">⚠️ Allergy Alert: {{ patient.allergies }}</span>
-          </div>
-        {% endif %}
-      </div>
-    </div>
-
-    <!-- Quick Patient Actions -->
-    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-      <a href="{{ url_for('new_appointment') }}" class="btn btn-primary" id="dashBookBtn">
-        📅 Schedule Consultation
-      </a>
-      <a href="{{ url_for('diagnoses') }}" class="btn btn-secondary" id="dashRecordsBtn">
-        📋 Clinical History
-      </a>
-    </div>
-  </div>
-
-  <!-- Key Clinical Metrics Statistics Grid -->
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-icon teal">📅</div>
-      <div>
-        <div class="stat-val">{{ stats.upcoming_count }}</div>
-        <div class="stat-label">Upcoming Visits</div>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon emerald">💊</div>
-      <div>
-        <div class="stat-val">{{ stats.active_prescriptions_count }}</div>
-        <div class="stat-label">Active Prescriptions</div>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon blue">🩺</div>
-      <div>
-        <div class="stat-val">{{ stats.diagnoses_count }}</div>
-        <div class="stat-label">Clinical Diagnoses</div>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon indigo" style="background: #e0e7ff; color: #4338ca;">📁</div>
-      <div>
-        <div class="stat-val">{{ stats.reports_count or 0 }}</div>
-        <div class="stat-label">Diagnostic Documents</div>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon amber">🔔</div>
-      <div>
-        <div class="stat-val">{{ stats.notifications_count }}</div>
-        <div class="stat-label">Dispatched Alerts</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Real-Time Vitals Telemetry Widget -->
-  <div class="card" style="margin-bottom: 2rem;">
-    <div class="card-header">
-      <div class="card-title">
-        <span>💓</span> Latest Clinical Vital Signs
-      </div>
-      <span style="font-size: 0.8rem; color: var(--text-muted);">
-        Recorded by attending physician
-      </span>
-    </div>
-
-    <div class="vitals-entry-grid" style="margin-top: 0.5rem;">
-      <div class="vital-input-card">
-        <label>Blood Pressure</label>
-        <div style="font-size: 1.35rem; font-weight: 800; color: #0f172a;">
-          {{ latest_vitals.blood_pressure or '120/80' }}
-        </div>
-        <div class="vital-unit-tag" style="color: #10b981; font-weight: 600;">Optimal (mmHg)</div>
-      </div>
-
-      <div class="vital-input-card">
-        <label>Heart Rate</label>
-        <div style="font-size: 1.35rem; font-weight: 800; color: #0f172a;">
-          {{ latest_vitals.heart_rate or 72 }}
-        </div>
-        <div class="vital-unit-tag" style="color: #10b981; font-weight: 600;">Normal Sinus (bpm)</div>
-      </div>
-
-      <div class="vital-input-card">
-        <label>Body Temperature</label>
-        <div style="font-size: 1.35rem; font-weight: 800; color: #0f172a;">
-          {{ latest_vitals.temperature or 98.6 }}
-        </div>
-        <div class="vital-unit-tag" style="color: #10b981; font-weight: 600;">Afebrile (°F)</div>
-      </div>
-
-      <div class="vital-input-card">
-        <label>Blood Oxygen (SpO2)</label>
-        <div style="font-size: 1.35rem; font-weight: 800; color: #0f172a;">
-          {{ latest_vitals.spo2 or 98 }}%
-        </div>
-        <div class="vital-unit-tag" style="color: #10b981; font-weight: 600;">Optimal Saturation</div>
-      </div>
-
-      <div class="vital-input-card">
-        <label>Blood Glucose</label>
-        <div style="font-size: 1.35rem; font-weight: 800; color: #0f172a;">
-          {{ latest_vitals.blood_sugar or 96 }}
-        </div>
-        <div class="vital-unit-tag" style="color: #10b981; font-weight: 600;">Fasting (mg/dL)</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Main Dashboard Two-Column Grid -->
-  <div class="dashboard-main-grid">
-    <!-- Left Column: Upcoming Consultations & Active Prescriptions -->
+  <!-- Patient Header Card -->
+  <div class="card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
     <div>
-      <!-- Upcoming Appointments Card -->
-      <div class="card" style="margin-bottom: 2rem;">
+      <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem;">
+        Patient Portal
+      </div>
+      <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.35rem;">
+        Welcome, {{ patient.name }}
+      </h1>
+      <div style="font-size: 0.88rem; color: var(--text-muted); display: flex; gap: 1rem; flex-wrap: wrap;">
+        <span>📧 {{ patient.email }}</span>
+        {% if patient.phone %}<span>📞 {{ patient.phone }}</span>{% endif %}
+        {% if patient.date_of_birth %}<span>🎂 DOB: {{ patient.date_of_birth }}</span>{% endif %}
+        {% if patient.gender %}<span>👤 {{ patient.gender }}</span>{% endif %}
+      </div>
+    </div>
+    <div>
+      <a href="{{ url_for('book_appointment') }}" class="btn btn-primary">+ Book Appointment</a>
+    </div>
+  </div>
+
+  <!-- Key Metrics Row -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-icon teal">📅</div>
+      <div>
+        <div class="metric-val">{{ upcoming_appointments | length }}</div>
+        <div class="metric-label">Upcoming Visits</div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon blue">🩺</div>
+      <div>
+        <div class="metric-val">{{ past_appointments | length }}</div>
+        <div class="metric-label">Past Appointments</div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon emerald">📋</div>
+      <div>
+        <div class="metric-val">{{ diagnoses | length }}</div>
+        <div class="metric-label">Clinical Diagnoses</div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon amber">🔔</div>
+      <div>
+        <div class="metric-val">{{ notifications | length }}</div>
+        <div class="metric-label">Notifications</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main 2-Column Content Grid -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+    
+    <!-- Left Column: Upcoming & Past Appointments -->
+    <div>
+      <!-- Upcoming Appointments -->
+      <div class="card">
         <div class="card-header">
           <div class="card-title">
-            <span>📅</span> Upcoming Specialist Consultations
+            <span>📅</span> Upcoming Appointments
           </div>
-          <a href="{{ url_for('appointments') }}" class="btn btn-outline btn-sm">All Consultations &rarr;</a>
+          <a href="{{ url_for('view_appointments') }}" style="font-size: 0.82rem; font-weight: 600;">View All &rarr;</a>
         </div>
 
         {% if upcoming_appointments %}
@@ -159,140 +80,28 @@
             <table class="table">
               <thead>
                 <tr>
-                  <th>Attending Physician</th>
-                  <th>Schedule</th>
-                  <th>Clinical Reason</th>
+                  <th>Doctor</th>
+                  <th>Date & Time</th>
                   <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for appt in upcoming_appointments %}
-                  <tr>
-                    <td style="font-weight: 600;">
-                      {{ appt.doctor }}
-                      {% if appt.department %}
-                        <div style="font-size: 0.75rem; color: var(--primary); font-weight: 500;">
-                          {{ appt.department }}
-                        </div>
-                      {% endif %}
-                    </td>
-                    <td>
-                      <strong>{{ appt.date }}</strong>
-                      <div style="color: var(--text-muted); font-size: 0.85rem;">at {{ appt.time }}</div>
-                    </td>
-                    <td>{{ appt.reason }}</td>
-                    <td>
-                      {% if appt.status == 'Checked-In' %}
-                        <span class="badge badge-checkedin">Checked-In</span>
-                      {% elif appt.status == 'In-Consultation' %}
-                        <span class="badge badge-inconsultation">In Consultation</span>
-                      {% else %}
-                        <span class="badge badge-confirmed">Confirmed</span>
-                      {% endif %}
-                    </td>
-                    <td>
-                      <form action="{{ url_for('cancel_appointment', appointment_id=appt.appointment_id) }}" method="POST" class="cancel-appointment-form" style="display:inline;">
-                        <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
-                      </form>
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        {% else %}
-          <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
-            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🩺</div>
-            <p style="font-weight: 600;">No upcoming consultations scheduled.</p>
-            <p style="font-size: 0.85rem; margin-top: 0.25rem;">Book a consultation with certified clinical specialists.</p>
-            <a href="{{ url_for('new_appointment') }}" class="btn btn-primary btn-sm" style="margin-top: 1rem;">Schedule Now</a>
-          </div>
-        {% endif %}
-      </div>
-
-      <!-- Active Electronic Prescriptions (E-Prescriptions Locker) -->
-      <div class="card" style="margin-bottom: 2rem;">
-        <div class="card-header">
-          <div class="card-title">
-            <span>💊</span> Active Electronic Prescriptions (Rx)
-          </div>
-          <a href="{{ url_for('diagnoses') }}" class="btn btn-outline btn-sm">View Full History &rarr;</a>
-        </div>
-
-        {% if active_prescriptions %}
-          <div class="table-responsive">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Medication</th>
-                  <th>Dosage</th>
-                  <th>Frequency & Regimen</th>
-                  <th>Prescribed By</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for rx in active_prescriptions %}
-                  <tr>
-                    <td>
-                      <strong style="color: #0f172a;">{{ rx.medication }}</strong>
-                      {% if rx.duration %}
-                        <div style="font-size: 0.75rem; color: var(--text-muted);">Duration: {{ rx.duration }}</div>
-                      {% endif %}
-                    </td>
-                    <td><span class="badge badge-role">{{ rx.dosage }}</span></td>
-                    <td>{{ rx.frequency }}</td>
-                    <td style="font-size: 0.88rem;">{{ rx.prescribed_by }}</td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        {% else %}
-          <div style="text-align: center; padding: 2rem 1rem; color: var(--text-muted);">
-            <p style="font-weight: 600;">No active prescriptions on file.</p>
-            <p style="font-size: 0.85rem;">Prescriptions issued during consultations will appear here automatically.</p>
-          </div>
-        {% endif %}
-      </div>
-
-      <!-- Encrypted Diagnostic Vault Documents -->
-      <div class="card" style="margin-bottom: 2rem;">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-          <div class="card-title">
-            <span>📁</span> Encrypted Diagnostic Vault & Lab Reports
-          </div>
-          <div style="display: flex; gap: 0.5rem;">
-            <a href="{{ url_for('reports_vault') }}#uploadCard" class="btn btn-primary btn-sm">+ Upload Test / Scan</a>
-            <a href="{{ url_for('reports_vault') }}" class="btn btn-outline btn-sm">Full Vault &rarr;</a>
-          </div>
-        </div>
-
-        {% if reports %}
-          <div class="table-responsive">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Document Title</th>
-                  <th>Category</th>
-                  <th>Filename</th>
-                  <th>Size</th>
-                  <th>Uploaded</th>
                   <th>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {% for r in reports %}
+                {% for apt in upcoming_appointments %}
                   <tr>
-                    <td><strong>{{ r.title }}</strong></td>
-                    <td><span class="badge" style="background: #e0f2fe; color: #0284c7; font-size: 0.72rem;">{{ r.category }}</span></td>
-                    <td style="font-family: monospace; font-size: 0.85rem;">{{ r.filename }}</td>
-                    <td>{{ (r.file_size / 1024) | round(1) }} KB</td>
-                    <td>{{ r.uploaded_at[:10] }}</td>
+                    <td><strong>{{ apt.doctor_name }}</strong></td>
+                    <td>{{ apt.appointment_date }}<br><small style="color: var(--text-muted);">{{ apt.appointment_time }}</small></td>
                     <td>
-                      <a href="{{ url_for('download_report', report_id=r.report_id) }}" target="_blank" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">
-                        👁️ View
-                      </a>
+                      <span class="badge badge-{{ apt.status | lower }}">{{ apt.status }}</span>
+                    </td>
+                    <td>
+                      {% if apt.status in ('PENDING', 'CONFIRMED') %}
+                        <form action="{{ url_for('cancel_appointment', appointment_id=apt.appointment_id) }}" method="POST" onsubmit="return confirm('Cancel this appointment?');" style="display:inline;">
+                          <button type="submit" class="btn btn-danger-outline btn-sm">Cancel</button>
+                        </form>
+                      {% else %}
+                        <span style="color: var(--text-light); font-size: 0.8rem;">—</span>
+                      {% endif %}
                     </td>
                   </tr>
                 {% endfor %}
@@ -300,126 +109,119 @@
             </table>
           </div>
         {% else %}
-          <div style="text-align: center; padding: 2rem 1rem; color: var(--text-muted);">
-            <p style="font-weight: 600;">No pathology tests or diagnostic scans in your vault.</p>
-            <p style="font-size: 0.85rem; margin-bottom: 0.75rem;">Upload lab panels or imaging reports so your attending physicians can review them.</p>
-            <a href="{{ url_for('reports_vault') }}#uploadCard" class="btn btn-primary btn-sm">Upload Diagnostic Document</a>
+          <div class="empty-state">
+            <div class="empty-icon">📅</div>
+            <p>No upcoming appointments scheduled.</p>
+            <a href="{{ url_for('book_appointment') }}" class="btn btn-outline btn-sm" style="margin-top: 8px;">Schedule a Consultation</a>
           </div>
         {% endif %}
       </div>
 
-      <!-- Longitudinal Diagnoses & Clinical Records -->
+      <!-- Recent Diagnosis Records -->
       <div class="card">
         <div class="card-header">
           <div class="card-title">
-            <span>📋</span> Longitudinal Diagnoses & Clinical Records
+            <span>📋</span> Recent Diagnoses
           </div>
-          <a href="{{ url_for('diagnoses') }}" class="btn btn-outline btn-sm">Full Timeline &rarr;</a>
+          <a href="{{ url_for('view_diagnoses') }}" style="font-size: 0.82rem; font-weight: 600;">Full Records &rarr;</a>
         </div>
 
         {% if diagnoses %}
-          <div class="table-responsive">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Physician</th>
-                  <th>Diagnosis Assessment</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for diag in diagnoses %}
-                  <tr>
-                    <td style="white-space: nowrap; font-weight: 600;">
-                      {{ diag.date }}
-                      {% if diag.icd10_code %}
-                        <div><code style="font-size: 0.75rem; color: var(--primary);">ICD: {{ diag.icd10_code }}</code></div>
-                      {% endif %}
-                    </td>
-                    <td style="white-space: nowrap;">{{ diag.doctor }}</td>
-                    <td>
-                      <div>{{ diag.diagnosis }}</div>
-                      {% if diag.treatment_plan %}
-                        <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.25rem;">
-                          <strong>Plan:</strong> {{ diag.treatment_plan }}
-                        </div>
-                      {% endif %}
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
+          {% for diag in diagnoses[:3] %}
+            <div style="padding: 0.85rem 0; border-bottom: 1px solid #f1f5f9;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <strong style="font-size: 0.92rem; color: var(--text-main);">{{ diag.doctor_name or 'Attending Physician' }}</strong>
+                <span style="font-size: 0.78rem; color: var(--text-muted);">{{ diag.date }}</span>
+              </div>
+              <p style="font-size: 0.88rem; color: #475569; margin: 0; line-height: 1.5;">
+                {{ diag.diagnosis }}
+              </p>
+            </div>
+          {% endfor %}
         {% else %}
-          <div style="text-align: center; padding: 2rem 1rem; color: var(--text-muted);">
-            <p style="font-weight: 600;">No medical diagnoses on record yet.</p>
-            <p style="font-size: 0.85rem;">Attending physicians document clinical findings here after examinations.</p>
+          <div class="empty-state">
+            <div class="empty-icon">🩺</div>
+            <p>No clinical diagnoses recorded yet.</p>
           </div>
         {% endif %}
       </div>
     </div>
 
-    <!-- Right Column: Patient Profile & Notifications Feed -->
+    <!-- Right Column: Notifications & Profile Summary -->
     <div>
-      <!-- Profile Card -->
-      <div class="card" style="margin-bottom: 2rem;">
-        <div class="card-header">
-          <div class="card-title">
-            <span>👤</span> Patient Chart Details
-          </div>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.9rem;">
-          <div>
-            <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">Full Legal Name</span>
-            <strong>{{ patient.name }}</strong>
-          </div>
-          <div>
-            <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">Email Address</span>
-            <span>{{ patient.email }}</span>
-          </div>
-          <div>
-            <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">Emergency Contact</span>
-            <span>{{ patient.emergency_contact or 'Not Provided' }}</span>
-          </div>
-          <div>
-            <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">Insurance Provider</span>
-            <span>{{ patient.insurance_provider or 'Standard Health Coverage' }}</span>
-          </div>
-          <div>
-            <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">EHR Patient ID</span>
-            <code style="font-size: 0.75rem; background: var(--bg-card-alt); padding: 0.2rem 0.4rem; border-radius: 4px;">{{ patient.user_id }}</code>
-          </div>
-        </div>
-      </div>
-
-      <!-- Real-Time Clinical Notifications Feed -->
+      <!-- Notifications / Status Feed -->
       <div class="card">
         <div class="card-header">
           <div class="card-title">
-            <span>🔔</span> Real-Time Clinical Notifications
+            <span>🔔</span> System Notifications
           </div>
-          <span class="badge badge-role">Live Feed</span>
+          <span class="badge badge-role">Amazon SNS Feed</span>
         </div>
 
         {% if notifications %}
           <ul class="notif-list">
-            {% for n in notifications %}
+            {% for n in notifications[:6] %}
               <li class="notif-item">
                 <div class="notif-dot"></div>
                 <div>
                   <div class="notif-msg">{{ n.message }}</div>
-                  <div class="notif-time">{{ n.created_at[:19].replace('T', ' ') }} UTC</div>
+                  <div class="notif-time">{{ n.created_at[:10] }} &bull; {{ n.created_at[11:16] }} UTC</div>
                 </div>
               </li>
             {% endfor %}
           </ul>
         {% else %}
-          <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 1.5rem 0;">
-            No notifications yet. Real-time alerts will appear here when appointments or prescriptions are issued.
-          </p>
+          <div class="empty-state">
+            <div class="empty-icon">🔕</div>
+            <p>No notifications yet.</p>
+          </div>
         {% endif %}
       </div>
+
+      <!-- Patient Profile Summary -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>👤</span> Patient Information
+          </div>
+        </div>
+        <table class="table">
+          <tbody>
+            <tr>
+              <th style="width: 40%;">Patient ID</th>
+              <td><code>{{ patient.user_id }}</code></td>
+            </tr>
+            <tr>
+              <th>Full Name</th>
+              <td>{{ patient.name }}</td>
+            </tr>
+            <tr>
+              <th>Email</th>
+              <td>{{ patient.email }}</td>
+            </tr>
+            <tr>
+              <th>Phone</th>
+              <td>{{ patient.phone or 'Not provided' }}</td>
+            </tr>
+            <tr>
+              <th>Date of Birth</th>
+              <td>{{ patient.date_of_birth or 'Not provided' }}</td>
+            </tr>
+            <tr>
+              <th>Gender</th>
+              <td>{{ patient.gender or 'Not specified' }}</td>
+            </tr>
+            <tr>
+              <th>Registered</th>
+              <td>{{ patient.created_at[:10] }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
     </div>
+
   </div>
+
 </div>
 {% endblock %}
