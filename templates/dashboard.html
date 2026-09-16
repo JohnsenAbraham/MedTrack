@@ -74,7 +74,7 @@
       <div class="stat-icon indigo" style="background: #e0e7ff; color: #4338ca;">📁</div>
       <div>
         <div class="stat-val">{{ stats.reports_count or 0 }}</div>
-        <div class="stat-label">S3 Vault Documents</div>
+        <div class="stat-label">Diagnostic Documents</div>
       </div>
     </div>
 
@@ -256,11 +256,11 @@
         {% endif %}
       </div>
 
-      <!-- S3 Encrypted Diagnostic Vault Documents -->
+      <!-- Encrypted Diagnostic Vault Documents -->
       <div class="card" style="margin-bottom: 2rem;">
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
           <div class="card-title">
-            <span>📁</span> S3 Encrypted Diagnostic Vault & Lab Reports
+            <span>📁</span> Encrypted Diagnostic Vault & Lab Reports
           </div>
           <div style="display: flex; gap: 0.5rem;">
             <a href="{{ url_for('reports_vault') }}#uploadCard" class="btn btn-primary btn-sm">+ Upload Test / Scan</a>
@@ -392,11 +392,11 @@
         </div>
       </div>
 
-      <!-- Real-Time AWS SNS Notifications Feed -->
+      <!-- Real-Time Clinical Notifications Feed -->
       <div class="card">
         <div class="card-header">
           <div class="card-title">
-            <span>🔔</span> Real-Time Notifications (AWS SNS)
+            <span>🔔</span> Real-Time Clinical Notifications
           </div>
           <span class="badge badge-role">Live Feed</span>
         </div>

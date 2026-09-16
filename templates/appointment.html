@@ -74,11 +74,11 @@
         <textarea class="form-control" id="reason" name="reason" rows="3" placeholder="Describe symptoms, chief complaint, or reason for specialist visit..." required>{{ form.get('reason', '') }}</textarea>
       </div>
 
-      <!-- AWS Cloud Alert Notice -->
+      <!-- Instant Clinical Confirmation Notice -->
       <div style="background: var(--bg-card-alt); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem; display: flex; gap: 0.75rem; align-items: center;">
         <span style="font-size: 1.25rem;">🔔</span>
         <div style="font-size: 0.85rem; color: var(--text-muted);">
-          <strong>AWS SNS Notification:</strong> Upon booking, an instant confirmation alert will be published to AWS SNS and recorded in your patient file.
+          <strong>Instant Clinical Confirmation:</strong> Upon booking, an immediate confirmation alert will be dispatched to your notifications feed and recorded in your patient file.
         </div>
       </div>
 

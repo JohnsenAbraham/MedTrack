@@ -459,6 +459,10 @@ def auth_google():
         session["auth_provider"] = "google"
 
         flash(f"Signed in successfully with Google as {user['email']}.", "success")
+        if user.get("role") == "doctor":
+            return redirect(url_for("doctor_queue"))
+        elif user.get("role") == "admin":
+            return redirect(url_for("admin_analytics"))
         return redirect(url_for("dashboard"))
 
     suggested_email = request.args.get("email", "")

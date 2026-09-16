@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="MedTrack - AWS Cloud-Enabled Healthcare Management & Electronic Health Record (EHR) System.">
-  <title>{% block title %}MedTrack | Hospital Healthcare Management System{% endblock %}</title>
+  <meta name="description" content="MedTrack - Connected Clinical Portal & Hospital Information System.">
+  <title>{% block title %}MedTrack — Connected Healthcare & Clinical Portal{% endblock %}</title>
 
-  <!-- Preconnect & Google Fonts -->
+  <!-- Google Fonts & Bootstrap Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
   <!-- Core Stylesheet -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -17,26 +18,27 @@
 </head>
 <body>
 
-  <!-- Top Emergency Hotline Ribbon -->
-  <div class="emergency-top-bar" role="banner">
-    <div class="container emergency-wrapper">
-      <div class="emergency-contact">
-        <a href="tel:911" class="emergency-link">🚨 Emergency: 911 / 112</a>
-        <span class="emergency-divider">|</span>
-        <span class="emergency-text">24/7 Clinical Care & Emergency Triage Desk</span>
+  <!-- Top Clinical Excellence Sub-Bar -->
+  <div class="mt-top-subbar">
+    <div class="mt-top-subbar-container">
+      <div class="mt-top-subbar-left">
+        <span class="mt-top-subbar-tag"><i class="bi bi-award-fill"></i> CLINICAL EXCELLENCE</span>
+        <span class="mt-top-subbar-text">MedTrack Connected Healthcare System & Diagnostic Network</span>
       </div>
-      <div class="emergency-meta">
-        <span>AWS Cloud Architecture Capstone</span>
-        <span class="emergency-divider">•</span>
-        <span>HIPAA §164.312 Compliant</span>
+      <div class="mt-top-subbar-right">
+        <span><i class="bi bi-clock-fill"></i> 24/7 Access</span>
+        <span class="mt-subbar-sep">|</span>
+        <span><i class="bi bi-shield-check"></i> HIPAA Ready</span>
+        <span class="mt-subbar-sep">|</span>
+        <a href="tel:911" class="mt-subbar-link"><i class="bi bi-telephone-fill"></i> Emergency: 911 / 112</a>
       </div>
     </div>
   </div>
 
-  <!-- Top Evaluator Quick Demo Persona Bar -->
-  <aside class="evaluator-demo-bar" aria-label="Evaluator Demo Switcher">
-    <div class="container evaluator-demo-wrapper">
-      <div class="evaluator-demo-title">
+  <!-- Discreet Evaluator Quick Persona Switcher -->
+  <aside class="evaluator-demo-bar" aria-label="Evaluator Demo Switcher" style="background: #071E36; border-bottom: 1px solid rgba(255,255,255,0.08); padding: 5px 0;">
+    <div class="container evaluator-demo-wrapper" style="font-size: 0.76rem; color: #94A3B8;">
+      <div class="evaluator-demo-title" style="color: #38BDF8; font-weight: 600;">
         <span>⚡</span> Evaluator 1-Click Role Switcher:
       </div>
       <div class="evaluator-demo-actions">
@@ -46,121 +48,127 @@
         <a href="{{ url_for('demo_login', role='patient') }}" class="demo-btn {% if user_role == 'patient' and is_authenticated and current_user.email == 'jane.doe@example.com' %}active-role{% endif %}" title="Log in as Patient with medical records">
           🧑‍🦱 Patient (Jane Doe)
         </a>
-        <a href="{{ url_for('demo_login', role='admin') }}" class="demo-btn {% if user_role == 'admin' %}active-role{% endif %}" title="Log in as Hospital Chief Medical Officer">
-          🛡️ Admin & AWS Cloud Ops
+        <a href="{{ url_for('demo_login', role='admin') }}" class="demo-btn {% if user_role == 'admin' %}active-role{% endif %}" title="Log in as Hospital Administrator">
+          🛡️ Hospital Administrator
         </a>
       </div>
       <div class="demo-user-indicator">
         {% if is_authenticated %}
-          <span>Active: <strong>{{ current_user.name }}</strong> ({{ user_role | capitalize }})</span>
+          <span>Active: <strong style="color: #FFFFFF;">{{ current_user.name }}</strong> ({{ user_role | capitalize }})</span>
         {% else %}
-          <span>Status: <em>Guest / Not Authenticated</em></span>
+          <span>Status: <em>Guest / Public View</em></span>
         {% endif %}
       </div>
     </div>
   </aside>
 
-  <!-- Top Navigation Bar -->
-  <header class="site-header">
-    <div class="container nav-wrapper">
-      <a href="{{ url_for('index') }}" class="brand-logo" id="navBrandLogo">
-        <div class="brand-icon">✚</div>
-        <div class="brand-text">
-          <span class="brand-title">MEDTRACK</span>
-          <span class="brand-sub">HEALTHCARE</span>
+  <!-- Main Navigation Bar -->
+  <nav class="mt-society-navbar">
+    <div class="mt-society-nav-container">
+      <a href="{{ url_for('index') }}" class="mt-society-brand">
+        <span class="mt-brand-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 4v16m-8-8h16"/>
+          </svg>
+        </span>
+        <div class="mt-society-brand-text">
+          <span class="mt-brand-main">MEDTRACK</span>
+          <span class="mt-brand-sub">HEALTHCARE</span>
         </div>
       </a>
 
-      <!-- Dynamic Role Navigation -->
-      <ul class="nav-links" id="navLinks">
-        <li class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
-          <a href="{{ url_for('index') }}">Home</a>
-        </li>
-        <li class="nav-item">
-          <a href="{{ url_for('index') }}#about-us">About Us</a>
-        </li>
-        <li class="nav-item">
-          <a href="{{ url_for('index') }}#services">Services</a>
-        </li>
-        <li class="nav-item">
-          <a href="{{ url_for('index') }}#departments">Departments</a>
-        </li>
+      <!-- Desktop Navigation Links -->
+      <div class="mt-society-nav-links">
+        <a href="{{ url_for('index') }}" class="mt-nav-item {% if request.endpoint == 'index' %}active{% endif %}">HOME</a>
+        <a href="{{ url_for('index') }}#about-us" class="mt-nav-item">ABOUT US</a>
+        <a href="{{ url_for('index') }}#services" class="mt-nav-item">SERVICES</a>
+        <a href="{{ url_for('index') }}#departments" class="mt-nav-item">DEPARTMENTS</a>
 
         {% if is_authenticated %}
           {% if user_role == 'doctor' %}
-            <li class="nav-item {% if request.endpoint == 'doctor_queue' %}active{% endif %}">
-              <a href="{{ url_for('doctor_queue') }}">Consultation Queue</a>
-            </li>
-            <li class="nav-item {% if request.endpoint == 'diagnoses' %}active{% endif %}">
-              <a href="{{ url_for('diagnoses') }}">Clinical History</a>
-            </li>
-            <li class="nav-item {% if request.endpoint == 'reports_vault' %}active{% endif %}">
-              <a href="{{ url_for('reports_vault') }}">Document Vault</a>
-            </li>
+            <a href="{{ url_for('doctor_queue') }}" class="mt-nav-item {% if request.endpoint == 'doctor_queue' %}active{% endif %}">CONSULTATION QUEUE</a>
+            <a href="{{ url_for('diagnoses') }}" class="mt-nav-item {% if request.endpoint == 'diagnoses' %}active{% endif %}">CLINICAL RECORDS</a>
+            <a href="{{ url_for('reports_vault') }}" class="mt-nav-item {% if request.endpoint == 'reports_vault' %}active{% endif %}">DOCUMENT VAULT</a>
           {% elif user_role == 'admin' %}
-            <li class="nav-item {% if request.endpoint == 'admin_analytics' %}active{% endif %}">
-              <a href="{{ url_for('admin_analytics') }}">Hospital Analytics & Cloud Ops</a>
-            </li>
-            <li class="nav-item {% if request.endpoint == 'doctor_queue' %}active{% endif %}">
-              <a href="{{ url_for('doctor_queue') }}">Physician Queues</a>
-            </li>
-            <li class="nav-item {% if request.endpoint == 'reports_vault' %}active{% endif %}">
-              <a href="{{ url_for('reports_vault') }}">Document Vault</a>
-            </li>
+            <a href="{{ url_for('admin_analytics') }}" class="mt-nav-item {% if request.endpoint == 'admin_analytics' %}active{% endif %}">HOSPITAL OPERATIONS</a>
+            <a href="{{ url_for('doctor_queue') }}" class="mt-nav-item {% if request.endpoint == 'doctor_queue' %}active{% endif %}">PHYSICIAN QUEUES</a>
+            <a href="{{ url_for('reports_vault') }}" class="mt-nav-item {% if request.endpoint == 'reports_vault' %}active{% endif %}">DOCUMENT VAULT</a>
           {% else %}
-            <li class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
-              <a href="{{ url_for('dashboard') }}">Patient Portal</a>
-            </li>
-            <li class="nav-item {% if 'appointment' in request.endpoint %}active{% endif %}">
-              <a href="{{ url_for('appointments') }}">My Appointments</a>
-            </li>
-            <li class="nav-item {% if 'diagnos' in request.endpoint %}active{% endif %}">
-              <a href="{{ url_for('diagnoses') }}">Medical Records</a>
-            </li>
-            <li class="nav-item {% if request.endpoint == 'reports_vault' %}active{% endif %}">
-              <a href="{{ url_for('reports_vault') }}">Document Vault</a>
-            </li>
+            <a href="{{ url_for('dashboard') }}" class="mt-nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">PATIENT PORTAL</a>
+            <a href="{{ url_for('appointments') }}" class="mt-nav-item {% if 'appointment' in request.endpoint %}active{% endif %}">APPOINTMENTS</a>
+            <a href="{{ url_for('diagnoses') }}" class="mt-nav-item {% if 'diagnos' in request.endpoint %}active{% endif %}">MEDICAL RECORDS</a>
+            <a href="{{ url_for('reports_vault') }}" class="mt-nav-item {% if request.endpoint == 'reports_vault' %}active{% endif %}">DOCUMENT VAULT</a>
           {% endif %}
-        {% endif %}
-      </ul>
 
-      <!-- Nav Actions -->
-      <div class="nav-actions">
-        <!-- Cloud Status Pill -->
-        <span class="mock-badge {% if not mock_aws %}live{% endif %}" title="AWS Architecture Mode">
-          {% if mock_aws %}
-            AWS Local Simulation
-          {% else %}
-            AWS Live Cloud
-          {% endif %}
-        </span>
-
-        {% if is_authenticated %}
+          <!-- User Profile and Sign Out -->
           {% if user_role == 'doctor' %}
-            <a href="{{ url_for('doctor_queue') }}" class="btn btn-secondary btn-sm" id="userProfileBtn">
-              👨‍⚕️ {{ current_user.name }}
+            <a href="{{ url_for('doctor_queue') }}" class="mt-btn-nav-outline" id="userProfileBtn">
+              <i class="bi bi-person-badge"></i> {{ current_user.name }}
             </a>
           {% elif user_role == 'admin' %}
-            <a href="{{ url_for('admin_analytics') }}" class="btn btn-secondary btn-sm" id="userProfileBtn">
-              🛡️ {{ current_user.name }}
+            <a href="{{ url_for('admin_analytics') }}" class="mt-btn-nav-outline" id="userProfileBtn">
+              <i class="bi bi-shield-lock"></i> {{ current_user.name }}
             </a>
           {% else %}
-            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-sm" id="userProfileBtn">
-              👤 {{ current_user.name }}
+            <a href="{{ url_for('dashboard') }}" class="mt-btn-nav-outline" id="userProfileBtn">
+              <i class="bi bi-person-circle"></i> {{ current_user.name }}
             </a>
           {% endif %}
-          <a href="{{ url_for('logout') }}" class="btn btn-outline btn-sm" id="navLogoutBtn">Sign Out</a>
+          <a href="{{ url_for('logout') }}" class="mt-btn-nav-outline" id="navLogoutBtn" style="border-color: #CBD5E1; color: #64748B;">
+            <i class="bi bi-box-arrow-right"></i> Sign Out
+          </a>
         {% else %}
-          <a href="{{ url_for('login') }}" class="btn btn-outline btn-sm" id="navLoginBtn">Sign In</a>
-          <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm" id="navRegisterBtn">Sign Up</a>
+          <a href="{{ url_for('login') }}" class="mt-btn-nav-outline" id="navLoginBtn">
+            <i class="bi bi-box-arrow-in-right"></i> SIGN IN
+          </a>
+          <a href="{{ url_for('register') }}" class="mt-btn-nav-primary" id="navRegisterBtn">
+            <i class="bi bi-person-plus-fill"></i> SIGN UP
+          </a>
         {% endif %}
-
-        <button class="mobile-toggle" id="mobileNavToggle" aria-label="Toggle navigation menu">
-          ☰
-        </button>
       </div>
+
+      <!-- Mobile Hamburger Toggle -->
+      <button class="mt-society-hamburger" id="mtSocietyHamburger" type="button" aria-label="Toggle navigation menu">
+        <i class="bi bi-list"></i>
+      </button>
     </div>
-  </header>
+
+    <!-- Mobile Dropdown Menu -->
+    <div class="mt-society-mobile-menu" id="mtSocietyMobileMenu">
+      <a href="{{ url_for('index') }}" class="mt-mobile-nav-link active"><i class="bi bi-house-door-fill"></i> Home</a>
+      <a href="{{ url_for('index') }}#about-us" class="mt-mobile-nav-link"><i class="bi bi-info-circle-fill"></i> About Us</a>
+      <a href="{{ url_for('index') }}#services" class="mt-mobile-nav-link"><i class="bi bi-gear-wide-connected"></i> Services</a>
+      <a href="{{ url_for('index') }}#departments" class="mt-mobile-nav-link"><i class="bi bi-hospital"></i> Departments</a>
+      {% if is_authenticated %}
+        {% if user_role == 'doctor' %}
+          <a href="{{ url_for('doctor_queue') }}" class="mt-mobile-nav-link"><i class="bi bi-card-checklist"></i> Consultation Queue</a>
+          <a href="{{ url_for('diagnoses') }}" class="mt-mobile-nav-link"><i class="bi bi-journal-medical"></i> Clinical Records</a>
+          <a href="{{ url_for('reports_vault') }}" class="mt-mobile-nav-link"><i class="bi bi-folder-check"></i> Document Vault</a>
+        {% elif user_role == 'admin' %}
+          <a href="{{ url_for('admin_analytics') }}" class="mt-mobile-nav-link"><i class="bi bi-graph-up-arrow"></i> Hospital Operations</a>
+          <a href="{{ url_for('doctor_queue') }}" class="mt-mobile-nav-link"><i class="bi bi-people-fill"></i> Physician Queues</a>
+          <a href="{{ url_for('reports_vault') }}" class="mt-mobile-nav-link"><i class="bi bi-folder-check"></i> Document Vault</a>
+        {% else %}
+          <a href="{{ url_for('dashboard') }}" class="mt-mobile-nav-link"><i class="bi bi-speedometer2"></i> Patient Portal</a>
+          <a href="{{ url_for('appointments') }}" class="mt-mobile-nav-link"><i class="bi bi-calendar-event"></i> My Appointments</a>
+          <a href="{{ url_for('diagnoses') }}" class="mt-mobile-nav-link"><i class="bi bi-clipboard2-pulse"></i> Medical Records</a>
+          <a href="{{ url_for('reports_vault') }}" class="mt-mobile-nav-link"><i class="bi bi-folder-check"></i> Document Vault</a>
+        {% endif %}
+        <div class="mt-mobile-nav-actions">
+          <a href="{{ url_for('logout') }}" class="mt-btn-nav-outline w-100" style="display: block; text-align: center;">Sign Out</a>
+        </div>
+      {% else %}
+        <div class="mt-mobile-nav-actions">
+          <a href="{{ url_for('login') }}" class="mt-btn-nav-outline w-100 mb-2" style="display: block; text-align: center;">
+            <i class="bi bi-box-arrow-in-right"></i> Sign In
+          </a>
+          <a href="{{ url_for('register') }}" class="mt-btn-nav-primary w-100" style="display: block; text-align: center;">
+            <i class="bi bi-person-plus-fill"></i> Sign Up
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </nav>
 
   <!-- Global Flash Messages -->
   <div class="container flash-container">
@@ -181,32 +189,35 @@
     {% block content %}{% endblock %}
   </main>
 
-  <!-- Footer -->
-  <footer class="site-footer">
-    <div class="container">
-      <div class="footer-grid">
-        <div class="footer-brand">
-          <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.75rem;">
-            <div class="brand-icon" style="width: 32px; height: 32px; font-size: 1rem;">✚</div>
-            <h3 style="margin: 0; font-size: 1.3rem; letter-spacing: -0.02em;">MEDTRACK HEALTHCARE</h3>
+  <!-- Professional Clinical Footer -->
+  <footer class="mt-footer-pro">
+    <div class="container" style="max-width: 1360px;">
+      <div class="mt-emergency-strip">
+        <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.25rem;"></i>
+        <div>
+          <strong>Emergency Medical Notice:</strong> If you or someone around you is experiencing an acute medical emergency, chest pain, or severe respiratory distress, please contact emergency dispatch (911 / 112) immediately. MedTrack is a clinical appointment and records portal, not an acute emergency ambulance dispatch service.
+        </div>
+      </div>
+
+      <div class="mt-footer-grid">
+        <div class="mt-footer-brand">
+          <div class="mt-society-brand" style="color: #fff; margin-bottom: 14px;">
+            <span class="mt-brand-badge" style="background: linear-gradient(135deg, #0288D1, #0275D8);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 4v16m-8-8h16"/>
+              </svg>
+            </span>
+            <div class="mt-society-brand-text">
+              <span class="mt-brand-main" style="color:#FFFFFF;">MEDTRACK</span>
+              <span class="mt-brand-sub" style="color:#A0C8F0;">HEALTHCARE</span>
+            </div>
           </div>
-          <p style="font-size: 0.9rem; line-height: 1.6; color: #94a3b8;">
-            Empowering patients and clinical practitioners with unified appointment scheduling, verified diagnostic exchanges, and accredited physician care in one reliable medical portal.
+          <p>
+            Next-generation connected clinical portal connecting patients, board-certified medical doctors, and healthcare administration with high-reliability medical informatics.
           </p>
-          <div style="display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; font-size: 0.78rem; color: #38bdf8;">
-            <span>☁️ AWS DynamoDB</span>
-            <span>•</span>
-            <span>🔔 AWS SNS</span>
-            <span>•</span>
-            <span>🪣 AWS S3 Vault</span>
-            <span>•</span>
-            <span>🖥️ AWS EC2</span>
-            <span>•</span>
-            <span>🔒 HIPAA Compliant</span>
-          </div>
         </div>
 
-        <div class="footer-links">
+        <div class="mt-footer-col">
           <h4>Specialties</h4>
           <ul>
             <li>Cardiology Clinic</li>
@@ -218,37 +229,48 @@
           </ul>
         </div>
 
-        <div class="footer-links">
+        <div class="mt-footer-col">
           <h4>Patient Portal</h4>
           <ul>
             <li><a href="{{ url_for('login') }}">Patient Sign In</a></li>
             <li><a href="{{ url_for('register') }}">Create Account</a></li>
             <li><a href="{{ url_for('new_appointment') }}">Book Doctor Visit</a></li>
-            <li><a href="{{ url_for('diagnoses') }}">Medical Record Access</a></li>
-            <li><a href="{{ url_for('reports_vault') }}">Encrypted Document Vault</a></li>
+            <li><a href="{{ url_for('diagnoses') }}">Medical Records</a></li>
+            <li><a href="{{ url_for('reports_vault') }}">Diagnostic Document Vault</a></li>
           </ul>
         </div>
 
-        <div class="footer-links">
+        <div class="mt-footer-col">
           <h4>System & Architecture</h4>
           <ul>
-            <li><a href="{{ url_for('health') }}" target="_blank">Cloud Health Telemetry JSON</a></li>
-            <li>Phase 1 — Local SQLite Engine</li>
-            <li>Phase 2 — AWS DynamoDB Hybrid</li>
-            <li>Encrypted S3 Document Vault</li>
+            <li><a href="{{ url_for('health') }}" target="_blank" style="color:#38BDF8;">Cloud Health Telemetry JSON</a></li>
+            <li>High-Performance Database Engine</li>
+            <li>Encrypted Pathology & Scan Vault</li>
             <li>Role-Based Authorization (RBAC)</li>
-            <li>Fault-Tolerant Retries & DLQ</li>
+            <li>HIPAA §164.312 Compliant Audit Trail</li>
           </ul>
         </div>
       </div>
-      <div class="footer-bottom">
-        &copy; {{ current_year }} MedTrack Healthcare. AWS Cloud Practitioner Capstone Platform. Designed & Engineered by Johnsen Abraham.
+
+      <div class="mt-footer-bottom">
+        <span>&copy; {{ current_year }} MedTrack Healthcare Systems. All rights reserved.</span>
+        <span>Engineered for Clinical Reliability &bull; HIPAA-Ready Health Information Architecture</span>
       </div>
     </div>
   </footer>
 
   <!-- Core JavaScript -->
   <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  <script>
+    // Mobile Navigation Toggle
+    const hamb = document.getElementById('mtSocietyHamburger');
+    const menu = document.getElementById('mtSocietyMobileMenu');
+    if (hamb && menu) {
+      hamb.addEventListener('click', function() {
+        menu.classList.toggle('show');
+      });
+    }
+  </script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>

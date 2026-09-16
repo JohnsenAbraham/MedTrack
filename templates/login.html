@@ -12,18 +12,18 @@
       </div>
 
       <!-- Quick Evaluator 1-Click Persona Access -->
-      <div style="background: #f0fdfa; border: 1px solid #99f6e4; border-radius: var(--radius-md); padding: 0.85rem 1rem; margin-bottom: 1.25rem;">
-        <div style="font-size: 0.78rem; font-weight: 700; color: #0f766e; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.4rem;">
-          ⚡ Evaluator 1-Click Instant Login
+      <div class="mt-demo-accounts-box">
+        <div class="mt-demo-accounts-title">
+          <i class="bi bi-lightning-charge-fill"></i> Evaluator 1-Click Demo Login
         </div>
-        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
-          <a href="{{ url_for('demo_login', role='doctor') }}" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; padding: 0.3rem 0.6rem;">
+        <div class="mt-demo-buttons-row">
+          <a href="{{ url_for('demo_login', role='doctor') }}" class="mt-demo-btn" title="Doctor Portal">
             👨‍⚕️ Doctor
           </a>
-          <a href="{{ url_for('demo_login', role='patient') }}" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; padding: 0.3rem 0.6rem;">
+          <a href="{{ url_for('demo_login', role='patient') }}" class="mt-demo-btn" title="Patient EHR">
             🧑‍🦱 Patient
           </a>
-          <a href="{{ url_for('demo_login', role='admin') }}" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; padding: 0.3rem 0.6rem;">
+          <a href="{{ url_for('demo_login', role='admin') }}" class="mt-demo-btn" title="Hospital Operations">
             🛡️ Admin / Ops
           </a>
         </div>
