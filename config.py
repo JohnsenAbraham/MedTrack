@@ -25,10 +25,17 @@ class Config:
     DYNAMODB_APPOINTMENTS_TABLE = os.getenv("DYNAMODB_APPOINTMENTS_TABLE", "MedTrack_Appointments")
     DYNAMODB_DIAGNOSES_TABLE = os.getenv("DYNAMODB_DIAGNOSES_TABLE", "MedTrack_Diagnoses")
     DYNAMODB_NOTIFICATIONS_TABLE = os.getenv("DYNAMODB_NOTIFICATIONS_TABLE", "MedTrack_Notifications")
+    DYNAMODB_REPORTS_TABLE = os.getenv("DYNAMODB_REPORTS_TABLE", "MedTrack_Reports")
 
     # AWS SNS Configuration
     SNS_TOPIC_ARN = os.getenv("SNS_TOPIC_ARN", "arn:aws:sns:us-east-1:123456789012:MedTrack-Alerts")
     SNS_DLQ_ARN = os.getenv("SNS_DLQ_ARN", "arn:aws:sqs:us-east-1:123456789012:MedTrack-Alerts-DLQ")
+
+    # AWS S3 Document Vault Configuration
+    S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME", "medtrack-clinical-vault")
+    UPLOAD_FOLDER = BASE_DIR / "uploads"
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB max upload
+    ALLOWED_EXTENSIONS = {"pdf", "png", "jpg", "jpeg"}
 
     # AWS CloudWatch Logging
     CLOUDWATCH_LOG_GROUP = os.getenv("CLOUDWATCH_LOG_GROUP", "/aws/ec2/medtrack-production")
@@ -41,13 +48,12 @@ class Config:
     GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
 
     # Hospital Branding & Clinical Specialty Configuration
-    HOSPITAL_NAME = os.getenv("HOSPITAL_NAME", "MedTrack Health System")
+    HOSPITAL_NAME = os.getenv("HOSPITAL_NAME", "MedTrack Healthcare")
     HOSPITAL_DEPARTMENTS = [
         "Cardiology",
-        "Neurology",
-        "Internal Medicine",
-        "Orthopedics & Sports",
-        "Pediatrics & Child Health",
         "Dermatology",
-        "General Medicine"
+        "General Medicine",
+        "Pediatrics",
+        "Orthopedics",
+        "Neurology"
     ]

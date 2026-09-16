@@ -87,6 +87,51 @@
     {% endif %}
   </div>
 
+  <!-- S3 Encrypted Diagnostic Vault & Lab Reports -->
+  <div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="card-title">
+        <span>📁</span> Diagnostic Documents & Pathology Reports
+      </div>
+      <span class="badge badge-confirmed">{{ patient_reports | length }} Documents</span>
+    </div>
+
+    {% if patient_reports %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Document Title</th>
+              <th>Category</th>
+              <th>File Name</th>
+              <th>Size</th>
+              <th>Uploaded Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in patient_reports %}
+              <tr>
+                <td><strong>{{ r.title }}</strong></td>
+                <td><span class="badge" style="background: #e0f2fe; color: #0284c7; font-size: 0.72rem;">{{ r.category }}</span></td>
+                <td style="font-family: monospace; font-size: 0.85rem;">{{ r.filename }}</td>
+                <td>{{ (r.file_size / 1024) | round(1) }} KB</td>
+                <td>{{ r.uploaded_at[:10] }}</td>
+                <td>
+                  <a href="{{ url_for('download_report', report_id=r.report_id) }}" target="_blank" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; padding: 0.25rem 0.6rem;">
+                    👁️ View Document
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p style="text-align: center; color: var(--text-muted); padding: 1.5rem 0;">No diagnostic reports attached to this patient record.</p>
+    {% endif %}
+  </div>
+
   <!-- Complete Clinical Encounters Timeline -->
   <div class="card" style="margin-bottom: 2rem;">
     <div class="card-header">

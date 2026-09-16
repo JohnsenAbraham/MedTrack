@@ -5,7 +5,7 @@
 [![Framework](https://img.shields.io/badge/Flask-3.x%20WSGI-000000.svg?logo=flask&logoColor=white)](#)
 [![Cloud Architecture](https://img.shields.io/badge/AWS-DynamoDB%20%7C%20SNS%20%7C%20EC2%20%7C%20IAM%20%7C%20CloudWatch-FF9900.svg?logo=amazon-aws&logoColor=white)](#)
 [![Compliance](https://img.shields.io/badge/Compliance-HIPAA%20Security%20Rule%20Audit-059669.svg)](#)
-[![Tests](https://img.shields.io/badge/Automated%20Tests-19%2F19%20Passing-success.svg)](#)
+[![Tests](https://img.shields.io/badge/Automated%20Tests-22%2F22%20Passing-success.svg)](#)
 
 > **SkillWallet Capstone Project**  
 > **Student / Engineer:** Johnsen Abraham (<johnsenabraham01@gmail.com>)  
@@ -114,9 +114,15 @@ For academic evaluations, mentor reviews, and recruiter demonstrations, MedTrack
 - **Specialist Consultation Booking:** Department-filtered scheduling with certified doctors.
 
 ### 3. Hospital Operations & AWS Cloud Telemetry (`/admin/analytics`)
-- **Executive Analytics:** Patient volume, active doctors, and department distribution (Cardiology, Neurology, Internal Medicine, Orthopedics, Pediatrics, Dermatology).
+- **Executive Analytics:** Patient volume, active doctors, and department distribution (Cardiology, Neurology, General Medicine, Orthopedics, Pediatrics, Dermatology).
 - **AWS Cloud Center:** Live health indicators for DynamoDB read/write capacity, SNS topic status, EC2 concurrency, and SQS DLQ backlog.
 - **HIPAA Security Rule §164.312(b) Audit Stream:** Immutable table tracking every login, record view, appointment change, and prescription write with timestamp, actor role, and IP address.
+
+### 4. S3 Encrypted Diagnostic & Pathology Document Vault (`/reports`)
+- **MIME & Extension Security Validation:** Strict validation enforcing permitted document types (`PDF`, `PNG`, `JPG`, `JPEG`) and blocking arbitrary execution.
+- **Clinical Category Tagging:** Classifies records into Pathology / Lab Panels, Radiology / ECG Scans, Physician Summaries, and Prescriptions.
+- **Integrated Consultation Access:** Attending physicians directly review uploaded blood panels and ECG scans inside the Doctor Consultation Room (`/doctor/consultation/<id>`) prior to prescribing.
+- **Longitudinal EHR Viewer:** Patients and doctors can preview and download historical scans and diagnostic records anytime.
 
 ---
 
@@ -326,6 +332,9 @@ Use the **Evaluator Persona Bar** at the top of the page to switch between Docto
 - `test_17_patient_record_view_ehr` – Verifies longitudinal patient medical chart.
 - `test_18_admin_analytics_and_hipaa_audit_trail` – Verifies hospital analytics and HIPAA audit logs.
 - `test_19_deep_cloud_health_check_payload` – Verifies deep dependency telemetry JSON.
+- `test_20_signup_route_alias` – Verifies `/signup` seamlessly aliases to clinical registration.
+- `test_21_diagnostic_document_vault_flow` – Verifies authenticated vault upload, storage, and secure download.
+- `test_22_diagnostic_vault_mime_validation` – Verifies security blocks on invalid file extensions.
 
 ### 2. Run Live HTTP End-to-End Simulation
 ```powershell

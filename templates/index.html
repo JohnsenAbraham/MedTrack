@@ -9,34 +9,63 @@
     <div class="hero-grid">
       <div class="hero-content">
         <div class="hero-tag">
-          <span>⚡ Next-Generation Hospital Cloud EHR</span>
+          <span>⚡ Next-Generation Hospital Cloud EHR • AWS Enabled</span>
         </div>
         <h1 class="hero-title">
           Smart, Scalable Healthcare with <span>MedTrack</span>.
         </h1>
-        <p class="hero-description">
-          An enterprise clinical ecosystem connecting patients, attending physicians, and hospital administration with high-reliability appointment scheduling, electronic health records (EHR), structured e-prescriptions, and AWS cloud event notifications.
+        <p class="hero-description" style="font-size: 1.15rem; line-height: 1.7; margin-bottom: 1.5rem;">
+          Empowering patients and clinical practitioners with unified appointment scheduling, verified diagnostic exchanges, and accredited physician care in one reliable medical portal.
         </p>
 
         <!-- Quick 1-Click Evaluation Showcase -->
-        <div style="background: rgba(13, 148, 136, 0.08); border: 1px solid rgba(13, 148, 136, 0.2); border-radius: var(--radius-md); padding: 0.85rem 1.25rem; margin-bottom: 1.5rem;">
-          <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;">
-            ⚡ Quick Evaluator Demo Access
+        <div style="background: rgba(13, 148, 136, 0.08); border: 1px solid rgba(13, 148, 136, 0.25); border-radius: var(--radius-md); padding: 0.9rem 1.25rem; margin-bottom: 1.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <div style="font-size: 0.8rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em;">
+              ⚡ Evaluator 1-Click Demo Login
+            </div>
+            <span class="badge badge-confirmed" style="font-size: 0.72rem;">No Password Required</span>
           </div>
           <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <a href="{{ url_for('demo_login', role='doctor') }}" class="btn btn-secondary btn-sm">👨‍⚕️ Launch Doctor Workspace</a>
-            <a href="{{ url_for('demo_login', role='patient') }}" class="btn btn-secondary btn-sm">🧑‍🦱 Launch Patient Portal</a>
-            <a href="{{ url_for('demo_login', role='admin') }}" class="btn btn-secondary btn-sm">🛡️ Launch Hospital Ops</a>
+            <a href="{{ url_for('demo_login', role='doctor') }}" class="btn btn-secondary btn-sm" title="Attending Physician View">
+              👨‍⚕️ Doctor (Dr. Jenkins, MD)
+            </a>
+            <a href="{{ url_for('demo_login', role='patient') }}" class="btn btn-secondary btn-sm" title="Patient EHR Portal">
+              🧑‍🦱 Patient (Jane Doe)
+            </a>
+            <a href="{{ url_for('demo_login', role='admin') }}" class="btn btn-secondary btn-sm" title="Executive Ops Console">
+              🛡️ Hospital Ops & Cloud
+            </a>
           </div>
         </div>
 
-        <div class="hero-actions">
+        <div class="hero-actions" style="display: flex; gap: 0.85rem; flex-wrap: wrap; align-items: center;">
           {% if is_authenticated %}
-            <a href="{{ url_for('dashboard') }}" class="btn btn-primary" id="heroDashboardBtn">Open My Portal &rarr;</a>
-            <a href="{{ url_for('new_appointment') }}" class="btn btn-secondary" id="heroBookBtn">Schedule Visit</a>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary" id="heroDashboardBtn">
+              Open My Portal &rarr;
+            </a>
+            <a href="{{ url_for('new_appointment') }}" class="btn btn-secondary" id="heroBookBtn">
+              Schedule Doctor Visit
+            </a>
+            <a href="{{ url_for('reports_vault') }}" class="btn btn-outline" id="heroVaultBtn">
+              📁 S3 Document Vault
+            </a>
           {% else %}
-            <a href="{{ url_for('register') }}" class="btn btn-primary" id="heroRegisterBtn">Register Patient Account</a>
-            <a href="{{ url_for('login') }}" class="btn btn-secondary" id="heroLoginBtn">Sign In to Portal</a>
+            <a href="{{ url_for('register') }}" class="btn btn-primary" id="heroRegisterBtn">
+              JOIN US &rarr;
+            </a>
+            <a href="{{ url_for('auth_google') }}" class="btn btn-secondary" id="heroGoogleBtn" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+              </svg>
+              Continue with Google
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline" id="heroLoginBtn">
+              Sign In
+            </a>
           {% endif %}
         </div>
       </div>
@@ -44,11 +73,11 @@
       <!-- Live Clinical Telemetry Preview Card -->
       <div class="hero-card-preview">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-          <span style="font-weight: 700; font-size: 1.1rem; color: #0f172a;">Patient Health Center</span>
+          <span style="font-weight: 700; font-size: 1.15rem; color: #0f172a;">Patient Health Center</span>
           <span class="badge badge-confirmed">Clinical Grade</span>
         </div>
-        <p style="color: var(--text-muted); font-size: 0.9rem;">
-          Unified access to vital signs monitoring, longitudinal clinical notes, ICD-10 diagnostic codes, and verified specialist care.
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+          Unified access to vital signs monitoring, longitudinal clinical notes, ICD-10 diagnostic codes, encrypted pathology vault, and verified specialist care.
         </p>
 
         <div class="preview-stat-grid">
@@ -66,134 +95,247 @@
           </div>
           <div class="preview-stat">
             <div class="preview-stat-number">Audit Trail</div>
-            <div class="preview-stat-label">HIPAA & RBAC Compliant</div>
+            <div class="preview-stat-label">HIPAA §164.312(b)</div>
           </div>
+        </div>
+
+        <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-size: 0.8rem; color: var(--text-muted);">
+            <strong style="color: var(--text-main);">Active S3 Vault:</strong> Fasting Lipid Panels & 12-Lead ECGs
+          </div>
+          <a href="{{ url_for('demo_login', role='patient') }}" style="font-size: 0.8rem; font-weight: 700;">Explore &rarr;</a>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Hospital Clinical Specialties -->
-<section class="features-section" style="background: white; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
+<!-- Section 1: The 4 Feature Pillars (#services) -->
+<section class="features-section" id="services" style="background: white; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
   <div class="container">
     <div class="section-header">
-      <h2 class="section-title">Comprehensive Hospital Departments & Specialties</h2>
+      <div style="font-size: 0.8rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem;">
+        Integrated Clinical Ecosystem
+      </div>
+      <h2 class="section-title">Core Clinical Healthcare Pillars</h2>
       <p class="section-subtitle">
-        MedTrack coordinates multi-disciplinary clinical departments with dedicated physician consultation queues.
+        Engineered for patient satisfaction, physician diagnostic precision, and enterprise cloud reliability.
+      </p>
+    </div>
+
+    <div class="features-grid">
+      <!-- Pillar 1: Physician Care -->
+      <div class="feature-box">
+        <div class="feature-icon-wrapper" style="background: #e0f2fe; color: #0284c7;">👨‍⚕️</div>
+        <h3 class="feature-title">PHYSICIAN CARE</h3>
+        <p class="feature-text">
+          Consult with board-certified clinical specialists across cardiology, dermatology, pediatrics, and family medicine with scheduled appointments and queue triage.
+        </p>
+        <div style="margin-top: 1rem;">
+          <a href="{{ url_for('register') }}" style="font-size: 0.85rem; font-weight: 700;">Learn More &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Pillar 2: Patient Records -->
+      <div class="feature-box">
+        <div class="feature-icon-wrapper" style="background: #d1fae5; color: #059669;">📑</div>
+        <h3 class="feature-title">PATIENT RECORDS</h3>
+        <p class="feature-text">
+          Securely maintain encrypted historical diagnostic reports, clinical vitals trends, ICD-10 diagnostic codes, and digital multi-drug e-prescriptions.
+        </p>
+        <div style="margin-top: 1rem;">
+          <a href="{{ url_for('login') }}" style="font-size: 0.85rem; font-weight: 700;">Access Portal &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Pillar 3: Clinical Diagnostics -->
+      <div class="feature-box">
+        <div class="feature-icon-wrapper" style="background: #fef3c7; color: #d97706;">🔬</div>
+        <h3 class="feature-title">CLINICAL DIAGNOSTICS</h3>
+        <p class="feature-text">
+          Upload pathology tests and scans with rigorous MIME validation, AES-256 encryption, and role-isolated doctor pre-consultation evaluations.
+        </p>
+        <div style="margin-top: 1rem;">
+          <a href="{{ url_for('register') }}" style="font-size: 0.85rem; font-weight: 700;">Upload Files &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Pillar 4: Instant Scheduling -->
+      <div class="feature-box">
+        <div class="feature-icon-wrapper" style="background: #f3e8ff; color: #7c3aed;">📅</div>
+        <h3 class="feature-title">INSTANT SCHEDULING</h3>
+        <p class="feature-text">
+          Book real-time appointments with verified clinical doctors with immediate AWS SNS notification updates, zero delay, and self-service rescheduling.
+        </p>
+        <div style="margin-top: 1rem;">
+          <a href="{{ url_for('login') }}" style="font-size: 0.85rem; font-weight: 700;">Book Visit &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 2: About Us (#about-us) -->
+<section class="features-section" id="about-us" style="background: var(--bg-app);">
+  <div class="container">
+    <div style="max-width: 840px; margin: 0 auto; text-align: center;">
+      <div style="font-size: 0.8rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem;">
+        About MedTrack Health System
+      </div>
+      <h2 style="font-size: 2.1rem; font-weight: 800; color: var(--text-main); margin-bottom: 1.25rem;">
+        Modern Healthcare Infrastructure for Patients & Providers
+      </h2>
+      <p style="font-size: 1.05rem; line-height: 1.8; color: var(--text-muted); margin-bottom: 1.25rem;">
+        MedTrack was created to bring institutional clinical coordination into a modern, unified environment. By bridging accredited physicians and patients, we eliminate the administrative overhead and telephone delays common to modern medical offices.
+      </p>
+      <p style="font-size: 1.05rem; line-height: 1.8; color: var(--text-muted); margin-bottom: 2rem;">
+        Our platform guarantees end-to-end security through cryptographic password hashing, role-isolated health data access (RBAC), and verified diagnostic document storage. Whether conducting routine consultations or managing complex multi-specialty evaluations, MedTrack upholds the highest benchmarks of clinical integrity and patient trust.
+      </p>
+      <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+        <a href="#departments" class="btn btn-primary">EXPLORE SERVICES &rarr;</a>
+        <a href="{{ url_for('health') }}" target="_blank" class="btn btn-secondary">SYSTEM HEALTH TELEMETRY</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 3: Clinical Departments (#departments) -->
+<section class="features-section" id="departments" style="background: white; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
+  <div class="container">
+    <div class="section-header">
+      <div style="font-size: 0.8rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem;">
+        Accredited Specialties
+      </div>
+      <h2 class="section-title">Hospital Clinical Departments</h2>
+      <p class="section-subtitle">
+        Connect with accredited specialists across diverse clinical practices for comprehensive consultations and diagnostic reviews.
       </p>
     </div>
 
     <div class="features-grid">
       <div class="feature-box">
-        <div class="feature-icon-wrapper">🫀</div>
-        <h3 class="feature-title">Cardiology & Heart Center</h3>
+        <div class="feature-icon-wrapper" style="background: #fee2e2; color: #dc2626;">🫀</div>
+        <h3 class="feature-title">Cardiology</h3>
         <p class="feature-text">
-          Comprehensive cardiovascular consultations, ECG & stress testing triage, hypertensive monitoring, and arrhythmia tracking.
+          Cardiovascular health, ECG evaluations, hypertension therapy & preventive vascular care under Dr. Sarah Jenkins, MD.
         </p>
       </div>
 
       <div class="feature-box">
-        <div class="feature-icon-wrapper">🧠</div>
-        <h3 class="feature-title">Neurology & Spine Care</h3>
+        <div class="feature-icon-wrapper" style="background: #fef3c7; color: #d97706;">🔬</div>
+        <h3 class="feature-title">Dermatology</h3>
         <p class="feature-text">
-          Migraine clinic, neuro-imaging evaluations, neuropathy management, and specialized neurological examinations.
+          Skin condition management, biopsy evaluations & clinical therapies under Dr. Elena Rostova, MD.
         </p>
       </div>
 
       <div class="feature-box">
-        <div class="feature-icon-wrapper">🩺</div>
-        <h3 class="feature-title">Internal Medicine</h3>
+        <div class="feature-icon-wrapper" style="background: #e0f2fe; color: #0284c7;">🩺</div>
+        <h3 class="feature-title">General Medicine</h3>
         <p class="feature-text">
-          Longitudinal metabolic care, Type 2 diabetes management, annual health wellness screenings, and chronic illness plans.
+          Comprehensive primary care, diagnostic screenings & preventive checkups under Dr. Priya Sharma, MD.
         </p>
       </div>
 
       <div class="feature-box">
-        <div class="feature-icon-wrapper">🦴</div>
-        <h3 class="feature-title">Orthopedics & Sports</h3>
+        <div class="feature-icon-wrapper" style="background: #d1fae5; color: #059669;">👶</div>
+        <h3 class="feature-title">Pediatrics</h3>
         <p class="feature-text">
-          Joint evaluations, musculoskeletal rehabilitation, acute injury triage, and post-operative mobility assessments.
+          Infant, child & adolescent developmental health, checkups & immunizations under Dr. David Chen, MD.
         </p>
       </div>
 
       <div class="feature-box">
-        <div class="feature-icon-wrapper">👶</div>
-        <h3 class="feature-title">Pediatrics & Child Health</h3>
+        <div class="feature-icon-wrapper" style="background: #f1f5f9; color: #475569;">🦴</div>
+        <h3 class="feature-title">Orthopedics</h3>
         <p class="feature-text">
-          Developmental milestone monitoring, pediatric immunizations, acute illness management, and parental consultations.
+          Joint, bone & musculoskeletal assessments, sports injuries & rehab under Dr. Marcus Vance, MD.
         </p>
       </div>
 
       <div class="feature-box">
-        <div class="feature-icon-wrapper">🔬</div>
-        <h3 class="feature-title">Dermatology & Skin Care</h3>
+        <div class="feature-icon-wrapper" style="background: #ede9fe; color: #7c3aed;">🧠</div>
+        <h3 class="feature-title">Neurology</h3>
         <p class="feature-text">
-          Clinical dermatological assessments, eczema and allergy management, lesion biopsies, and phototherapy coordination.
+          Central nervous system diagnostics, nerve assessments & neuro consultations under Dr. Mark Thorne, MD.
         </p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- AWS Cloud Architecture Features -->
-<section class="features-section">
+<!-- Section 4: 4-Step Patient Pathway (#how-it-works) -->
+<section class="features-section" id="how-it-works" style="background: var(--bg-app);">
   <div class="container">
     <div class="section-header">
-      <h2 class="section-title">Architected for AWS Cloud Enterprise Resiliency</h2>
+      <div style="font-size: 0.8rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem;">
+        Patient Care Journey
+      </div>
+      <h2 class="section-title">Four-Step Pathway to Coordinated Care</h2>
       <p class="section-subtitle">
-        Built in alignment with the AWS Well-Architected Framework: Reliability, Security, and Operational Excellence.
+        A rigorous four-step pathway engineered to eliminate paperwork delays and place patient care first.
       </p>
     </div>
 
-    <div class="features-grid">
-      <div class="feature-box">
-        <div class="feature-icon-wrapper">⚡</div>
-        <h3 class="feature-title">AWS DynamoDB Serverless NoSQL</h3>
+    <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+      <div class="feature-box" style="position: relative;">
+        <div style="position: absolute; top: 1rem; right: 1.25rem; font-size: 2rem; font-weight: 900; color: var(--border-color); line-height: 1;">01</div>
+        <div class="feature-icon-wrapper">🔐</div>
+        <h3 class="feature-title">Register or Authenticate</h3>
         <p class="feature-text">
-          Multi-table architecture storing patient rosters, appointments, structured vitals, and diagnoses with Global Secondary Indexes (GSIs).
+          Sign up securely with your email and password, or authenticate instantly with verified Google OAuth credentials.
         </p>
       </div>
 
-      <div class="feature-box">
-        <div class="feature-icon-wrapper">🔔</div>
-        <h3 class="feature-title">AWS SNS Real-Time Push Alerts</h3>
+      <div class="feature-box" style="position: relative;">
+        <div style="position: absolute; top: 1rem; right: 1.25rem; font-size: 2rem; font-weight: 900; color: var(--border-color); line-height: 1;">02</div>
+        <div class="feature-icon-wrapper">👨‍⚕️</div>
+        <h3 class="feature-title">Select Physician & Time</h3>
         <p class="feature-text">
-          Event-driven notifications alerting patients when visits are confirmed or cancelled, and when doctors publish e-prescriptions.
+          Browse accredited medical specialists by clinical department and pick your ideal appointment date and time slot.
         </p>
       </div>
 
-      <div class="feature-box">
-        <div class="feature-icon-wrapper">🔒</div>
-        <h3 class="feature-title">AWS IAM Zero-Trust Security</h3>
+      <div class="feature-box" style="position: relative;">
+        <div style="position: absolute; top: 1rem; right: 1.25rem; font-size: 2rem; font-weight: 900; color: var(--border-color); line-height: 1;">03</div>
+        <div class="feature-icon-wrapper">📁</div>
+        <h3 class="feature-title">Attach Diagnostic Records</h3>
         <p class="feature-text">
-          Role-Based Access Control (RBAC) separating Doctors, Patients, and Hospital Admins with immutable HIPAA audit trail logging.
+          Upload pathology tests, radiological scans, or prior prescriptions directly into the S3 vault for physician pre-review.
         </p>
       </div>
 
-      <div class="feature-box">
-        <div class="feature-icon-wrapper">🖥️</div>
-        <h3 class="feature-title">AWS EC2 Multi-AZ Hosting</h3>
+      <div class="feature-box" style="position: relative;">
+        <div style="position: absolute; top: 1rem; right: 1.25rem; font-size: 2rem; font-weight: 900; color: var(--border-color); line-height: 1;">04</div>
+        <div class="feature-icon-wrapper">🩺</div>
+        <h3 class="feature-title">Consultation & Tracking</h3>
         <p class="feature-text">
-          Production-grade Gunicorn WSGI workers reverse-proxied behind Nginx for high-throughput concurrency and SSL termination.
+          Receive consultation confirmations via SNS, track historical vitals and ICD-10 records, and manage prescriptions effortlessly.
         </p>
       </div>
+    </div>
+  </div>
+</section>
 
-      <div class="feature-box">
-        <div class="feature-icon-wrapper">🛡️</div>
-        <h3 class="feature-title">Fault-Tolerant Retries & DLQ</h3>
-        <p class="feature-text">
-          Exponential backoff with jitter on cloud database throttling and automated Dead Letter Queue (DLQ) routing for message resilience.
-        </p>
-      </div>
-
-      <div class="feature-box">
-        <div class="feature-icon-wrapper">📊</div>
-        <h3 class="feature-title">AWS CloudWatch Observability</h3>
-        <p class="feature-text">
-          Live structured JSON health monitoring, application latency metrics, and HIPAA compliance audit log streaming.
-        </p>
-      </div>
+<!-- Section 5: Trust Banner & Direct Registration CTA -->
+<section style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 4.5rem 0; border-top: 1px solid #334155;">
+  <div class="container" style="text-align: center; max-width: 800px;">
+    <span class="badge" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); margin-bottom: 1rem;">
+      Enterprise HIPAA §164.312 Security
+    </span>
+    <h2 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 1rem; line-height: 1.3;">
+      Confidential, Role-Enforced Healthcare Access
+    </h2>
+    <p style="font-size: 1.05rem; line-height: 1.8; color: #94a3b8; margin-bottom: 2rem;">
+      Every healthcare interaction in MedTrack is guarded by role-enforced access controls. Patients maintain ownership of their records, doctors access only authorized consultations, and file storage enforces cryptographic verification.
+    </p>
+    <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+      <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">
+        Register Confidentially &rarr;
+      </a>
+      <a href="{{ url_for('login') }}" class="btn btn-secondary btn-lg">
+        Sign In to Portal
+      </a>
     </div>
   </div>
 </section>

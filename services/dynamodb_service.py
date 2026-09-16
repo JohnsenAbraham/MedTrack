@@ -60,6 +60,7 @@ class DynamoDBService:
             self.appointments_table = self.dynamodb.Table(Config.DYNAMODB_APPOINTMENTS_TABLE)
             self.diagnoses_table = self.dynamodb.Table(Config.DYNAMODB_DIAGNOSES_TABLE)
             self.notifications_table = self.dynamodb.Table(Config.DYNAMODB_NOTIFICATIONS_TABLE)
+            self.reports_table = self.dynamodb.Table(Config.DYNAMODB_REPORTS_TABLE)
 
     # -------------------------------------------------------------
     # Resilience & Retry Helper
@@ -245,7 +246,115 @@ class DynamoDBService:
                 )
             """)
 
+            # 7. Diagnostic Reports & Clinical Scans Document Vault table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS reports (
+                    report_id TEXT PRIMARY KEY,
+                    patient_id TEXT NOT NULL,
+                    patient_name TEXT DEFAULT '',
+                    doctor_id TEXT DEFAULT '',
+                    appointment_id TEXT DEFAULT '',
+                    title TEXT NOT NULL,
+                    category TEXT DEFAULT 'Pathology / Lab',
+                    filename TEXT NOT NULL,
+                    file_path TEXT NOT NULL,
+                    file_type TEXT NOT NULL,
+                    file_size INTEGER DEFAULT 0,
+                    mime_type TEXT DEFAULT '',
+                    notes TEXT DEFAULT '',
+                    uploaded_at TEXT NOT NULL,
+                    FOREIGN KEY (patient_id) REFERENCES users (user_id)
+                )
+            """)
+
             conn.commit()
+
+    def _seed_demo_reports(self, conn):
+        """Seed realistic clinical PDF diagnostic reports and scan artifacts."""
+        import os
+        from pathlib import Path
+        upload_dir = Path(Config.UPLOAD_FOLDER)
+        upload_dir.mkdir(parents=True, exist_ok=True)
+
+        def _create_minimal_pdf(filepath: Path, title: str, subtitle: str, patient_name: str):
+            if not filepath.exists():
+                text_content = f"{title} - Patient: {patient_name} - {subtitle}"
+                # Valid minimal PDF structure
+                stream_bytes = f"BT /F1 12 Tf 50 720 Td ({text_content}) Tj ET".encode("latin1")
+                pdf_bytes = (
+                    b"%PDF-1.4\n"
+                    b"1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
+                    b"2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
+                    b"3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Resources<<>>/Contents 4 0 R>>endobj\n"
+                    b"4 0 obj<</Length " + str(len(stream_bytes)).encode("latin1") + b">>stream\n"
+                    + stream_bytes + b"\nendstream\nendobj\n"
+                    b"xref\n0 5\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n0000000216 00000 n \n"
+                    b"trailer<</Size 5/Root 1 0 R>>\nstartxref\n320\n%%EOF\n"
+                )
+                with open(filepath, "wb") as f:
+                    f.write(pdf_bytes)
+
+        # 1. Lipid Panel Report
+        f1_name = "patient-jane-doe_demo01_Jane_Doe_Lipid_Panel_2026.pdf"
+        p1 = upload_dir / f1_name
+        _create_minimal_pdf(p1, "MedTrack Clinical Pathology - Fasting Lipid Panel", "Cholesterol: 198 mg/dL | HDL: 52 mg/dL | LDL: 122 mg/dL", "Jane Doe")
+        f1_size = p1.stat().st_size if p1.exists() else 512
+
+        # 2. ECG Strip Report
+        f2_name = "patient-jane-doe_demo02_Jane_Doe_ECG_Rhythm_Strip_2026.pdf"
+        p2 = upload_dir / f2_name
+        _create_minimal_pdf(p2, "MedTrack Cardiology Diagnostics - 12-Lead Electrocardiogram", "Sinus Rhythm 74 bpm | PR: 158ms | Normal Axis", "Jane Doe")
+        f2_size = p2.stat().st_size if p2.exists() else 512
+
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT OR IGNORE INTO reports (
+                report_id, patient_id, patient_name, doctor_id, appointment_id,
+                title, category, filename, file_path, file_type, file_size,
+                mime_type, notes, uploaded_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            "rep-demo-01",
+            "patient-jane-doe",
+            "Jane Doe",
+            "doc-jenkins-01",
+            "appt-demo-01",
+            "Fasting Lipid Panel & Metabolic Profile",
+            "Pathology / Lab",
+            "Jane_Doe_Lipid_Panel_2026.pdf",
+            f1_name,
+            "pdf",
+            f1_size,
+            "application/pdf",
+            "Total Cholesterol: 198 mg/dL, HDL: 52 mg/dL, LDL: 122 mg/dL, Triglycerides: 140 mg/dL. Fasting 12 hours prior.",
+            "2026-09-10T09:30:00Z"
+        ))
+
+        cursor.execute("""
+            INSERT OR IGNORE INTO reports (
+                report_id, patient_id, patient_name, doctor_id, appointment_id,
+                title, category, filename, file_path, file_type, file_size,
+                mime_type, notes, uploaded_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            "rep-demo-02",
+            "patient-jane-doe",
+            "Jane Doe",
+            "doc-jenkins-01",
+            "appt-demo-01",
+            "12-Lead Diagnostic Electrocardiogram (ECG)",
+            "Radiology / Diagnostics",
+            "Jane_Doe_ECG_Rhythm_Strip_2026.pdf",
+            f2_name,
+            "pdf",
+            f2_size,
+            "application/pdf",
+            "Resting ECG shows regular sinus rhythm (74 bpm), PR interval 158 ms, QRS duration 86 ms, no acute ST-segment changes.",
+            "2026-09-12T14:15:00Z"
+        ))
+        conn.commit()
 
     # -------------------------------------------------------------
     # Seeding Realistic Clinical Hospital Demo Data
@@ -257,11 +366,19 @@ class DynamoDBService:
 
         with self._get_sqlite_conn() as conn:
             cursor = conn.cursor()
+            # Ensure reports are seeded
+            try:
+                cursor.execute("SELECT COUNT(*) FROM reports")
+                if cursor.fetchone()[0] == 0:
+                    self._seed_demo_reports(conn)
+            except sqlite3.OperationalError:
+                pass
+
             cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'doctor'")
             doc_count = cursor.fetchone()[0]
 
             if doc_count > 0:
-                return  # Already seeded
+                return  # Doctors already seeded
 
             logger.info("Seeding realistic clinical hospital demo accounts and longitudinal records...")
 
@@ -1053,6 +1170,108 @@ class DynamoDBService:
         return []
 
     # -------------------------------------------------------------
+    # Diagnostic Reports & Vault Operations
+    # -------------------------------------------------------------
+    def create_report(self, report_data: dict) -> dict:
+        """Record diagnostic document / report upload metadata."""
+        if not report_data.get("report_id"):
+            report_data["report_id"] = str(uuid.uuid4())
+        if not report_data.get("uploaded_at"):
+            report_data["uploaded_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+        if self.mock_aws:
+            with self._get_sqlite_conn() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO reports (
+                        report_id, patient_id, patient_name, doctor_id, appointment_id,
+                        title, category, filename, file_path, file_type, file_size,
+                        mime_type, notes, uploaded_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    report_data["report_id"],
+                    report_data.get("patient_id", ""),
+                    report_data.get("patient_name", ""),
+                    report_data.get("doctor_id", ""),
+                    report_data.get("appointment_id", ""),
+                    report_data.get("title", "Clinical Document"),
+                    report_data.get("category", "Pathology / Lab"),
+                    report_data.get("filename", ""),
+                    report_data.get("file_path", ""),
+                    report_data.get("file_type", "pdf"),
+                    report_data.get("file_size", 0),
+                    report_data.get("mime_type", "application/pdf"),
+                    report_data.get("notes", ""),
+                    report_data["uploaded_at"]
+                ))
+                conn.commit()
+            return report_data
+        else:
+            def _put():
+                self.reports_table.put_item(Item=report_data)
+            self._execute_with_retry(_put)
+            return report_data
+
+    def get_reports_by_patient(self, patient_id: str) -> list:
+        """Retrieve diagnostic reports for a given patient."""
+        if self.mock_aws:
+            with self._get_sqlite_conn() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT * FROM reports
+                    WHERE patient_id = ?
+                    ORDER BY uploaded_at DESC
+                """, (patient_id,))
+                return [dict(row) for row in cursor.fetchall()]
+        else:
+            def _scan():
+                resp = self.reports_table.scan(
+                    FilterExpression=Attr("patient_id").eq(patient_id)
+                )
+                items = resp.get("Items", [])
+                items.sort(key=lambda x: x.get("uploaded_at", ""), reverse=True)
+                return items
+            return self._execute_with_retry(_scan)
+
+    def get_report_by_id(self, report_id: str) -> dict | None:
+        """Retrieve single diagnostic report metadata by ID."""
+        if self.mock_aws:
+            with self._get_sqlite_conn() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT * FROM reports WHERE report_id = ?", (report_id,))
+                row = cursor.fetchone()
+                return dict(row) if row else None
+        else:
+            def _get():
+                resp = self.reports_table.get_item(Key={"report_id": report_id})
+                return resp.get("Item")
+            return self._execute_with_retry(_get)
+
+    def delete_report(self, report_id: str) -> bool:
+        """Delete diagnostic report record."""
+        if self.mock_aws:
+            with self._get_sqlite_conn() as conn:
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM reports WHERE report_id = ?", (report_id,))
+                conn.commit()
+                return cursor.rowcount > 0
+        else:
+            def _del():
+                self.reports_table.delete_item(Key={"report_id": report_id})
+            self._execute_with_retry(_del)
+            return True
+
+    def get_all_reports(self) -> list:
+        """Retrieve all diagnostic documents across the hospital system."""
+        if self.mock_aws:
+            with self._get_sqlite_conn() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT * FROM reports ORDER BY uploaded_at DESC")
+                return [dict(row) for row in cursor.fetchall()]
+        return []
+
+    # -------------------------------------------------------------
     # Notification Operations
     # -------------------------------------------------------------
     def create_notification(self, notif_data: dict) -> dict:
@@ -1168,6 +1387,9 @@ class DynamoDBService:
                 cursor.execute("SELECT COUNT(*) FROM audit_logs")
                 total_audit_events = cursor.fetchone()[0]
 
+                cursor.execute("SELECT COUNT(*) FROM reports")
+                total_reports = cursor.fetchone()[0]
+
                 cursor.execute("""
                     SELECT department, COUNT(*) as count
                     FROM appointments
@@ -1183,12 +1405,13 @@ class DynamoDBService:
                     "active_appointments": active_appts,
                     "total_diagnoses": total_diagnoses,
                     "total_audit_events": total_audit_events,
+                    "total_reports": total_reports,
                     "department_distribution": dept_distribution
                 }
         return {
             "total_patients": 0, "total_doctors": 0, "total_appointments": 0,
             "active_appointments": 0, "total_diagnoses": 0, "total_audit_events": 0,
-            "department_distribution": []
+            "total_reports": 0, "department_distribution": []
         }
 
     def check_health(self) -> dict:

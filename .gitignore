@@ -42,6 +42,10 @@ env/
 *.sqlite3
 medtrack_local.db
 
+# Local File Uploads
+uploads/*
+!uploads/.gitkeep
+
 # IDE & Editor files
 .vscode/
 .idea/

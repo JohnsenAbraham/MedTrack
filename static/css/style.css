@@ -1357,9 +1357,98 @@ a:hover {
 .audit-tag.warning { background: #fef3c7; color: #92400e; }
 .audit-tag.danger  { background: #fee2e2; color: #991b1b; }
 
+/* Emergency Hotline Ribbon */
+.emergency-top-bar {
+  background: #0f172a;
+  border-bottom: 1px solid #1e293b;
+  color: #cbd5e1;
+  font-size: 0.78rem;
+  padding: 0.4rem 0;
+}
+
+.emergency-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.emergency-contact {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.emergency-link {
+  color: #f87171;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.emergency-link:hover {
+  color: #ef4444;
+  text-decoration: underline;
+}
+
+.emergency-divider {
+  color: #475569;
+}
+
+.emergency-text {
+  color: #94a3b8;
+}
+
+.emergency-meta {
+  color: #64748b;
+  font-size: 0.74rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Brand Text Styling */
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.brand-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.brand-sub {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--primary);
+  text-transform: uppercase;
+}
+
+/* Vault File Dropzone & Badges */
+.vault-file-card {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  transition: var(--transition);
+}
+
+.vault-file-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: #cbd5e1;
+}
+
 /* Print Styles for Prescriptions & Medical Certificates */
 @media print {
-  .site-header, .evaluator-demo-bar, .site-footer, .nav-actions, .btn, .flash-container {
+  .site-header, .evaluator-demo-bar, .emergency-top-bar, .site-footer, .nav-actions, .btn, .flash-container {
     display: none !important;
   }
   body {

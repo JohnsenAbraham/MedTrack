@@ -26,7 +26,16 @@ def run_verification():
     assert home_req.status == 200, f"Expected 200 on /, got {home_req.status}"
     home_html = home_req.read().decode("utf-8")
     assert "MedTrack" in home_html, "Home page missing brand 'MedTrack'"
-    print("  [+] Home Page rendered successfully (HTTP 200).")
+    assert "Emergency: 911 / 112" in home_html, "Home page missing emergency hotline"
+    assert "PHYSICIAN CARE" in home_html, "Home page missing 4-pillar Physician Care"
+    print("  [+] Home Page rendered successfully with emergency ribbon & 4 clinical pillars (HTTP 200).")
+
+    # 1b. Test /signup alias
+    signup_req = opener.open(f"{BASE_URL}/signup")
+    assert signup_req.status == 200
+    signup_html = signup_req.read().decode("utf-8")
+    assert "Clinician Registration" in signup_html
+    print("  [+] /signup route alias verified successfully (HTTP 200).")
 
     # 2. Test Health check
     health_req = opener.open(f"{BASE_URL}/health")

@@ -4,9 +4,11 @@ import functools
 import uuid
 import json
 import logging
-from flask import Flask, render_template, request, redirect, url_for, flash, session, g, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, g, jsonify, send_from_directory, abort
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+import mimetypes
 
 from config import Config
 from services.dynamodb_service import DynamoDBService, ICD10_REFERENCE
@@ -199,6 +201,7 @@ def demo_login(role):
 # -----------------------------------------------------------------
 # Authentication Lifecycle (Register, Login, Password Reset, Google)
 # -----------------------------------------------------------------
+@app.route("/signup", methods=["GET", "POST"])
 @app.route("/register", methods=["GET", "POST"])
 def register():
     """Patient registration with structured clinical metadata."""
@@ -538,12 +541,15 @@ def dashboard():
         "blood_sugar": 95
     }
 
+    reports = db.get_reports_by_patient(patient_id)
+
     stats = {
         "total_appointments": len(appointments),
         "upcoming_count": len(upcoming_appointments),
         "diagnoses_count": len(diagnoses),
         "active_prescriptions_count": len(active_prescriptions),
-        "notifications_count": len(notifications)
+        "notifications_count": len(notifications),
+        "reports_count": len(reports)
     }
 
     db.log_audit_event(
@@ -564,6 +570,7 @@ def dashboard():
         active_prescriptions=active_prescriptions[:4],
         latest_vitals=latest_vitals,
         notifications=notifications,
+        reports=reports[:4],
         stats=stats
     )
 
@@ -733,11 +740,14 @@ def doctor_consultation(appointment_id):
         ip_address=request.remote_addr or "127.0.0.1"
     )
 
+    patient_reports = db.get_reports_by_patient(patient["user_id"])
+
     return render_template(
         "doctor_consultation.html",
         appointment=appt,
         patient=patient,
         past_diagnoses=past_diagnoses,
+        patient_reports=patient_reports,
         today_str=today_str,
         icd10_reference=ICD10_REFERENCE
     )
@@ -793,11 +803,14 @@ def patient_record_view(patient_id):
         ip_address=request.remote_addr or "127.0.0.1"
     )
 
+    patient_reports = db.get_reports_by_patient(patient_id)
+
     return render_template(
         "patient_record_view.html",
         patient=patient,
         appointments=appointments,
         diagnoses=diagnoses,
+        patient_reports=patient_reports,
         vitals_history=vitals_history
     )
 
@@ -813,25 +826,27 @@ def admin_analytics():
     Visualizes patient volume, department load, and HIPAA audit trails.
     """
     analytics = db.get_hospital_analytics()
-    audit_logs = db.get_recent_audit_logs(limit=30)
-    all_users = db.get_all_users()
-    all_doctors = [u for u in all_users if u.get("role") == "doctor"]
+    doctors = db.get_all_doctors()
+    recent_logs = db.get_recent_audit_logs(limit=25)
+    all_reports = db.get_all_reports()
 
     db.log_audit_event(
         actor_id=g.user["user_id"],
         actor_name=g.user["name"],
         actor_role="admin",
         action="VIEW_ADMIN_ANALYTICS",
-        target_resource="Hospital Operations Dashboard",
+        target_resource="Hospital Cloud Console",
         ip_address=request.remote_addr or "127.0.0.1"
     )
 
     return render_template(
         "admin_analytics.html",
         analytics=analytics,
-        audit_logs=audit_logs,
-        doctors=all_doctors,
-        cloud_config=Config
+        doctors=doctors,
+        recent_logs=recent_logs,
+        audit_logs=recent_logs,
+        cloud_config=Config,
+        reports=all_reports[:10]
     )
 
 # -----------------------------------------------------------------
@@ -1022,6 +1037,186 @@ def new_diagnosis():
         return redirect(url_for("diagnoses"))
 
     return render_template("diagnosis.html", today=today_str, all_users=all_users, form={})
+
+# -----------------------------------------------------------------
+# S3 Encrypted Clinical Document & Diagnostic Report Vault
+# -----------------------------------------------------------------
+@app.route("/reports")
+@login_required
+def reports_vault():
+    """Encrypted Clinical Document & Diagnostic Report Vault."""
+    if g.user["role"] in ["doctor", "admin"]:
+        reports = db.get_all_reports()
+    else:
+        reports = db.get_reports_by_patient(g.user["user_id"])
+
+    all_patients = db.get_all_users(role="patient") if g.user["role"] in ["doctor", "admin"] else []
+
+    return render_template(
+        "reports.html",
+        reports=reports,
+        all_patients=all_patients,
+        allowed_extensions=list(Config.ALLOWED_EXTENSIONS)
+    )
+
+@app.route("/reports/upload", methods=["POST"])
+@login_required
+def upload_report():
+    """Secure diagnostic document upload with MIME validation & HIPAA audit trail."""
+    file = request.files.get("report_file")
+    if not file or file.filename == "":
+        flash("Please select a diagnostic report or scan file to upload.", "danger")
+        return redirect(request.referrer or url_for("reports_vault"))
+
+    title = request.form.get("title", "").strip() or "Clinical Document"
+    category = request.form.get("category", "Pathology / Lab").strip()
+    notes = request.form.get("notes", "").strip()
+    appointment_id = request.form.get("appointment_id", "").strip()
+
+    # Determine patient ID (either self or specified patient if doctor/admin)
+    patient_id = g.user["user_id"]
+    patient_name = g.user["name"]
+    if g.user["role"] in ["doctor", "admin"]:
+        target_patient_id = request.form.get("patient_id", "").strip()
+        if target_patient_id:
+            target_pt = db.get_user_by_id(target_patient_id)
+            if target_pt:
+                patient_id = target_pt["user_id"]
+                patient_name = target_pt["name"]
+
+    original_filename = secure_filename(file.filename)
+    if not original_filename:
+        flash("Invalid file name. Please choose a valid file.", "danger")
+        return redirect(request.referrer or url_for("reports_vault"))
+
+    ext = original_filename.rsplit(".", 1)[-1].lower() if "." in original_filename else ""
+    if ext not in Config.ALLOWED_EXTENSIONS:
+        flash(f"Invalid file extension '.{ext}'. Allowed types: {', '.join(Config.ALLOWED_EXTENSIONS).upper()}", "danger")
+        return redirect(request.referrer or url_for("reports_vault"))
+
+    content_type = file.content_type or mimetypes.guess_type(original_filename)[0] or "application/octet-stream"
+    valid_mimes = {
+        "application/pdf", "image/png", "image/jpeg", "image/jpg",
+        "application/x-pdf", "image/pjpeg"
+    }
+    if content_type not in valid_mimes:
+        flash("Security Alert: Uploaded file MIME signature does not match clinical document standards.", "danger")
+        return redirect(request.referrer or url_for("reports_vault"))
+
+    os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
+    unique_file_id = str(uuid.uuid4())[:12]
+    saved_filename = f"{patient_id}_{unique_file_id}_{original_filename}"
+    file_path = os.path.join(str(Config.UPLOAD_FOLDER), saved_filename)
+    
+    file.save(file_path)
+    file_size = os.path.getsize(file_path)
+
+    report_id = f"rep-{uuid.uuid4().hex[:10]}"
+    report_record = {
+        "report_id": report_id,
+        "patient_id": patient_id,
+        "patient_name": patient_name,
+        "doctor_id": g.user["user_id"] if g.user["role"] == "doctor" else "",
+        "appointment_id": appointment_id,
+        "title": title,
+        "category": category,
+        "filename": original_filename,
+        "file_path": saved_filename,
+        "file_type": ext,
+        "file_size": file_size,
+        "mime_type": content_type,
+        "notes": notes,
+        "uploaded_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+    }
+    db.create_report(report_record)
+
+    db.log_audit_event(
+        actor_id=g.user["user_id"],
+        actor_name=g.user["name"],
+        actor_role=g.user["role"],
+        action="UPLOAD_CLINICAL_REPORT",
+        target_resource=f"Report {report_id} ({original_filename})",
+        ip_address=request.remote_addr or "127.0.0.1",
+        status="SUCCESS"
+    )
+
+    flash(f"Clinical diagnostic document '{original_filename}' uploaded securely to MedTrack Vault.", "success")
+    return redirect(request.referrer or url_for("reports_vault"))
+
+@app.route("/reports/<report_id>/download")
+@login_required
+def download_report(report_id):
+    """Download / view clinical document with strict RBAC permission checks."""
+    report = db.get_report_by_id(report_id)
+    if not report:
+        flash("Clinical report not found.", "danger")
+        return redirect(url_for("reports_vault"))
+
+    # RBAC authorization: patient can only view their own reports; doctors and admins can view
+    if g.user["role"] == "patient" and report["patient_id"] != g.user["user_id"]:
+        flash("Access Denied: You are not authorized to view this diagnostic record.", "danger")
+        return redirect(url_for("reports_vault"))
+
+    db.log_audit_event(
+        actor_id=g.user["user_id"],
+        actor_name=g.user["name"],
+        actor_role=g.user["role"],
+        action="VIEW_CLINICAL_REPORT",
+        target_resource=f"Report {report_id} ({report['filename']})",
+        ip_address=request.remote_addr or "127.0.0.1",
+        status="SUCCESS"
+    )
+
+    filename = report.get("file_path", "")
+    full_path = os.path.join(str(Config.UPLOAD_FOLDER), filename)
+    if not os.path.exists(full_path):
+        flash("The document file could not be located on the vault storage server.", "danger")
+        return redirect(url_for("reports_vault"))
+
+    return send_from_directory(
+        directory=str(Config.UPLOAD_FOLDER),
+        path=filename,
+        as_attachment=False,
+        download_name=report["filename"]
+    )
+
+@app.route("/reports/<report_id>/delete", methods=["POST"])
+@login_required
+def delete_report(report_id):
+    """Securely purge clinical report record and storage object."""
+    report = db.get_report_by_id(report_id)
+    if not report:
+        flash("Report not found.", "danger")
+        return redirect(url_for("reports_vault"))
+
+    if g.user["role"] == "patient" and report["patient_id"] != g.user["user_id"]:
+        flash("Unauthorized deletion attempt.", "danger")
+        return redirect(url_for("reports_vault"))
+
+    # Remove file from disk
+    filename = report.get("file_path", "")
+    if filename:
+        full_path = os.path.join(str(Config.UPLOAD_FOLDER), filename)
+        if os.path.exists(full_path):
+            try:
+                os.remove(full_path)
+            except OSError:
+                pass
+
+    db.delete_report(report_id)
+
+    db.log_audit_event(
+        actor_id=g.user["user_id"],
+        actor_name=g.user["name"],
+        actor_role=g.user["role"],
+        action="DELETE_CLINICAL_REPORT",
+        target_resource=f"Report {report_id}",
+        ip_address=request.remote_addr or "127.0.0.1",
+        status="SUCCESS"
+    )
+
+    flash("Diagnostic report record purged from clinical vault.", "info")
+    return redirect(request.referrer or url_for("reports_vault"))
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

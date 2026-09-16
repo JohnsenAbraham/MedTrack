@@ -448,6 +448,60 @@ class MedTrackTestCase(unittest.TestCase):
         self.assertIn("sns", data["components"])
         self.assertEqual(data["components"]["dynamodb"]["status"], "healthy")
 
+    def test_20_signup_route_alias(self):
+        """Verify /signup route aliases seamlessly to registration page."""
+        res = self.client.get("/signup")
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b"Clinician Registration", res.data)
+        self.assertIn(b"Blood Group", res.data)
+
+    def test_21_diagnostic_document_vault_flow(self):
+        """Verify authenticated patient can access vault, upload a diagnostic PDF, and download it."""
+        import io
+        self.client.get("/demo-login/patient")
+        
+        # 1. View vault
+        res = self.client.get("/reports")
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b"Diagnostic Document & Pathology Vault", res.data)
+
+        # 2. Upload valid mock PDF
+        dummy_pdf = io.BytesIO(b"%PDF-1.4 mock content %%EOF")
+        upload_data = {
+            "title": "Complete Blood Count (CBC) Panel",
+            "category": "Pathology / Lab",
+            "notes": "Hemoglobin 14.2 g/dL, Platelets 260k/uL.",
+            "report_file": (dummy_pdf, "Jane_Doe_CBC_Panel.pdf")
+        }
+        res_upload = self.client.post("/reports/upload", data=upload_data, content_type="multipart/form-data", follow_redirects=True)
+        self.assertEqual(res_upload.status_code, 200)
+        self.assertIn(b"Complete Blood Count (CBC) Panel", res_upload.data)
+
+        # 3. Retrieve uploaded report ID
+        patient = db.get_user_by_email("jane.doe@example.com")
+        reports = db.get_reports_by_patient(patient["user_id"])
+        cbc_report = next((r for r in reports if r["title"] == "Complete Blood Count (CBC) Panel"), None)
+        self.assertIsNotNone(cbc_report)
+
+        # 4. Download file
+        res_dl = self.client.get(f"/reports/{cbc_report['report_id']}/download")
+        self.assertEqual(res_dl.status_code, 200)
+        self.assertIn(b"%PDF-1.4 mock content %%EOF", res_dl.data)
+
+    def test_22_diagnostic_vault_mime_validation(self):
+        """Verify invalid file extensions are blocked by MIME & extension validation."""
+        import io
+        self.client.get("/demo-login/patient")
+        bad_file = io.BytesIO(b"malicious script contents")
+        upload_data = {
+            "title": "Unauthorized Script",
+            "category": "Other",
+            "report_file": (bad_file, "payload.exe")
+        }
+        res = self.client.post("/reports/upload", data=upload_data, content_type="multipart/form-data", follow_redirects=True)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b"Invalid file extension", res.data)
+
 if __name__ == "__main__":
     unittest.main()
 

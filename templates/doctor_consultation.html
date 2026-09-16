@@ -219,8 +219,51 @@
       </form>
     </div>
 
-    <!-- Right Column: Historical Encounter Timeline & Context -->
+    <!-- Right Column: Historical Encounter Timeline & Diagnostic Vault -->
     <div>
+      <!-- Patient Attached Diagnostic Vault Documents -->
+      <div class="card" style="margin-bottom: 1.5rem;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <div class="card-title" style="font-size: 1.05rem;">
+            <span>📁</span> S3 Diagnostic Vault ({{ patient_reports | length }})
+          </div>
+          <a href="{{ url_for('reports_vault') }}" style="font-size: 0.78rem; font-weight: 700;">Vault &rarr;</a>
+        </div>
+
+        {% if patient_reports %}
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            {% for r in patient_reports %}
+              <div style="background: var(--bg-card-alt); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.75rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                  <div>
+                    <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">{{ r.title }}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap;">
+                      <span class="badge" style="background: #e0f2fe; color: #0284c7; font-size: 0.68rem; padding: 0.1rem 0.35rem;">{{ r.category }}</span>
+                      <span>•</span>
+                      <span>{{ (r.file_size / 1024) | round(1) }} KB</span>
+                      <span>•</span>
+                      <span>{{ r.uploaded_at[:10] }}</span>
+                    </div>
+                  </div>
+                  <a href="{{ url_for('download_report', report_id=r.report_id) }}" target="_blank" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;" title="View Report">
+                    👁️ View
+                  </a>
+                </div>
+                {% if r.notes %}
+                  <div style="font-size: 0.78rem; color: #475569; margin-top: 0.4rem; padding-top: 0.4rem; border-top: 1px dashed var(--border-color);">
+                    {{ r.notes }}
+                  </div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p style="font-size: 0.85rem; color: var(--text-muted); text-align: center; padding: 1rem 0;">
+            No diagnostic documents uploaded by patient yet.
+          </p>
+        {% endif %}
+      </div>
+
       <div class="card" style="position: sticky; top: 5rem;">
         <div class="card-header">
           <div class="card-title" style="font-size: 1.05rem;">
