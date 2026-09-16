@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: medtrack-healthcare
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: MOCK_AWS
+        value: "true"
+      - key: SECRET_KEY
+        generateValue: true
