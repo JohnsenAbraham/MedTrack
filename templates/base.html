@@ -1,10 +1,11 @@
+{% import "icons.html" as icons %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="MedTrack – AWS Cloud-Enabled Healthcare Management System. Student demonstration web application.">
-  <title>{% block title %}MedTrack – AWS Cloud-Enabled Healthcare Management System{% endblock %}</title>
+  <title>{% block title %}MedTrack – Connected Healthcare & Patient Portal{% endblock %}</title>
 
   <!-- Google Fonts: Plus Jakarta Sans & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,91 +18,311 @@
 </head>
 <body>
 
-  <!-- Main Navigation Bar -->
-  <header class="site-header">
-    <div class="container nav-wrapper">
-      <a href="{{ url_for('index') }}" class="brand-logo">
-        <div class="brand-badge">✚</div>
-        <div class="brand-text">
-          <span class="brand-title">MedTrack</span>
-          <span class="brand-sub">Healthcare Portal</span>
-        </div>
-      </a>
+<div class="{% if is_authenticated %}app-shell{% else %}public-layout{% endif %}">
 
-      <!-- Navigation Links -->
-      <nav>
-        <ul class="nav-links">
-          {% if is_authenticated %}
+  {% if is_authenticated %}
+    <!-- ====================================================================
+         AUTHENTICATED WORKSPACE: Professional Left Sidebar
+         ==================================================================== -->
+    <aside class="app-sidebar" aria-label="Clinical Navigation Sidebar">
+      
+      <!-- Brand Header -->
+      <div class="sidebar-header">
+        <a href="{{ url_for('doctor_dashboard' if user_role == 'doctor' else 'dashboard') }}" class="sidebar-brand">
+          <div class="sidebar-brand-badge">+</div>
+          <span class="sidebar-brand-name">MedTrack</span>
+        </a>
+      </div>
+
+      <!-- Nav Sections -->
+      <div class="sidebar-nav-container">
+        
+        <!-- Clinical Workspace Section -->
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Clinical Workspace</div>
+          <ul class="sidebar-nav">
             {% if user_role == 'doctor' %}
-              <li><a href="{{ url_for('doctor_dashboard') }}" class="nav-link {% if request.endpoint == 'doctor_dashboard' %}active{% endif %}">Doctor Dashboard</a></li>
+              <!-- Doctor Workspace Navigation -->
+              <li>
+                <a href="{{ url_for('doctor_dashboard') }}" class="sidebar-link {% if request.endpoint == 'doctor_dashboard' %}active{% endif %}">
+                  <div class="sidebar-link-content">
+                    {{ icons.icon_dashboard(class="icon", size=18) }}
+                    <span>Dashboard</span>
+                  </div>
+                </a>
+              </li>
+              <li>
+                <a href="{{ url_for('doctor_schedule') }}" class="sidebar-link {% if request.endpoint == 'doctor_schedule' %}active{% endif %}">
+                  <div class="sidebar-link-content">
+                    {{ icons.icon_calendar(class="icon", size=18) }}
+                    <span>My Schedule</span>
+                  </div>
+                </a>
+              </li>
+              <li>
+                <a href="{{ url_for('doctor_patients') }}" class="sidebar-link {% if request.endpoint == 'doctor_patients' and request.args.get('search') != '1' %}active{% endif %}">
+                  <div class="sidebar-link-content">
+                    {{ icons.icon_users(class="icon", size=18) }}
+                    <span>Patients</span>
+                  </div>
+                </a>
+              </li>
+              <li>
+                <a href="{{ url_for('doctor_reports') }}" class="sidebar-link {% if request.endpoint in ('doctor_reports', 'submit_diagnosis') %}active{% endif %}">
+                  <div class="sidebar-link-content">
+                    {{ icons.icon_document(class="icon", size=18) }}
+                    <span>Diagnosis Reports</span>
+                  </div>
+                </a>
+              </li>
+              <li>
+                <a href="{{ url_for('doctor_patients', search='1') }}" class="sidebar-link {% if request.endpoint == 'doctor_patients' and request.args.get('search') == '1' %}active{% endif %}">
+                  <div class="sidebar-link-content">
+                    {{ icons.icon_search(class="icon", size=18) }}
+                    <span>Search</span>
+                  </div>
+                </a>
+              </li>
+              <li>
+                <a href="{{ url_for('doctor_prescriptions') }}" class="sidebar-link {% if request.endpoint == 'doctor_prescriptions' %}active{% endif %}">
+                  <div class="sidebar-link-content">
+                    {{ icons.icon_pill(class="icon", size=18) }}
+                    <span>Prescriptions</span>
+                  </div>
+                </a>
+              </li>
             {% else %}
-              <li><a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">Dashboard</a></li>
-              <li><a href="{{ url_for('view_medicines') }}" class="nav-link {% if request.endpoint in ('view_medicines', 'add_medicine') %}active{% endif %}">💊 Medications</a></li>
-              <li><a href="{{ url_for('book_appointment') }}" class="nav-link {% if request.endpoint == 'book_appointment' %}active{% endif %}">Book Visit</a></li>
-              <li><a href="{{ url_for('view_appointments') }}" class="nav-link {% if request.endpoint == 'view_appointments' %}active{% endif %}">Appointments</a></li>
-              <li><a href="{{ url_for('view_diagnoses') }}" class="nav-link {% if request.endpoint == 'view_diagnoses' %}active{% endif %}">Records</a></li>
-              <li><a href="{{ url_for('view_notifications') }}" class="nav-link {% if request.endpoint == 'view_notifications' %}active{% endif %}">🔔 Notifications</a></li>
+              <!-- Patient Workspace Navigation -->
+              <li>
+                <a href="{{ url_for('dashboard') }}" class="sidebar-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                  <div class="sidebar-link-content">
+                    {{ icons.icon_dashboard(class="icon", size=18) }}
+                    <span>Dashboard</span>
+                  </div>
+                </a>
+              </li>
+              <li>
+                <a href="{{ url_for('view_appointments') }}" class="sidebar-link {% if request.endpoint == 'view_appointments' %}active{% endif %}">
+                  <div class="sidebar-link-content">
+                    {{ icons.icon_calendar(class="icon", size=18) }}
+                    <span>Appointments</span>
+                  </div>
+                </a>
+              </li>
+              <li>
+                <a href="{{ url_for('book_appointment') }}" class="sidebar-link {% if request.endpoint == 'book_appointment' %}active{% endif %}">
+                  <div class="sidebar-link-content">
+                    {{ icons.icon_calendar_plus(class="icon", size=18) }}
+                    <span>Book Visit</span>
+                  </div>
+                </a>
+              </li>
+              <li>
+                <a href="{{ url_for('view_diagnoses') }}" class="sidebar-link {% if request.endpoint == 'view_diagnoses' %}active{% endif %}">
+                  <div class="sidebar-link-content">
+                    {{ icons.icon_document(class="icon", size=18) }}
+                    <span>Medical Records</span>
+                  </div>
+                </a>
+              </li>
+              <li>
+                <a href="{{ url_for('search_doctors') }}" class="sidebar-link {% if request.endpoint == 'search_doctors' %}active{% endif %}">
+                  <div class="sidebar-link-content">
+                    {{ icons.icon_search(class="icon", size=18) }}
+                    <span>Search Doctors</span>
+                  </div>
+                </a>
+              </li>
+              <li>
+                <a href="{{ url_for('view_medicines') }}" class="sidebar-link {% if request.endpoint in ('view_medicines', 'add_medicine', 'view_intake_history') %}active{% endif %}">
+                  <div class="sidebar-link-content">
+                    {{ icons.icon_pill(class="icon", size=18) }}
+                    <span>Medications</span>
+                  </div>
+                </a>
+              </li>
+              <li>
+                <a href="{{ url_for('patient_schedule') }}" class="sidebar-link {% if request.endpoint == 'patient_schedule' %}active{% endif %}">
+                  <div class="sidebar-link-content">
+                    {{ icons.icon_checklist(class="icon", size=18) }}
+                    <span>Schedule</span>
+                  </div>
+                </a>
+              </li>
             {% endif %}
-          {% else %}
-            <li><a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">Home</a></li>
-            <li><a href="/#about-us" class="nav-link">About Us</a></li>
-            <li><a href="/#services" class="nav-link">Services</a></li>
-            <li><a href="/#departments" class="nav-link">Departments</a></li>
-          {% endif %}
-        </ul>
-      </nav>
+          </ul>
+        </div>
 
-      <!-- Nav Actions -->
-      <div class="nav-actions">
-        {% if is_authenticated %}
-          <span class="user-pill">
-            {% if user_role == 'doctor' %}👨‍⚕️{% else %}👤{% endif %}
-            {{ current_user.name }}
-          </span>
-          <a href="{{ url_for('logout') }}" class="btn btn-outline btn-sm">Sign Out</a>
-        {% else %}
+        <!-- Account Section -->
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Account</div>
+          <ul class="sidebar-nav">
+            <li>
+              {% if user_role == 'doctor' %}
+                <a href="{{ url_for('doctor_notifications') }}" class="sidebar-link {% if request.endpoint == 'doctor_notifications' %}active{% endif %}">
+                  <div class="sidebar-link-content">
+                    {{ icons.icon_bell(class="icon", size=18) }}
+                    <span>Notifications</span>
+                  </div>
+                  {% if unread_notifications_count > 0 %}
+                    <span class="sidebar-badge">{{ unread_notifications_count }}</span>
+                  {% endif %}
+                </a>
+              {% else %}
+                <a href="{{ url_for('view_notifications') }}" class="sidebar-link {% if request.endpoint == 'view_notifications' %}active{% endif %}">
+                  <div class="sidebar-link-content">
+                    {{ icons.icon_bell(class="icon", size=18) }}
+                    <span>Notifications</span>
+                  </div>
+                  {% if unread_notifications_count > 0 %}
+                    <span class="sidebar-badge">{{ unread_notifications_count }}</span>
+                  {% endif %}
+                </a>
+              {% endif %}
+            </li>
+            <li>
+              <a href="{{ url_for('profile') }}" class="sidebar-link {% if request.endpoint in ('profile', 'doctor_profile') %}active{% endif %}">
+                <div class="sidebar-link-content">
+                  {{ icons.icon_user(class="icon", size=18) }}
+                  <span>Profile</span>
+                </div>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Sidebar Footer / Logout -->
+      <div class="sidebar-footer">
+        <a href="{{ url_for('logout') }}" class="sidebar-signout">
+          {{ icons.icon_logout(class="icon", size=18) }}
+          <span>Sign Out</span>
+        </a>
+      </div>
+
+    </aside>
+
+  {% else %}
+    <!-- ====================================================================
+         PUBLIC GUEST: Top Navigation Bar
+         ==================================================================== -->
+    <header class="site-header">
+      <div class="container nav-wrapper">
+        <a href="{{ url_for('index') }}" class="brand-logo">
+          <div class="brand-badge">+</div>
+          <div class="brand-text">
+            <span class="brand-title">MedTrack</span>
+            <span class="brand-sub">Healthcare Portal</span>
+          </div>
+        </a>
+
+        <!-- Navigation Links -->
+        <nav>
+          <ul class="nav-links">
+            <li><a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">Home</a></li>
+            <li><a href="/#services" class="nav-link">Services</a></li>
+            <li><a href="/#about-us" class="nav-link">About Us</a></li>
+            <li><a href="/#departments" class="nav-link">Specialties</a></li>
+          </ul>
+        </nav>
+
+        <!-- Nav Actions -->
+        <div class="nav-actions">
           <a href="{{ url_for('login') }}" class="btn btn-outline btn-sm">Sign In</a>
           <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm">Register</a>
-        {% endif %}
-      </div>
-    </div>
-  </header>
-
-  <!-- Global Flash Messages -->
-  <div class="container flash-container">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }}" role="alert">
-            <span>{{ message }}</span>
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-  </div>
-
-  <!-- Main Content Block -->
-  <main>
-    {% block content %}{% endblock %}
-  </main>
-
-  <!-- Application Footer -->
-  <footer class="site-footer">
-    <div class="container footer-inner">
-      <div>
-        <strong>MedTrack</strong> &mdash; Connected Healthcare & Clinical Portal
-        <div class="footer-note">
-          Unified patient appointment scheduling, confidential clinical records, and daily medication tracking.
         </div>
       </div>
-      <div class="footer-note">
-        &copy; 2026 MedTrack Healthcare. All rights reserved.
-      </div>
-    </div>
-  </footer>
+    </header>
+  {% endif %}
 
-  <!-- Core JavaScript -->
-  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-  {% block extra_js %}{% endblock %}
+  <!-- Main Area (for both authenticated and public) -->
+  <div class="{% if is_authenticated %}app-main{% else %}public-main-wrapper{% endif %}">
+    
+    {% if is_authenticated %}
+      <!-- Authenticated Top Bar -->
+      <header class="app-topbar">
+        <div class="topbar-portal-label">
+          <span class="topbar-page-title">
+            {% block page_title %}
+              {% if user_role == 'doctor' %}
+                Physician Portal
+              {% else %}
+                Patient Dashboard
+              {% endif %}
+            {% endblock %}
+          </span>
+          <span class="portal-badge">
+            {{ icons.icon_shield(class="icon", size=13) }}
+            {% if user_role == 'doctor' %}
+              Physician Portal
+            {% else %}
+              Patient Portal
+            {% endif %}
+          </span>
+        </div>
+
+        <!-- User Profile Pill Widget -->
+        <a href="{{ url_for('profile') }}" class="user-profile-badge" title="View Profile">
+          <div class="avatar-circle">
+            {{ current_user.name[:1] }}
+          </div>
+          <div class="avatar-info">
+            <span class="avatar-name">{{ current_user.name }}</span>
+            <span class="avatar-role">{% if user_role == 'doctor' %}Doctor{% else %}Patient{% endif %}</span>
+          </div>
+        </a>
+      </header>
+    {% endif %}
+
+    <!-- Flash Messages -->
+    <div class="{% if is_authenticated %}flash-container" style="padding: 1rem 2rem 0;{% else %}container flash-container{% endif %}">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}" role="alert">
+              {% if category == 'success' %}
+                {{ icons.icon_check_circle(class="icon", size=18) }}
+              {% elif category == 'danger' %}
+                {{ icons.icon_cross(class="icon", size=18) }}
+              {% else %}
+                {{ icons.icon_bell(class="icon", size=18) }}
+              {% endif %}
+              <span>{{ message }}</span>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    </div>
+
+    <!-- Main Content Block -->
+    <main class="{% if is_authenticated %}app-workspace-content{% else %}public-content{% endif %}">
+      {% block content %}{% endblock %}
+    </main>
+
+    {% if not is_authenticated %}
+      <!-- Application Footer for Guests -->
+      <footer class="site-footer">
+        <div class="container footer-inner">
+          <div>
+            <strong>MedTrack</strong> &mdash; AWS Cloud-Enabled Healthcare Management System
+            <div class="footer-note">
+              Unified patient appointment scheduling, confidential clinical records, and daily medication tracking.
+            </div>
+          </div>
+          <div class="footer-note">
+            &copy; 2026 MedTrack Healthcare. All rights reserved.
+          </div>
+        </div>
+      </footer>
+    {% endif %}
+
+  </div>
+
+</div>
+
+<!-- Core JavaScript -->
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>

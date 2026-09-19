@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Patients – MedTrack{% endblock %}
+
+{% block content %}
+<div style="max-width: 1100px; margin: 0 auto;">
+
+  <!-- Header -->
+  <div style="margin-bottom: 2rem;">
+    <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem; letter-spacing: -0.02em;">
+      Clinical Patient Roster
+    </h1>
+    <p style="font-size: 0.92rem; color: var(--text-muted); margin: 0;">
+      Directory of registered patients who have consulted with or scheduled appointments under your practice.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-header" style="gap: 1rem; flex-wrap: wrap;">
+      <div class="card-title">
+        {{ icons.icon_users(class="icon", size=20) }}
+        <span>Patient Directory</span>
+      </div>
+      
+      <!-- Instant Search Filter -->
+      <div style="flex: 1; max-width: 380px; position: relative;">
+        <input 
+          type="text" 
+          id="patientSearchInput" 
+          class="form-control form-control-sm" 
+          placeholder="Filter patients by name, phone, or email..."
+          style="padding-left: 2.2rem;"
+          onkeyup="filterPatients()"
+          {% if request.args.get('search') == '1' %}autofocus{% endif %}
+        >
+        <div style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">
+          {{ icons.icon_search(class="icon", size=14) }}
+        </div>
+      </div>
+
+      <span class="portal-badge" id="patientCountBadge">
+        {{ patients | length }} Registered Patients
+      </span>
+    </div>
+
+    {% if patients %}
+      <div class="table-responsive">
+        <table class="table" id="patientsTable">
+          <thead>
+            <tr>
+              <th>Patient Name</th>
+              <th>Contact Info</th>
+              <th>Demographics</th>
+              <th>Total Visits</th>
+              <th>Last Consultation</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for pt in patients %}
+              <tr>
+                <td>
+                  <div style="display: flex; align-items: center;">
+                    <span class="avatar-initial-badge">
+                      {{ pt.name[:1] if pt.name else 'P' }}
+                    </span>
+                    <div>
+                      <strong style="color: var(--text-main); font-size: 0.92rem;">{{ pt.name }}</strong>
+                      <div style="font-size: 0.74rem; font-family: monospace; color: var(--text-muted);">{{ pt.user_id }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div style="font-size: 0.86rem; color: #334155;">{{ pt.email }}</div>
+                  <div style="font-size: 0.76rem; color: var(--text-muted);">{{ pt.phone or 'No phone on file' }}</div>
+                </td>
+                <td>
+                  <span style="font-size: 0.84rem; color: #475569;">
+                    {{ pt.gender or 'Unspecified' }}
+                    {% if pt.date_of_birth %}&bull; DOB: {{ pt.date_of_birth }}{% endif %}
+                  </span>
+                </td>
+                <td>
+                  <span class="portal-badge" style="font-size: 0.76rem;">
+                    {{ pt.total_visits }} visit{% if pt.total_visits != 1 %}s{% endif %}
+                  </span>
+                </td>
+                <td>
+                  <span style="font-size: 0.84rem; color: var(--text-muted);">
+                    {{ pt.last_visit or 'Pending' }}
+                  </span>
+                </td>
+                <td>
+                  <a href="{{ url_for('doctor_reports') }}" class="btn btn-secondary btn-sm">
+                    View Records
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          {{ icons.icon_users(class="icon", size=24) }}
+        </div>
+        <p style="font-weight: 600; color: var(--text-main);">No patients currently on roster</p>
+        <p style="font-size: 0.84rem; color: var(--text-muted);">Patients will appear here automatically when they book consultations with your schedule.</p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<script>
+  function filterPatients() {
+    const input = document.getElementById('patientSearchInput');
+    const filter = input.value.toLowerCase().trim();
+    const table = document.getElementById('patientsTable');
+    if (!table) return;
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+    let visibleCount = 0;
+
+    for (let i = 0; i < rows.length; i++) {
+      const text = rows[i].textContent || rows[i].innerText;
+      if (text.toLowerCase().indexOf(filter) > -1) {
+        rows[i].style.display = '';
+        visibleCount++;
+      } else {
+        rows[i].style.display = 'none';
+      }
+    }
+    const countBadge = document.getElementById('patientCountBadge');
+    if (countBadge) {
+      countBadge.textContent = visibleCount + ' Matching Patient' + (visibleCount !== 1 ? 's' : '');
+    }
+  }
+</script>
+{% endblock %}

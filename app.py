@@ -45,10 +45,21 @@ def load_logged_in_user():
 @app.context_processor
 def inject_user_context():
     """Make user authentication state available in all Jinja templates."""
+    notif_count = 0
+    if g.user:
+        try:
+            if g.user.get("role") == "patient":
+                notif_count = len(db.get_notifications_by_patient(g.user["user_id"]))
+            elif g.user.get("role") == "doctor":
+                notif_count = len(db.get_notifications_by_doctor(g.user["user_id"]))
+        except Exception:
+            notif_count = 0
+
     return {
         "current_user": g.user,
         "is_authenticated": g.user is not None,
         "user_role": g.user.get("role") if g.user else None,
+        "unread_notifications_count": notif_count,
         "mock_aws": Config.MOCK_AWS
     }
 
@@ -255,7 +266,7 @@ def demo_login(role):
 @app.route("/dashboard")
 @patient_required
 def dashboard():
-    """Patient dashboard showing appointments, diagnosis records, and notifications."""
+    """Patient dashboard showing overview metrics, schedule, and recent records."""
     patient_id = g.user["user_id"]
     all_appointments = db.get_appointments_by_patient(patient_id)
     diagnoses = db.get_diagnoses_by_patient(patient_id)
@@ -263,17 +274,66 @@ def dashboard():
 
     today = datetime.date.today().isoformat()
     upcoming = [a for a in all_appointments if a.get("appointment_date", "") >= today and a.get("status") != "CANCELLED"]
+    pending = [a for a in all_appointments if a.get("status") == "PENDING"]
+    completed = [a for a in all_appointments if a.get("status") == "COMPLETED"]
     past = [a for a in all_appointments if a.get("appointment_date", "") < today or a.get("status") in ("COMPLETED", "CANCELLED")]
     medicine_schedule = db.get_patient_schedule(patient_id)
 
     return render_template(
         "dashboard.html",
         patient=g.user,
+        all_appointments=all_appointments,
         upcoming_appointments=upcoming,
+        pending_appointments=pending,
+        completed_appointments=completed,
         past_appointments=past,
         diagnoses=diagnoses,
         notifications=notifications,
         medicine_schedule=medicine_schedule
+    )
+
+@app.route("/profile", methods=["GET", "POST"])
+@login_required
+def profile():
+    """Unified user profile and contact information settings."""
+    if request.method == "POST":
+        name = request.form.get("name", "").strip() or g.user["name"]
+        phone = request.form.get("phone", "").strip()
+        date_of_birth = request.form.get("date_of_birth", "").strip()
+        gender = request.form.get("gender", "").strip()
+
+        db.update_user(g.user["user_id"], {
+            "name": name,
+            "phone": phone,
+            "date_of_birth": date_of_birth,
+            "gender": gender
+        })
+        g.user = db.get_user_by_id(g.user["user_id"])
+        flash("Profile information updated successfully.", "success")
+        return redirect(url_for("profile"))
+
+    if g.user.get("role") == "doctor":
+        appointments = db.get_appointments_by_doctor(g.user["user_id"])
+        diagnoses = db.get_diagnoses_by_doctor(g.user["user_id"])
+        return render_template("doctor_profile.html", doctor=g.user, appointments=appointments, diagnoses=diagnoses)
+
+    return render_template("profile.html", patient=g.user)
+
+@app.route("/schedule")
+@app.route("/patient/schedule")
+@patient_required
+def patient_schedule():
+    """Full calendar view of medication doses and consultation schedule."""
+    patient_id = g.user["user_id"]
+    all_appointments = db.get_appointments_by_patient(patient_id)
+    medicine_schedule = db.get_patient_schedule(patient_id)
+    medicines_list = db.get_medicines_by_patient(patient_id)
+    return render_template(
+        "patient_schedule.html",
+        patient=g.user,
+        appointments=all_appointments,
+        medicine_schedule=medicine_schedule,
+        medicines=medicines_list
     )
 
 @app.route("/notifications")
@@ -292,11 +352,38 @@ def view_appointments():
     appointments = db.get_appointments_by_patient(patient_id)
     return render_template("appointments.html", appointments=appointments)
 
+@app.route("/search-doctors")
+@app.route("/doctors")
+@patient_required
+def search_doctors():
+    """Browse and search clinical physicians and specialists."""
+    query = request.args.get("q", "").strip()
+    specialty = request.args.get("specialty", "").strip()
+
+    all_doctors = db.get_doctors()
+    filtered = []
+    for doc in all_doctors:
+        name = doc.get("name", "")
+        # Extract specialty from name if in format 'Dr. Name (Specialty)' or default
+        doc_specialty = "General Physician"
+        if "(" in name and ")" in name:
+            doc_specialty = name.split("(")[1].split(")")[0]
+        doc["specialty"] = doc_specialty
+
+        match_query = (not query) or (query.lower() in name.lower()) or (query.lower() in doc.get("email", "").lower()) or (query.lower() in doc_specialty.lower())
+        match_specialty = (not specialty) or (specialty.lower() in doc_specialty.lower())
+
+        if match_query and match_specialty:
+            filtered.append(doc)
+
+    return render_template("doctors_search.html", doctors=filtered, query=query, specialty=specialty)
+
 @app.route("/appointments/new", methods=["GET", "POST"])
 @patient_required
 def book_appointment():
     """Book a new medical consultation with an attending doctor."""
     doctors = db.get_doctors()
+    preselected_doctor = request.args.get("doctor_id", "").strip()
 
     if request.method == "POST":
         doctor_id = request.form.get("doctor_id", "").strip()
@@ -306,13 +393,13 @@ def book_appointment():
 
         if not doctor_id or not appointment_date or not appointment_time or not reason:
             flash("All appointment details are required.", "danger")
-            return render_template("appointment.html", doctors=doctors, form=request.form)
+            return render_template("appointment.html", doctors=doctors, preselected_doctor=preselected_doctor, form=request.form)
 
         # Verify chosen doctor exists
         doctor = db.get_user_by_id(doctor_id)
         if not doctor or doctor.get("role") != "doctor":
             flash("Selected doctor could not be verified.", "danger")
-            return render_template("appointment.html", doctors=doctors, form=request.form)
+            return render_template("appointment.html", doctors=doctors, preselected_doctor=preselected_doctor, form=request.form)
 
         appointment_data = {
             "patient_id": g.user["user_id"],
@@ -341,7 +428,7 @@ def book_appointment():
         flash("Appointment scheduled successfully! Awaiting confirmation from physician.", "success")
         return redirect(url_for("view_appointments"))
 
-    return render_template("appointment.html", doctors=doctors, form={})
+    return render_template("appointment.html", doctors=doctors, preselected_doctor=preselected_doctor, form={})
 
 @app.route("/appointments/<appointment_id>/cancel", methods=["POST"])
 @patient_required
@@ -389,10 +476,29 @@ def view_diagnoses():
 @app.route("/doctor/dashboard")
 @doctor_required
 def doctor_dashboard():
-    """Doctor dashboard showing assigned appointments and action controls."""
+    """Doctor dashboard overview showing metrics, upcoming consultations, and diagnosis queue."""
     doctor_id = g.user["user_id"]
     appointments = db.get_appointments_by_doctor(doctor_id)
-    return render_template("doctor_dashboard.html", doctor=g.user, appointments=appointments)
+    diagnoses = db.get_diagnoses_by_doctor(doctor_id)
+    today = datetime.date.today().isoformat()
+
+    today_visits = [a for a in appointments if a.get("appointment_date", "") == today and a.get("status") != "CANCELLED"]
+    pending_requests = [a for a in appointments if a.get("status") == "PENDING"]
+    completed_consults = [a for a in appointments if a.get("status") == "COMPLETED"]
+    unique_patients = len(set(a.get("patient_id") for a in appointments if a.get("patient_id")))
+    upcoming_appointments = [a for a in appointments if a.get("status") in ("PENDING", "CONFIRMED")]
+
+    return render_template(
+        "doctor_dashboard.html",
+        doctor=g.user,
+        appointments=appointments,
+        upcoming_appointments=upcoming_appointments,
+        today_visits=today_visits,
+        pending_requests=pending_requests,
+        completed_consults=completed_consults,
+        unique_patients=unique_patients,
+        diagnoses=diagnoses
+    )
 
 @app.route("/doctor/appointments/<appointment_id>/status", methods=["POST"])
 @doctor_required
@@ -500,6 +606,56 @@ def submit_diagnosis(appointment_id):
 
     today = datetime.date.today().isoformat()
     return render_template("diagnosis.html", appointment=appointment, today=today)
+
+@app.route("/doctor/schedule")
+@doctor_required
+def doctor_schedule():
+    """Physician agenda and consultation calendar schedule."""
+    doctor_id = g.user["user_id"]
+    appointments = db.get_appointments_by_doctor(doctor_id)
+    return render_template("doctor_schedule.html", doctor=g.user, appointments=appointments)
+
+@app.route("/doctor/patients")
+@doctor_required
+def doctor_patients():
+    """Physician patient roster with clinical visit history."""
+    doctor_id = g.user["user_id"]
+    patients = db.get_patients_by_doctor(doctor_id)
+    return render_template("doctor_patients.html", doctor=g.user, patients=patients)
+
+@app.route("/doctor/reports")
+@app.route("/doctor/diagnoses")
+@doctor_required
+def doctor_reports():
+    """Physician diagnosis reports and clinical evaluations repository."""
+    doctor_id = g.user["user_id"]
+    diagnoses = db.get_diagnoses_by_doctor(doctor_id)
+    return render_template("doctor_reports.html", doctor=g.user, diagnoses=diagnoses)
+
+@app.route("/doctor/prescriptions")
+@doctor_required
+def doctor_prescriptions():
+    """Overview of medications prescribed to consulting patients."""
+    doctor_id = g.user["user_id"]
+    prescriptions = db.get_prescriptions_by_doctor(doctor_id)
+    return render_template("doctor_prescriptions.html", doctor=g.user, prescriptions=prescriptions)
+
+@app.route("/doctor/notifications")
+@doctor_required
+def doctor_notifications():
+    """Physician notifications and appointment alerts stream."""
+    doctor_id = g.user["user_id"]
+    notifications = db.get_notifications_by_doctor(doctor_id)
+    return render_template("doctor_notifications.html", doctor=g.user, notifications=notifications)
+
+@app.route("/doctor/profile")
+@doctor_required
+def doctor_profile():
+    """Physician credentials, specialty details, and account settings."""
+    doctor_id = g.user["user_id"]
+    appointments = db.get_appointments_by_doctor(doctor_id)
+    diagnoses = db.get_diagnoses_by_doctor(doctor_id)
+    return render_template("doctor_profile.html", doctor=g.user, appointments=appointments, diagnoses=diagnoses)
 
 # -----------------------------------------------------------------
 # Patient Medicine Tracking & Dose Reminders

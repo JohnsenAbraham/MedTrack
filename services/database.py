@@ -7,6 +7,7 @@ import sqlite3
 import uuid
 import datetime
 import logging
+from contextlib import contextmanager
 from werkzeug.security import generate_password_hash
 from config import Config
 
@@ -24,10 +25,14 @@ class DatabaseService:
             from services.dynamodb_service import DynamoDBService
             self.dynamo = DynamoDBService()
 
+    @contextmanager
     def _get_sqlite_conn(self):
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
-        return conn
+        try:
+            yield conn
+        finally:
+            conn.close()
 
     def _init_sqlite(self):
         """Initialize local SQLite tables matching the DynamoDB schema."""
@@ -149,6 +154,17 @@ class DatabaseService:
                 "password_hash": generate_password_hash("DoctorPass123!"),
                 "phone": "+1-555-0102",
                 "date_of_birth": "1985-09-24",
+                "gender": "Female",
+                "role": "doctor",
+                "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+            },
+            {
+                "user_id": "doc-003",
+                "name": "Dr. Priya Nair (General Physician)",
+                "email": "doctor.nair@medtrack.local",
+                "password_hash": generate_password_hash("DoctorPass123!"),
+                "phone": "+1-555-0103",
+                "date_of_birth": "1988-11-18",
                 "gender": "Female",
                 "role": "doctor",
                 "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -407,6 +423,54 @@ class DatabaseService:
                 LEFT JOIN users p ON dg.patient_id = p.user_id
                 WHERE dg.doctor_id = ?
                 ORDER BY dg.date DESC
+            """, (doctor_id,))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_patients_by_doctor(self, doctor_id: str) -> list:
+        if not self.mock_aws:
+            return []
+
+        with self._get_sqlite_conn() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT u.user_id, u.name, u.email, u.phone, u.date_of_birth, u.gender,
+                       COUNT(a.appointment_id) as total_visits,
+                       MAX(a.appointment_date) as last_visit
+                FROM users u
+                JOIN appointments a ON u.user_id = a.patient_id
+                WHERE a.doctor_id = ?
+                GROUP BY u.user_id
+                ORDER BY u.name ASC
+            """, (doctor_id,))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_prescriptions_by_doctor(self, doctor_id: str) -> list:
+        if not self.mock_aws:
+            return []
+
+        with self._get_sqlite_conn() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT m.*, u.name as patient_name
+                FROM medicines m
+                JOIN users u ON m.patient_id = u.user_id
+                WHERE m.patient_id IN (
+                    SELECT DISTINCT patient_id FROM appointments WHERE doctor_id = ?
+                )
+                ORDER BY m.created_at DESC
+            """, (doctor_id,))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_notifications_by_doctor(self, doctor_id: str) -> list:
+        if not self.mock_aws:
+            return []
+
+        with self._get_sqlite_conn() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT * FROM notifications
+                WHERE patient_id = ?
+                ORDER BY created_at DESC
             """, (doctor_id,))
             return [dict(row) for row in cursor.fetchall()]
 

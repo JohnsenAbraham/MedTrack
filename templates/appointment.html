@@ -3,13 +3,16 @@
 {% block title %}Book Appointment – MedTrack{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 680px; padding-top: 2rem; padding-bottom: 3rem;">
+<div style="max-width: 680px; margin: 0 auto;">
   <div class="card">
     <div class="card-header">
       <div class="card-title">
-        <span>📅</span> Book a Medical Consultation
+        {{ icons.icon_calendar_plus(class="icon", size=20) }}
+        <span>Book a Medical Consultation</span>
       </div>
-      <a href="{{ url_for('view_appointments') }}" style="font-size: 0.85rem;">My Appointments &rarr;</a>
+      <a href="{{ url_for('view_appointments') }}" style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">
+        My Appointments &rarr;
+      </a>
     </div>
 
     <form action="{{ url_for('book_appointment') }}" method="POST">
@@ -17,9 +20,9 @@
       <div class="form-group">
         <label for="doctor_id" class="form-label">Select Attending Doctor *</label>
         <select class="form-select" id="doctor_id" name="doctor_id" required autofocus>
-          <option value="" disabled {% if not form.get('doctor_id') %}selected{% endif %}>Choose a physician...</option>
+          <option value="" disabled {% if not form.get('doctor_id') and not preselected_doctor %}selected{% endif %}>Choose a physician...</option>
           {% for doc in doctors %}
-            <option value="{{ doc.user_id }}" {% if form.get('doctor_id') == doc.user_id %}selected{% endif %}>
+            <option value="{{ doc.user_id }}" {% if form.get('doctor_id') == doc.user_id or (not form.get('doctor_id') and preselected_doctor == doc.user_id) %}selected{% endif %}>
               {{ doc.name }} ({{ doc.phone or 'General Service' }})
             </option>
           {% endfor %}
@@ -54,9 +57,10 @@
       </div>
 
       <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
-        <a href="{{ url_for('dashboard') }}" class="btn btn-outline">Cancel</a>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
         <button type="submit" class="btn btn-primary">
-          Confirm &amp; Book Appointment &rarr;
+          {{ icons.icon_check(class="icon", size=16) }}
+          <span>Confirm &amp; Book Appointment</span>
         </button>
       </div>
     </form>

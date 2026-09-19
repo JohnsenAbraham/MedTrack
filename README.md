@@ -51,39 +51,47 @@ Traditional paper-based and siloed outpatient scheduling systems create communic
 ---
 
 ## 4. Features
-- **Modern Landing Page**: Clean MedTrack branding, system explanation, and feature overviews.
-- **Patient Registration & Login**: Input validation, duplicate email prevention, and Werkzeug password hashing.
-- **Appointment Scheduling**: Patients select doctor, consultation date, time slot, and provide chief complaints.
-- **Doctor Consultation Console**: Physicians review assigned appointments, confirm visits, or complete appointments.
-- **Clinical Diagnosis Records**: Attending physicians log diagnosis findings and recommendations; patients securely view their personal medical history.
-- **Event-Driven Notifications**: Automated alerts for booking, confirmation, cancellation, and diagnosis recording.
-- **Evaluator Quick Login**: 1-click demo role switcher to test Patient and Doctor workflows without typing passwords.
+- **SaaS Clinical Workspace Layout**: Left-sidebar navigation (`#07231d`) with clean responsive layout, context-aware topbar headers, and verified portal badges.
+- **Uncluttered Dashboard Overviews**: 4-metric overview cards (Total Appointments, Upcoming Visits, Pending Confirmation, Completed Visits), today's care timetable, and recent diagnosis summaries.
+- **Dedicated Profile Management**: Separated personal patient credentials (phone, DOB, gender, patient ID) into dedicated profile settings, keeping dashboards clean and focused.
+- **Doctor Search & Directory (`/search-doctors`)**: Search practicing physicians by name or specialty with 1-click pre-selected appointment booking.
+- **Interactive Patient Appointment Management**: View appointments history with instant status filtering (`All`, `Pending`, `Confirmed`, `Completed`, `Cancelled`) and cancellation workflows.
+- **Medication Adherence & Dose Reminders**: Medicine cabinet tracking, daily dose checklists, live adherence compliance bar, and simulated Amazon SNS reminder dispatches.
+- **Expanded Physician Workspace**: Complete doctor tools for Consultation Agenda (`/doctor/schedule`), Patient Directory with real-time search (`/doctor/patients`), Diagnosis Archives (`/doctor/reports`), and Prescription Oversight (`/doctor/prescriptions`).
+- **Clinical Diagnosis Records**: Attending physicians log diagnosis findings and recommendations; patients securely view their confidential medical records.
+- **Zero Childish Emojis**: 100% sharp, accessible SVG vector icons across all views, cards, badges, and alerts.
+- **Event-Driven Notifications**: Simulated Amazon SNS dispatches for booking, cancellation, confirmation, diagnosis recording, and dose reminders.
+- **Evaluator Quick Login**: 1-click demo role switcher to test Patient and Doctor workflows instantly.
 
 ---
 
 ## 5. User Roles
 
-### Patient
+### Patient Portal
 - Register a new patient account with name, email, phone, date of birth, and gender.
-- Authenticate and manage session securely.
-- View personal patient dashboard with upcoming and previous appointments.
-- Book appointments by selecting an attending doctor, date, time, and reason.
-- View and cancel active appointments.
-- Access personal clinical diagnosis history.
-- Review notification status feed.
+- Authenticate securely with session persistence.
+- High-level overview dashboard with upcoming care schedule and key metrics.
+- Browse and search accredited physicians in the **Doctor Directory**.
+- Book consultations with preferred date, time slot, and chief complaint.
+- Manage appointment history with status filter tabs.
+- Track daily prescribed medications and log doses with adherence progress.
+- Access confidential clinical diagnosis reports.
+- Manage verified personal profile and contact details.
 
-### Doctor
+### Physician Portal
 - Sign in with verified physician credentials.
-- View real-time schedule of assigned patient appointments.
-- Update appointment states: `CONFIRMED`, `COMPLETED`, `CANCELLED`.
-- Submit clinical diagnoses and treatment instructions for completed consultations.
-- Access relevant patient information for assigned visits.
+- Clinical overview console with patient consultation schedule and diagnosis queue.
+- Consultation agenda calendar (`/doctor/schedule`) with 1-click visit confirmation and diagnosis actions.
+- Patient directory with instant name/phone filtering (`/doctor/patients`).
+- Submit and publish clinical diagnosis reports for completed consultations.
+- Oversee patient prescriptions and dose compliance schedules.
+- Review clinical alerts feed and manage physician credentials.
 
 ---
 
 ## 6. Technology Stack
 - **Backend Framework**: Python 3, Flask, Jinja2 Templates
-- **Frontend / UI**: HTML5, Vanilla CSS, JavaScript (ES6), Google Fonts (*Plus Jakarta Sans* & *Inter*)
+- **Frontend / UI**: HTML5, Vanilla CSS Design System, Modern Typography (*Newsreader* serif & *Plus Jakarta Sans*), SVG Icon Macro Library
 - **Local Storage**: SQLite 3 (for offline development and zero AWS cost)
 - **Cloud Database**: Amazon DynamoDB (NoSQL key-value store)
 - **Cloud Notifications**: Amazon SNS (Simple Notification Service)
@@ -256,6 +264,11 @@ python -m unittest discover -s tests -v
 14. Patient diagnosis viewing
 15. Cross-patient unauthorized record access prevention
 16. Mock Amazon SNS notification dispatch
+17. Patient medication creation and prescription schedule
+18. Medicine cabinet inventory and management
+19. Daily dose intake logging (Taken & Skipped compliance)
+20. Amazon SNS dose intake alert notification dispatch
+21. Medication intake history and adherence compliance tracking
 
 ---
 

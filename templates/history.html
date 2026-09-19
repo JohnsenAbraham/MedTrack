@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Medication Intake History – MedTrack{% endblock %}
+
+{% block content %}
+<div style="max-width: 1100px; margin: 0 auto;">
+
+  <!-- Header Section -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+    <div>
+      <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem; letter-spacing: -0.02em;">
+        Medication Intake History
+      </h1>
+      <p style="font-size: 0.92rem; color: var(--text-muted); margin: 0;">
+        Detailed audit trail of recorded medication doses, intake timings, and treatment compliance.
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      <a href="{{ url_for('patient_schedule') }}" class="btn btn-secondary">
+        {{ icons.icon_calendar(class="icon", size=15) }}
+        <span>Today's Schedule</span>
+      </a>
+      <a href="{{ url_for('view_medicines') }}" class="btn btn-secondary">
+        {{ icons.icon_pill(class="icon", size=15) }}
+        <span>Medicine Cabinet</span>
+      </a>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+        <span>&larr; Dashboard</span>
+      </a>
+    </div>
+  </div>
+
+  {% if logs %}
+    {% set taken_logs = logs | selectattr('status', 'equalto', 'TAKEN') | list %}
+    {% set skipped_logs = logs | selectattr('status', 'equalto', 'SKIPPED') | list %}
+    {% set total_count = logs | length %}
+    {% set taken_count = taken_logs | length %}
+    {% set compliance_rate = (taken_count / total_count * 100) | round if total_count > 0 else 100 %}
+
+    <!-- Metrics Strip -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.75rem;">
+      <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--primary);">
+        <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">
+          Total Logged Doses
+        </div>
+        <div style="font-size: 1.75rem; font-weight: 800; color: var(--text-main); margin-top: 4px;">
+          {{ total_count }}
+        </div>
+        <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">
+          Historical records tracked
+        </div>
+      </div>
+
+      <div class="card" style="padding: 1.25rem; border-left: 4px solid #16a34a;">
+        <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">
+          Doses Taken
+        </div>
+        <div style="font-size: 1.75rem; font-weight: 800; color: #16a34a; margin-top: 4px;">
+          {{ taken_count }}
+        </div>
+        <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">
+          Successfully administered
+        </div>
+      </div>
+
+      <div class="card" style="padding: 1.25rem; border-left: 4px solid #d97706;">
+        <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">
+          Doses Skipped
+        </div>
+        <div style="font-size: 1.75rem; font-weight: 800; color: #d97706; margin-top: 4px;">
+          {{ skipped_logs | length }}
+        </div>
+        <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">
+          Missed or deferred
+        </div>
+      </div>
+
+      <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--info);">
+        <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">
+          Compliance Adherence
+        </div>
+        <div style="font-size: 1.75rem; font-weight: 800; color: var(--info); margin-top: 4px;">
+          {{ compliance_rate }}%
+        </div>
+        <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">
+          Adherence percentage
+        </div>
+      </div>
+    </div>
+
+    <!-- Intake Logs Table -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          {{ icons.icon_clock(class="icon", size=20) }}
+          <span>Intake History Log ({{ total_count }})</span>
+        </div>
+        <div style="font-size: 0.82rem; color: var(--text-muted);">
+          Recorded in reverse chronological order
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Medication</th>
+              <th>Dosage</th>
+              <th>Scheduled</th>
+              <th>Action Time</th>
+              <th>Compliance Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in logs %}
+              <tr>
+                <td>
+                  <strong style="color: var(--text-main); font-size: 0.92rem;">{{ log.log_date }}</strong>
+                </td>
+                <td>
+                  <strong style="color: var(--primary); font-size: 0.92rem;">{{ log.medicine_name }}</strong>
+                </td>
+                <td>
+                  <span style="font-size: 0.82rem; background: #f1f5f9; padding: 2px 7px; border-radius: 4px; color: #475569; font-weight: 600;">
+                    {{ log.dosage }}
+                  </span>
+                </td>
+                <td>
+                  <span class="time-slot-badge">
+                    {{ icons.icon_clock(class="icon", size=12) }}
+                    {{ log.scheduled_time }}
+                  </span>
+                </td>
+                <td>
+                  <span style="font-size: 0.86rem; color: var(--text-muted);">
+                    {{ log.taken_time or '—' }}
+                  </span>
+                </td>
+                <td>
+                  {% if log.status == 'TAKEN' %}
+                    <span class="badge badge-completed">
+                      {{ icons.icon_check(class="icon", size=12) }}
+                      Taken
+                    </span>
+                  {% else %}
+                    <span class="badge badge-cancelled">
+                      {{ icons.icon_cross(class="icon", size=12) }}
+                      Skipped
+                    </span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  {% else %}
+    <div class="card">
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          {{ icons.icon_clock(class="icon", size=24) }}
+        </div>
+        <p style="font-weight: 600; color: var(--text-main); margin-bottom: 4px;">No medication intake logs recorded yet</p>
+        <p style="margin: 0.25rem auto 1.25rem; max-width: 440px; font-size: 0.86rem; color: var(--text-muted);">
+          When you mark your daily prescribed medicines as <strong>Taken</strong> or <strong>Skipped</strong> on your Dashboard or Schedule, your compliance records will be archived here.
+        </p>
+        <div style="display: flex; gap: 0.5rem; justify-content: center;">
+          <a href="{{ url_for('patient_schedule') }}" class="btn btn-primary btn-sm">Go to Daily Schedule</a>
+          <a href="{{ url_for('view_medicines') }}" class="btn btn-secondary btn-sm">Manage Medications</a>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -3,16 +3,18 @@
 {% block title %}Add Medicine – MedTrack{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 640px; padding-top: 2rem; padding-bottom: 3rem;">
+<div style="max-width: 640px; margin: 0 auto;">
 
   <div class="card">
-    <div class="card-header" style="text-align: center; margin-bottom: 1.5rem;">
-      <div style="font-size: 2.2rem; margin-bottom: 0.25rem;">💊</div>
+    <div class="card-header" style="text-align: center; margin-bottom: 1.5rem; justify-content: center; flex-direction: column;">
+      <div class="metric-icon-box teal" style="margin: 0 auto 0.75rem;">
+        {{ icons.icon_pill(class="icon", size=24) }}
+      </div>
       <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem;">
         Add Prescribed Medication
       </h1>
       <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">
-        Add details and scheduled intake time to receive automated Amazon SNS reminders.
+        Add details and scheduled intake time to receive automated dose reminders.
       </p>
     </div>
 
@@ -68,12 +70,13 @@
       </div>
 
       <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
-        <button type="submit" class="btn btn-primary" style="flex: 1;">
-          Add Medication &rarr;
-        </button>
-        <a href="{{ url_for('view_medicines') }}" class="btn btn-outline">
+        <a href="{{ url_for('view_medicines') }}" class="btn btn-secondary">
           Cancel
         </a>
+        <button type="submit" class="btn btn-primary" style="flex: 1;">
+          {{ icons.icon_check(class="icon", size=16) }}
+          <span>Save Medication Schedule</span>
+        </button>
       </div>
     </form>
   </div>

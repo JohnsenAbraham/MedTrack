@@ -3,24 +3,30 @@
 {% block title %}My Medications – MedTrack{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top: 1.5rem; padding-bottom: 3rem;">
+<div style="max-width: 1100px; margin: 0 auto;">
 
-  <!-- Header Card -->
-  <div class="card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+  <!-- Header -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
     <div>
-      <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem;">
-        Patient Portal &bull; Prescriptions
-      </div>
-      <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.35rem;">
-        My Medicine Cabinet & Dose Schedule
+      <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem; letter-spacing: -0.02em;">
+        My Medicine Cabinet &amp; Prescriptions
       </h1>
-      <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">
-        Manage your prescribed medicines, intake timing, and automated Amazon SNS dose reminders.
+      <p style="font-size: 0.92rem; color: var(--text-muted); margin: 0;">
+        Manage your prescribed medicines, intake timing, and automated dose reminder alerts.
       </p>
     </div>
-    <div style="display: flex; gap: 0.5rem;">
-      <a href="{{ url_for('add_medicine') }}" class="btn btn-primary">+ Add New Medicine</a>
-      <a href="{{ url_for('dashboard') }}" class="btn btn-outline">&larr; Back to Dashboard</a>
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      <a href="{{ url_for('view_intake_history') }}" class="btn btn-secondary">
+        {{ icons.icon_clock(class="icon", size=15) }}
+        <span>Intake History</span>
+      </a>
+      <a href="{{ url_for('add_medicine') }}" class="btn btn-primary">
+        {{ icons.icon_plus(class="icon", size=15) }}
+        <span>Add Medicine</span>
+      </a>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+        <span>&larr; Dashboard</span>
+      </a>
     </div>
   </div>
 
@@ -28,10 +34,11 @@
   <div class="card">
     <div class="card-header">
       <div class="card-title">
-        <span>💊</span> Active Prescriptions ({{ medicines | length }})
+        {{ icons.icon_pill(class="icon", size=20) }}
+        <span>Active Prescriptions ({{ medicines | length }})</span>
       </div>
       <div style="font-size: 0.82rem; color: var(--text-muted);">
-        Click <strong>Test SNS Alert</strong> to send an immediate intake reminder.
+        Click <strong>Test Alert</strong> to trigger an immediate dose reminder.
       </div>
     </div>
 
@@ -44,7 +51,7 @@
               <th>Dosage</th>
               <th>Intake Time</th>
               <th>Frequency</th>
-              <th>Instructions</th>
+              <th>Meal Instructions</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -52,36 +59,43 @@
             {% for med in medicines %}
               <tr>
                 <td>
-                  <strong>{{ med.name }}</strong>
+                  <strong style="color: var(--text-main); font-size: 0.94rem;">{{ med.name }}</strong>
                 </td>
                 <td>
-                  <span style="font-size: 0.82rem; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; color: #475569; font-weight: 600;">
+                  <span style="font-size: 0.82rem; background: #f1f5f9; padding: 3px 8px; border-radius: 4px; color: #475569; font-weight: 600;">
                     {{ med.dosage }}
                   </span>
                 </td>
                 <td>
-                  <strong style="color: var(--primary);">⏰ {{ med.schedule_time }}</strong>
+                  <span class="time-slot-badge">
+                    {{ icons.icon_clock(class="icon", size=13) }}
+                    {{ med.schedule_time }}
+                  </span>
                 </td>
                 <td>{{ med.frequency }}</td>
                 <td>
-                  <span>🍽️ {{ med.meal_timing }}</span>
+                  <span style="font-size: 0.86rem; color: #334155;">
+                    {{ med.meal_timing }}
+                  </span>
                   {% if med.notes %}
-                    <br><small style="color: var(--text-muted);">{{ med.notes }}</small>
+                    <br><small style="color: var(--text-muted); font-size: 0.78rem;">{{ med.notes }}</small>
                   {% endif %}
                 </td>
                 <td>
-                  <div style="display: flex; gap: 6px; align-items: center;">
+                  <div style="display: flex; gap: 8px; align-items: center;">
                     <!-- Amazon SNS Test Reminder Button -->
                     <form action="{{ url_for('trigger_dose_reminder', medicine_id=med.medicine_id) }}" method="POST" style="display: inline;">
-                      <button type="submit" class="btn btn-secondary btn-sm" title="Dispatch simulated Amazon SNS reminder">
-                        🔔 Test Alert
+                      <button type="submit" class="btn btn-secondary btn-sm" title="Dispatch simulated dose reminder">
+                        {{ icons.icon_bell(class="icon", size=13) }}
+                        <span>Test Alert</span>
                       </button>
                     </form>
 
                     <!-- Delete Button -->
                     <form action="{{ url_for('delete_medicine_route', medicine_id=med.medicine_id) }}" method="POST" onsubmit="return confirm('Remove {{ med.name }} from your prescriptions?');" style="display: inline;">
                       <button type="submit" class="btn btn-danger-outline btn-sm">
-                        Remove
+                        {{ icons.icon_trash(class="icon", size=13) }}
+                        <span>Remove</span>
                       </button>
                     </form>
                   </div>
@@ -92,13 +106,15 @@
         </table>
       </div>
     {% else %}
-      <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">💊</div>
-        <h3>No Prescriptions Added Yet</h3>
-        <p style="margin: 0.5rem auto 1.25rem; max-width: 420px; font-size: 0.9rem;">
-          Keep track of your daily doses, get automated Amazon SNS reminders, and ensure complete treatment compliance.
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          {{ icons.icon_pill(class="icon", size=24) }}
+        </div>
+        <p style="font-weight: 600; color: var(--text-main);">No prescriptions added yet</p>
+        <p style="margin: 0.25rem auto 1.25rem; max-width: 420px; font-size: 0.86rem; color: var(--text-muted);">
+          Keep track of your daily doses, get automated reminder alerts, and ensure complete treatment compliance.
         </p>
-        <a href="{{ url_for('add_medicine') }}" class="btn btn-primary">+ Add Your First Medicine</a>
+        <a href="{{ url_for('add_medicine') }}" class="btn btn-primary btn-sm">+ Add Your First Medicine</a>
       </div>
     {% endif %}
   </div>

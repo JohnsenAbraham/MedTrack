@@ -3,21 +3,36 @@
 {% block title %}My Appointments – MedTrack{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top: 1.5rem; padding-bottom: 3rem;">
+<div style="max-width: 1100px; margin: 0 auto;">
+
   <div class="card">
-    <div class="card-header">
+    <div class="card-header" style="flex-wrap: wrap; gap: 1rem;">
       <div class="card-title">
-        <span>📅</span> My Appointments History
+        {{ icons.icon_calendar(class="icon", size=20) }}
+        <span>My Appointments History</span>
       </div>
-      <a href="{{ url_for('book_appointment') }}" class="btn btn-primary btn-sm">+ Book New Appointment</a>
+      <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+        <!-- Status Filter Chips -->
+        <div style="display: flex; gap: 4px; background: #f1f5f9; padding: 3px; border-radius: 8px;">
+          <button type="button" class="btn-filter active" onclick="filterStatus('ALL', this)">All</button>
+          <button type="button" class="btn-filter" onclick="filterStatus('PENDING', this)">Pending</button>
+          <button type="button" class="btn-filter" onclick="filterStatus('CONFIRMED', this)">Confirmed</button>
+          <button type="button" class="btn-filter" onclick="filterStatus('COMPLETED', this)">Completed</button>
+          <button type="button" class="btn-filter" onclick="filterStatus('CANCELLED', this)">Cancelled</button>
+        </div>
+        <a href="{{ url_for('book_appointment') }}" class="btn-dark-green btn-sm">
+          {{ icons.icon_calendar_plus(class="icon", size=14) }}
+          <span>Book New Appointment</span>
+        </a>
+      </div>
     </div>
 
     {% if appointments %}
       <div class="table-responsive">
-        <table class="table">
+        <table class="table" id="appointmentsTable">
           <thead>
             <tr>
-              <th>Doctor</th>
+              <th>Attending Physician</th>
               <th>Date</th>
               <th>Time</th>
               <th>Reason for Visit</th>
@@ -29,12 +44,28 @@
           <tbody>
             {% for apt in appointments %}
               <tr>
-                <td><strong>{{ apt.doctor_name }}</strong></td>
-                <td>{{ apt.appointment_date }}</td>
-                <td>{{ apt.appointment_time }}</td>
-                <td style="max-width: 250px;">{{ apt.reason }}</td>
                 <td>
-                  <span class="badge badge-{{ apt.status | lower }}">{{ apt.status }}</span>
+                  <div style="display: flex; align-items: center;">
+                    <span class="avatar-initial-badge">
+                      {{ apt.doctor_name[:1] if apt.doctor_name else 'D' }}
+                    </span>
+                    <strong style="color: var(--text-main); font-size: 0.92rem;">{{ apt.doctor_name }}</strong>
+                  </div>
+                </td>
+                <td>
+                  <span style="font-weight: 600; color: #334155;">{{ apt.appointment_date }}</span>
+                </td>
+                <td>
+                  <span style="color: var(--text-muted); font-size: 0.88rem;">{{ apt.appointment_time }}</span>
+                </td>
+                <td style="max-width: 250px;">
+                  <span style="font-size: 0.86rem; color: #475569;">{{ apt.reason }}</span>
+                </td>
+                <td>
+                  <span class="badge badge-{{ apt.status | lower }}">
+                    <span class="badge-dot"></span>
+                    {{ apt.status }}
+                  </span>
                 </td>
                 <td><small style="color: var(--text-muted);">{{ apt.created_at[:10] }}</small></td>
                 <td>
@@ -53,11 +84,58 @@
       </div>
     {% else %}
       <div class="empty-state">
-        <div class="empty-icon">📅</div>
-        <p>You have not booked any appointments yet.</p>
+        <div class="empty-state-icon">
+          {{ icons.icon_calendar(class="icon", size=24) }}
+        </div>
+        <p style="font-weight: 600; color: var(--text-main);">You have not booked any appointments yet.</p>
         <a href="{{ url_for('book_appointment') }}" class="btn btn-primary btn-sm" style="margin-top: 10px;">Book Your First Appointment</a>
       </div>
     {% endif %}
   </div>
+
 </div>
+
+<style>
+  .btn-filter {
+    background: transparent;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  .btn-filter.active {
+    background: #ffffff;
+    color: var(--text-main);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+</style>
+
+<script>
+  function filterStatus(status, btn) {
+    const buttons = document.querySelectorAll('.btn-filter');
+    buttons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const table = document.getElementById('appointmentsTable');
+    if (!table) return;
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+    for (let i = 0; i < rows.length; i++) {
+      if (status === 'ALL') {
+        rows[i].style.display = '';
+      } else {
+        const text = rows[i].textContent || rows[i].innerText;
+        if (text.toUpperCase().indexOf(status) > -1) {
+          rows[i].style.display = '';
+        } else {
+          rows[i].style.display = 'none';
+        }
+      }
+    }
+  }
+</script>
 {% endblock %}

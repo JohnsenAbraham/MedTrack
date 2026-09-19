@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Search Doctors – MedTrack{% endblock %}
+{% block page_title %}Doctor Directory{% endblock %}
+
+{% block content %}
+<div style="max-width: 1100px; margin: 0 auto;">
+
+  <!-- Header -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.25rem; margin-bottom: 2rem;">
+    <div>
+      <h1 class="serif-heading" style="font-size: 2.15rem; font-weight: 700; color: #07231d; margin-bottom: 0.25rem;">
+        Find &amp; Consult Accredited Doctors
+      </h1>
+      <p style="font-size: 0.92rem; color: var(--text-muted); margin: 0;">
+        Browse practicing physicians, view clinical specialties, and book consultations directly.
+      </p>
+    </div>
+
+    <div>
+      <a href="{{ url_for('book_appointment') }}" class="btn-dark-green">
+        {{ icons.icon_calendar_plus(class="icon", size=16) }}
+        <span>Book an appointment</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Search & Filter Controls -->
+  <div class="card" style="margin-bottom: 2rem; padding: 1.25rem 1.5rem;">
+    <form method="GET" action="{{ url_for('search_doctors') }}" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+      <!-- Search Input -->
+      <div style="flex: 1; min-width: 260px; position: relative;">
+        <input 
+          type="text" 
+          name="q" 
+          value="{{ query }}" 
+          class="form-control" 
+          placeholder="Search by physician name or keyword..."
+          style="padding-left: 2.5rem;"
+          autofocus
+        >
+        <div style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">
+          {{ icons.icon_search(class="icon", size=16) }}
+        </div>
+      </div>
+
+      <!-- Specialty Filter -->
+      <div style="min-width: 200px;">
+        <select name="specialty" class="form-select" onchange="this.form.submit()">
+          <option value="">All Specialties</option>
+          <option value="General" {% if specialty == 'General' %}selected{% endif %}>General Practice / Physician</option>
+          <option value="Cardiology" {% if specialty == 'Cardiology' %}selected{% endif %}>Cardiology</option>
+          <option value="Pediatrics" {% if specialty == 'Pediatrics' %}selected{% endif %}>Pediatrics</option>
+          <option value="Dermatology" {% if specialty == 'Dermatology' %}selected{% endif %}>Dermatology</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-primary">
+        {{ icons.icon_search(class="icon", size=15) }}
+        <span>Search</span>
+      </button>
+
+      {% if query or specialty %}
+        <a href="{{ url_for('search_doctors') }}" class="btn btn-secondary">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+
+  <!-- Doctor Cards Grid -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        {{ icons.icon_users(class="icon", size=20) }}
+        <span>Practicing Physicians ({{ doctors | length }})</span>
+      </div>
+      <span class="portal-badge">
+        {{ icons.icon_shield(class="icon", size=12) }}
+        Verified Practitioners
+      </span>
+    </div>
+
+    {% if doctors %}
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem;">
+        {% for doc in doctors %}
+          <div style="background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.35rem; display: flex; flex-direction: column; justify-content: space-between; transition: var(--transition);" onmouseover="this.style.borderColor='#cbd5e1'" onmouseout="this.style.borderColor='var(--border-color)'">
+            <div>
+              <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 0.85rem;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <span class="avatar-initial-badge" style="width: 42px; height: 42px; font-size: 1rem; background: #07231d; color: #ffffff;">
+                    {{ doc.name[:1] if doc.name else 'D' }}
+                  </span>
+                  <div>
+                    <strong style="color: var(--text-main); font-size: 1rem; display: block;">{{ doc.name }}</strong>
+                    <span style="font-size: 0.78rem; color: var(--text-muted);">{{ doc.email }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem;">
+                <span class="specialization-pill">
+                  {{ doc.specialty or 'General Physician' }}
+                </span>
+                <span style="font-size: 0.76rem; background: #f0fdfa; color: #0d9488; padding: 3px 8px; border-radius: 6px; font-weight: 600;">
+                  Available for Consult
+                </span>
+              </div>
+
+              {% if doc.phone %}
+                <div style="font-size: 0.82rem; color: #475569; display: flex; align-items: center; gap: 6px; margin-bottom: 1.25rem;">
+                  {{ icons.icon_clock(class="icon", size=13) }}
+                  <span>Office: {{ doc.phone }}</span>
+                </div>
+              {% endif %}
+            </div>
+
+            <div style="border-top: 1px solid #f1f5f9; padding-top: 1rem; display: flex; gap: 8px;">
+              <a href="{{ url_for('book_appointment', doctor_id=doc.user_id) }}" class="btn-dark-green" style="width: 100%; justify-content: center; font-size: 0.82rem;">
+                {{ icons.icon_calendar_plus(class="icon", size=14) }}
+                <span>Book Consultation</span>
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          {{ icons.icon_search(class="icon", size=24) }}
+        </div>
+        <p style="font-weight: 600; color: var(--text-main); margin-bottom: 4px;">No physicians matched your search</p>
+        <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 12px;">Try adjusting your keyword or specialty filter.</p>
+        <a href="{{ url_for('search_doctors') }}" class="btn btn-secondary btn-sm">View All Doctors</a>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

@@ -1,49 +1,59 @@
 {% extends "base.html" %}
 
-{% block title %}MedTrack — Connected Healthcare & Clinical Portal{% endblock %}
+{% block title %}MedTrack — Connected Healthcare & Patient Portal{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
 <section class="hero-section">
   <div class="container">
-    <div class="hero-content">
-      <div class="hero-tag">
-        Modern Clinical Care &bullet; Patient Adherence
-      </div>
-      <h1 class="hero-title">
-        Connected Healthcare & <span>Patient Portal</span>
-      </h1>
-      <p class="hero-desc">
-        Empowering patients and accredited physicians with unified appointment scheduling, verified clinical records, and automated daily medicine dose tracking in one reliable healthcare platform.
-      </p>
-      <div class="hero-actions">
-        {% if is_authenticated %}
-          {% if user_role == 'doctor' %}
-            <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-primary">Doctor Workspace &rarr;</a>
+    <div class="hero-grid">
+      <div class="hero-content">
+        <div class="hero-tag">
+          {{ icons.icon_shield(class="icon", size=14) }}
+          <span>Modern Clinical Care &bull; AWS Cloud-Enabled</span>
+        </div>
+        <h1 class="hero-title">
+          Connected Healthcare &amp; <span>Patient Portal</span>
+        </h1>
+        <p class="hero-desc">
+          Empowering patients and accredited physicians with unified Appointment Scheduling, verified clinical records, and automated daily medicine dose tracking in one reliable healthcare platform.
+        </p>
+        <div class="hero-actions">
+          {% if is_authenticated %}
+            {% if user_role == 'doctor' %}
+              <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-primary">Doctor Workspace &rarr;</a>
+            {% else %}
+              <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Patient Dashboard &rarr;</a>
+              <a href="{{ url_for('book_appointment') }}" class="btn btn-secondary">Book an Appointment</a>
+            {% endif %}
           {% else %}
-            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Patient Dashboard &rarr;</a>
-            <a href="{{ url_for('book_appointment') }}" class="btn btn-secondary">Book an Appointment</a>
+            <a href="{{ url_for('register') }}" class="btn btn-primary">Join Us &rarr;</a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline" style="color: #ffffff; border-color: rgba(255,255,255,0.4);">Sign In</a>
           {% endif %}
-        {% else %}
-          <a href="{{ url_for('register') }}" class="btn btn-primary">Join Us &rarr;</a>
-          <a href="{{ url_for('login') }}" class="btn btn-outline">Sign In</a>
-        {% endif %}
+        </div>
+      </div>
+
+      <!-- Hero Graphic Asset -->
+      <div class="hero-image-wrapper">
+        <img src="{{ url_for('static', filename='img/hero_medical_tracking.jpg') }}" alt="MedTrack Healthcare SaaS Platform – Clinical scheduling, physician consultation, and medication tracking" loading="eager">
       </div>
     </div>
   </div>
 </section>
 
 <!-- Services Section -->
-<section id="services" class="container" style="padding: 3.5rem 1.5rem;">
-  <div style="text-align: center; max-width: 600px; margin: 0 auto 2.5rem;">
-    <span style="color: var(--primary); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Our Core Services</span>
-    <h2 style="font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin-top: 4px;">Comprehensive Patient & Clinical Care</h2>
+<section id="services" class="container" style="padding: 4rem 1.5rem;">
+  <div style="text-align: center; max-width: 620px; margin: 0 auto 3rem;">
+    <span style="color: var(--primary); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;">Our Core Services</span>
+    <h2 style="font-size: 2rem; font-weight: 800; color: var(--text-main); margin-top: 6px; letter-spacing: -0.02em;">Comprehensive Patient &amp; Clinical Care</h2>
     <p style="color: var(--text-muted); font-size: 0.95rem;">Streamlined medical workflows connecting patients directly with accredited doctors.</p>
   </div>
 
-  <div class="features-grid" style="margin: 0;">
+  <div class="features-grid">
     <div class="feature-card">
-      <div class="feature-icon">🩺</div>
+      <div class="feature-icon-box">
+        {{ icons.icon_stethoscope(class="icon", size=24) }}
+      </div>
       <h3 class="feature-title">Physician Consultations</h3>
       <p class="feature-text">
         Connect with accredited doctors across multiple specialties for clinical evaluations, diagnosis consultations, and follow-ups.
@@ -51,7 +61,9 @@
     </div>
 
     <div class="feature-card">
-      <div class="feature-icon">📅</div>
+      <div class="feature-icon-box">
+        {{ icons.icon_calendar(class="icon", size=24) }}
+      </div>
       <h3 class="feature-title">Appointment Scheduling</h3>
       <p class="feature-text">
         Book consultations in real time with preferred dates and slots. Track visit status from Pending to Confirmed without telephone delays.
@@ -59,15 +71,19 @@
     </div>
 
     <div class="feature-card">
-      <div class="feature-icon">💊</div>
-      <h3 class="feature-title">Prescriptions & Dose Reminders</h3>
+      <div class="feature-icon-box">
+        {{ icons.icon_pill(class="icon", size=24) }}
+      </div>
+      <h3 class="feature-title">Prescriptions &amp; Dose Reminders</h3>
       <p class="feature-text">
         Log prescribed medicines, meal instructions, and scheduled times. Monitor daily adherence with 1-click dose tracking and alert notifications.
       </p>
     </div>
 
     <div class="feature-card">
-      <div class="feature-icon">📋</div>
+      <div class="feature-icon-box">
+        {{ icons.icon_document(class="icon", size=24) }}
+      </div>
       <h3 class="feature-title">Verified Medical Records</h3>
       <p class="feature-text">
         Confidential clinical diagnosis reports and medical visit histories stored securely with role-isolated access for patients and doctors.
@@ -77,12 +93,12 @@
 </section>
 
 <!-- About Us Section -->
-<section id="about-us" style="background: #ffffff; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding: 4rem 0;">
+<section id="about-us" style="background: #ffffff; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding: 4.5rem 0;">
   <div class="container">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 3rem; align-items: center;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 3.5rem; align-items: center;">
       <div>
-        <span style="color: var(--primary); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">About MedTrack</span>
-        <h2 style="font-size: 2rem; font-weight: 800; color: var(--text-main); margin: 0.4rem 0 1rem; line-height: 1.25;">
+        <span style="color: var(--primary); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;">About MedTrack</span>
+        <h2 style="font-size: 2.1rem; font-weight: 800; color: var(--text-main); margin: 0.4rem 0 1rem; line-height: 1.25; letter-spacing: -0.02em;">
           Bridging Patients and Accredited Physicians Seamlessly
         </h2>
         <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.65; margin-bottom: 1rem;">
@@ -93,25 +109,34 @@
         </p>
         <a href="{{ url_for('register') }}" class="btn btn-primary">Create Your Patient Account &rarr;</a>
       </div>
+
       <div style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 2rem;">
-        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 1rem;">Why Patients Choose MedTrack</h3>
-        <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 1.25rem;">Why Patients Choose MedTrack</h3>
+        <div style="display: flex; flex-direction: column; gap: 1.2rem;">
           <div style="display: flex; gap: 12px; align-items: flex-start;">
-            <span style="color: var(--primary); font-size: 1.2rem;">✔</span>
+            <div style="color: var(--primary); margin-top: 2px;">
+              {{ icons.icon_check_circle(class="icon", size=20) }}
+            </div>
             <div>
               <strong style="font-size: 0.92rem; color: var(--text-main);">Zero Scheduling Delays</strong>
               <p style="font-size: 0.84rem; color: var(--text-muted); margin: 2px 0 0;">Select your consulting physician and lock in time slots with instant confirmation updates.</p>
             </div>
           </div>
+
           <div style="display: flex; gap: 12px; align-items: flex-start;">
-            <span style="color: var(--primary); font-size: 1.2rem;">✔</span>
+            <div style="color: var(--primary); margin-top: 2px;">
+              {{ icons.icon_check_circle(class="icon", size=20) }}
+            </div>
             <div>
               <strong style="font-size: 0.92rem; color: var(--text-main);">Daily Medication Compliance</strong>
-              <p style="font-size: 0.84rem; color: var(--text-muted); margin: 2px 0 0;">Never miss a dose with our automated intake tracking and reminder alerts.</p>
+              <p style="font-size: 0.84rem; color: var(--text-muted); margin: 2px 0 0;">Never miss a dose with automated intake tracking and simulated alert reminders.</p>
             </div>
           </div>
+
           <div style="display: flex; gap: 12px; align-items: flex-start;">
-            <span style="color: var(--primary); font-size: 1.2rem;">✔</span>
+            <div style="color: var(--primary); margin-top: 2px;">
+              {{ icons.icon_check_circle(class="icon", size=20) }}
+            </div>
             <div>
               <strong style="font-size: 0.92rem; color: var(--text-main);">Role-Isolated Security</strong>
               <p style="font-size: 0.84rem; color: var(--text-muted); margin: 2px 0 0;">Strict privilege boundaries prevent cross-patient record visibility.</p>
@@ -124,46 +149,58 @@
 </section>
 
 <!-- Clinical Departments Section -->
-<section id="departments" class="container" style="padding: 3.5rem 1.5rem;">
-  <div style="text-align: center; max-width: 600px; margin: 0 auto 2.5rem;">
-    <span style="color: var(--primary); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Medical Specialties</span>
-    <h2 style="font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin-top: 4px;">Clinical Departments</h2>
+<section id="departments" class="container" style="padding: 4rem 1.5rem 5rem;">
+  <div style="text-align: center; max-width: 620px; margin: 0 auto 3rem;">
+    <span style="color: var(--primary); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;">Medical Specialties</span>
+    <h2 style="font-size: 2rem; font-weight: 800; color: var(--text-main); margin-top: 6px; letter-spacing: -0.02em;">Clinical Departments</h2>
     <p style="color: var(--text-muted); font-size: 0.95rem;">Consult with accredited specialists across diverse clinical practices.</p>
   </div>
 
   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
     <div class="card" style="padding: 1.5rem;">
-      <div style="font-size: 1.8rem; margin-bottom: 0.5rem;">❤️</div>
+      <div style="color: var(--primary); margin-bottom: 0.75rem;">
+        {{ icons.icon_heart(class="icon", size=26) }}
+      </div>
       <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem;">Cardiology</h3>
       <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin: 0;">Cardiovascular evaluations, ECG reviews, blood pressure management, and preventive vascular care.</p>
     </div>
 
     <div class="card" style="padding: 1.5rem;">
-      <div style="font-size: 1.8rem; margin-bottom: 0.5rem;">🩺</div>
+      <div style="color: var(--primary); margin-bottom: 0.75rem;">
+        {{ icons.icon_stethoscope(class="icon", size=26) }}
+      </div>
       <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem;">General Practice</h3>
       <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin: 0;">Comprehensive primary healthcare, routine diagnostic checkups, and wellness screenings.</p>
     </div>
 
     <div class="card" style="padding: 1.5rem;">
-      <div style="font-size: 1.8rem; margin-bottom: 0.5rem;">👶</div>
+      <div style="color: var(--primary); margin-bottom: 0.75rem;">
+        {{ icons.icon_user(class="icon", size=26) }}
+      </div>
       <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem;">Pediatrics</h3>
       <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin: 0;">Infant, child, and adolescent developmental checkups, immunizations, and pediatric care.</p>
     </div>
 
     <div class="card" style="padding: 1.5rem;">
-      <div style="font-size: 1.8rem; margin-bottom: 0.5rem;">🔬</div>
+      <div style="color: var(--primary); margin-bottom: 0.75rem;">
+        {{ icons.icon_search(class="icon", size=26) }}
+      </div>
       <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem;">Dermatology</h3>
       <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin: 0;">Skin health evaluations, allergen assessments, and specialized dermatological treatments.</p>
     </div>
 
     <div class="card" style="padding: 1.5rem;">
-      <div style="font-size: 1.8rem; margin-bottom: 0.5rem;">🦴</div>
+      <div style="color: var(--primary); margin-bottom: 0.75rem;">
+        {{ icons.icon_shield(class="icon", size=26) }}
+      </div>
       <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem;">Orthopedics</h3>
       <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin: 0;">Bone, joint, and musculoskeletal diagnostics, rehabilitation guidance, and mobility therapy.</p>
     </div>
 
     <div class="card" style="padding: 1.5rem;">
-      <div style="font-size: 1.8rem; margin-bottom: 0.5rem;">🧠</div>
+      <div style="color: var(--primary); margin-bottom: 0.75rem;">
+        {{ icons.icon_checklist(class="icon", size=26) }}
+      </div>
       <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem;">Neurology</h3>
       <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin: 0;">Central nervous system assessments, cognitive health consultations, and nerve evaluations.</p>
     </div>

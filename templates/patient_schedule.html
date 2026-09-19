@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}My Schedule – MedTrack{% endblock %}
+
+{% block content %}
+<div style="max-width: 1100px; margin: 0 auto;">
+
+  <!-- Header -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+    <div>
+      <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem; letter-spacing: -0.02em;">
+        Clinical &amp; Medication Schedule
+      </h1>
+      <p style="font-size: 0.92rem; color: var(--text-muted); margin: 0;">
+        Calendar agenda combining your consultation appointments and daily prescription dose timetable.
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+      <a href="{{ url_for('view_intake_history') }}" class="btn btn-secondary">
+        {{ icons.icon_clock(class="icon", size=16) }}
+        <span>Intake History</span>
+      </a>
+      <a href="{{ url_for('book_appointment') }}" class="btn btn-primary">
+        {{ icons.icon_calendar_plus(class="icon", size=16) }}
+        <span>Book Visit</span>
+      </a>
+      <a href="{{ url_for('add_medicine') }}" class="btn btn-secondary">
+        {{ icons.icon_plus(class="icon", size=16) }}
+        <span>Add Medicine</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Weekly Calendar Strip (Visual) -->
+  <div class="card" style="margin-bottom: 1.75rem; padding: 1.25rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <span style="font-weight: 700; font-size: 1rem; color: var(--text-main);">Current Week View</span>
+      <span class="portal-badge">
+        {{ icons.icon_calendar(class="icon", size=13) }}
+        Live Care Plan
+      </span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center;">
+      {% set days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+      {% for d in days %}
+        <div style="padding: 12px 6px; border-radius: 8px; border: 1px solid var(--border-color); background: {% if loop.index == 4 %}var(--primary-light){% else %}#ffffff{% endif %};">
+          <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">{{ d }}</div>
+          <div style="font-size: 1.15rem; font-weight: 800; color: {% if loop.index == 4 %}var(--primary){% else %}var(--text-main){% endif %}; margin: 4px 0;">
+            {{ 14 + loop.index0 }}
+          </div>
+          <div style="font-size: 0.68rem; color: {% if loop.index == 4 %}var(--primary){% else %}var(--text-light){% endif %}; font-weight: 600;">
+            {% if loop.index == 4 %}Today{% else %}&bull; Active{% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+    
+    <!-- Scheduled Consultations -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          {{ icons.icon_calendar(class="icon", size=20) }}
+          <span>Doctor Consultations</span>
+        </div>
+      </div>
+
+      {% if appointments %}
+        <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+          {% for apt in appointments %}
+            <div style="display: flex; align-items: flex-start; gap: 12px; padding: 0.95rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: #ffffff;">
+              <div class="time-slot-badge" style="flex-direction: column; min-width: 75px; text-align: center; padding: 6px 4px;">
+                <span style="font-size: 0.72rem; text-transform: uppercase;">{{ apt.appointment_date[5:] }}</span>
+                <span style="font-size: 0.82rem; font-weight: 800;">{{ apt.appointment_time }}</span>
+              </div>
+              <div style="flex: 1;">
+                <strong style="font-size: 0.95rem; color: var(--text-main); display: block;">
+                  {{ apt.doctor_name }}
+                </strong>
+                <span style="font-size: 0.82rem; color: var(--text-muted); display: block; margin-top: 2px;">
+                  {{ apt.reason }}
+                </span>
+                <span class="badge badge-{{ apt.status | lower }}" style="margin-top: 6px;">
+                  <span class="badge-dot"></span>
+                  {{ apt.status }}
+                </span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">
+            {{ icons.icon_calendar(class="icon", size=24) }}
+          </div>
+          <p style="font-weight: 600; color: var(--text-main);">No appointments booked</p>
+          <a href="{{ url_for('book_appointment') }}" class="btn btn-outline btn-sm" style="margin-top: 8px;">Schedule Visit</a>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Daily Medication Timetable -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          {{ icons.icon_pill(class="icon", size=20) }}
+          <span>Medication Timetable</span>
+        </div>
+      </div>
+
+      {% if medicines %}
+        <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+          {% for med in medicines %}
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.95rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: #ffffff;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="time-slot-badge">
+                  {{ icons.icon_clock(class="icon", size=13) }}
+                  {{ med.schedule_time }}
+                </div>
+                <div>
+                  <strong style="font-size: 0.95rem; color: var(--text-main);">{{ med.name }}</strong>
+                  <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">
+                    {{ med.dosage }} &bull; {{ med.meal_timing }}
+                  </div>
+                </div>
+              </div>
+              <span class="badge badge-confirmed">
+                {{ med.frequency }}
+              </span>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">
+            {{ icons.icon_pill(class="icon", size=24) }}
+          </div>
+          <p style="font-weight: 600; color: var(--text-main);">No medications on schedule</p>
+          <a href="{{ url_for('add_medicine') }}" class="btn btn-outline btn-sm" style="margin-top: 8px;">Add Medicine</a>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

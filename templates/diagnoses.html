@@ -3,31 +3,39 @@
 {% block title %}My Diagnosis Records – MedTrack{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top: 1.5rem; padding-bottom: 3rem;">
+<div style="max-width: 1000px; margin: 0 auto;">
   <div class="card">
     <div class="card-header">
       <div class="card-title">
-        <span>📋</span> Confidential Medical Diagnoses
+        {{ icons.icon_document(class="icon", size=20) }}
+        <span>Confidential Medical Diagnoses</span>
       </div>
-      <a href="{{ url_for('dashboard') }}" style="font-size: 0.85rem;">&larr; Return to Dashboard</a>
+      <a href="{{ url_for('dashboard') }}" style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">
+        &larr; Return to Dashboard
+      </a>
     </div>
 
     {% if diagnoses %}
       <div style="display: flex; flex-direction: column; gap: 1.25rem;">
         {% for diag in diagnoses %}
-          <div style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-              <div>
-                <strong style="font-size: 1.05rem; color: var(--text-main);">
-                  {{ diag.doctor_name or 'Attending Physician' }}
-                </strong>
-                <span style="font-size: 0.78rem; color: var(--text-muted); margin-left: 8px;">
-                  Record ID: <code>{{ diag.diagnosis_id }}</code>
+          <div style="background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 0.75rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="avatar-initial-badge">
+                  {{ diag.doctor_name[:1] if diag.doctor_name else 'D' }}
                 </span>
+                <div>
+                  <strong style="font-size: 1rem; color: var(--text-main);">
+                    {{ diag.doctor_name or 'Attending Physician' }}
+                  </strong>
+                  <span style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace; margin-left: 6px;">
+                    Record ID: {{ diag.diagnosis_id }}
+                  </span>
+                </div>
               </div>
-              <div style="font-size: 0.82rem; font-weight: 600; color: var(--primary);">
+              <span class="portal-badge" style="font-size: 0.78rem;">
                 Date: {{ diag.date }}
-              </div>
+              </span>
             </div>
 
             <div style="font-size: 0.92rem; color: #334155; line-height: 1.6; white-space: pre-line;">
@@ -42,9 +50,11 @@
       </div>
     {% else %}
       <div class="empty-state">
-        <div class="empty-icon">🩺</div>
-        <p>No diagnosis records have been logged in your patient file yet.</p>
-        <p style="font-size: 0.82rem; color: var(--text-light);">
+        <div class="empty-state-icon">
+          {{ icons.icon_document(class="icon", size=24) }}
+        </div>
+        <p style="font-weight: 600; color: var(--text-main);">No diagnosis records have been logged yet</p>
+        <p style="font-size: 0.82rem; color: var(--text-muted);">
           Diagnosis records are published by your attending doctor following completed clinical consultations.
         </p>
       </div>

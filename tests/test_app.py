@@ -364,5 +364,12 @@ class MedTrackTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Amazon SNS Dose Reminder dispatched", response.data)
 
+    def test_21_intake_history_view(self):
+        """21. Verify patient can view their medicine intake compliance history."""
+        self.client.get("/demo-login/patient")
+        response = self.client.get("/medicines/history")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Medication Intake History", response.data)
+
 if __name__ == "__main__":
     unittest.main()

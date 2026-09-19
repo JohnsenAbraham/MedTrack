@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Doctor Schedule – MedTrack{% endblock %}
+
+{% block content %}
+<div style="max-width: 1100px; margin: 0 auto;">
+
+  <!-- Header -->
+  <div style="margin-bottom: 2rem;">
+    <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem; letter-spacing: -0.02em;">
+      Physician Consultation Schedule
+    </h1>
+    <p style="font-size: 0.92rem; color: var(--text-muted); margin: 0;">
+      Review scheduled patient appointments, manage status, and proceed with clinical evaluations.
+    </p>
+  </div>
+
+  <!-- Weekly Agenda View -->
+  <div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+      <div class="card-title">
+        {{ icons.icon_calendar(class="icon", size=20) }}
+        <span>Weekly Consultation Agenda</span>
+      </div>
+      <span class="portal-badge">
+        {{ appointments | length }} Total Visits
+      </span>
+    </div>
+
+    {% if appointments %}
+      <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+        {% for apt in appointments %}
+          <div class="schedule-item">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <span class="time-slot-badge">
+                {{ icons.icon_clock(class="icon", size=13) }}
+                {{ apt.appointment_date }} &bull; {{ apt.appointment_time }}
+              </span>
+              <div>
+                <strong style="font-size: 0.95rem; color: var(--text-main);">
+                  {{ apt.patient_name }}
+                </strong>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                  Reason: {{ apt.reason }}
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="badge badge-{{ apt.status | lower }}">
+                <span class="badge-dot"></span>
+                {{ apt.status }}
+              </span>
+
+              {% if apt.status == 'PENDING' %}
+                <form action="{{ url_for('update_appointment_status', appointment_id=apt.appointment_id) }}" method="POST" style="display:inline;">
+                  <input type="hidden" name="status" value="CONFIRMED">
+                  <button type="submit" class="btn btn-primary btn-sm">Confirm</button>
+                </form>
+              {% elif apt.status == 'CONFIRMED' %}
+                <a href="{{ url_for('submit_diagnosis', appointment_id=apt.appointment_id) }}" class="btn btn-success btn-sm">
+                  Complete &amp; Diagnose &rarr;
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          {{ icons.icon_calendar(class="icon", size=24) }}
+        </div>
+        <p style="font-weight: 600; color: var(--text-main);">No consultations scheduled</p>
+        <p style="font-size: 0.84rem; color: var(--text-muted);">Upcoming booked appointments will automatically populate here.</p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

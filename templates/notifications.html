@@ -3,46 +3,45 @@
 {% block title %}Notifications & Alerts – MedTrack{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top: 1.5rem; padding-bottom: 3rem; max-width: 860px;">
+<div style="max-width: 900px; margin: 0 auto;">
 
-  <div class="card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+  <!-- Header -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
     <div>
-      <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem;">
-        Patient Portal &bull; Communication Stream
-      </div>
-      <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.35rem;">
-        Clinical Alerts & Notifications
+      <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem; letter-spacing: -0.02em;">
+        Clinical Alerts &amp; Notifications
       </h1>
-      <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">
-        Real-time appointment updates, diagnosis logs, and Amazon SNS dose reminders.
+      <p style="font-size: 0.92rem; color: var(--text-muted); margin: 0;">
+        Real-time consultation updates, diagnosis notices, and automated medication reminders.
       </p>
     </div>
     <div>
-      <a href="{{ url_for('dashboard') }}" class="btn btn-outline">&larr; Back to Dashboard</a>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">&larr; Back to Dashboard</a>
     </div>
   </div>
 
   <div class="card">
     <div class="card-header">
       <div class="card-title">
-        <span>🔔</span> Message Inbox ({{ notifications | length }})
+        {{ icons.icon_bell(class="icon", size=20) }}
+        <span>Message Inbox ({{ notifications | length }})</span>
       </div>
-      <span class="badge badge-confirmed">Live Updates</span>
+      <span class="portal-badge">Live Updates</span>
     </div>
 
     {% if notifications %}
       <div style="display: flex; flex-direction: column; gap: 0.85rem;">
         {% for ntf in notifications %}
           <div style="display: flex; align-items: flex-start; gap: 14px; padding: 1rem 1.15rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: #ffffff;">
-            <div style="width: 36px; height: 36px; border-radius: 8px; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; margin-top: 2px;">
+            <div style="width: 38px; height: 38px; border-radius: 8px; background: #f0fdfa; color: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
               {% if 'Appointment' in ntf.message or 'visit' in ntf.message %}
-                📅
+                {{ icons.icon_calendar(class="icon", size=18) }}
               {% elif 'diagnosis' in ntf.message or 'Diagnosis' in ntf.message %}
-                📋
+                {{ icons.icon_document(class="icon", size=18) }}
               {% elif 'Dose' in ntf.message or 'Reminder' in ntf.message or 'medicine' in ntf.message or 'Medication' in ntf.message %}
-                💊
+                {{ icons.icon_pill(class="icon", size=18) }}
               {% else %}
-                🔔
+                {{ icons.icon_bell(class="icon", size=18) }}
               {% endif %}
             </div>
             <div style="flex: 1;">
@@ -57,13 +56,15 @@
         {% endfor %}
       </div>
     {% else %}
-      <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📭</div>
-        <h3>No Notifications Yet</h3>
-        <p style="margin: 0.5rem auto 1.25rem; max-width: 400px; font-size: 0.9rem;">
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          {{ icons.icon_bell(class="icon", size=24) }}
+        </div>
+        <p style="font-weight: 600; color: var(--text-main);">No notifications yet</p>
+        <p style="margin: 0.25rem auto 1.25rem; max-width: 400px; font-size: 0.86rem; color: var(--text-muted);">
           When your appointments are confirmed, diagnoses are submitted, or medication reminders trigger, alerts will appear here.
         </p>
-        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-sm">Go to Dashboard</a>
       </div>
     {% endif %}
   </div>

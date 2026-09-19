@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Profile – MedTrack{% endblock %}
+
+{% block content %}
+<div style="max-width: 960px; margin: 0 auto;">
+
+  <!-- Page Header -->
+  <div style="margin-bottom: 2rem;">
+    <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem; letter-spacing: -0.02em;">
+      Patient Profile &amp; Account Settings
+    </h1>
+    <p style="font-size: 0.92rem; color: var(--text-muted); margin: 0;">
+      Manage your personal clinical credentials, verified contact details, and account preferences.
+    </p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; align-items: start;">
+    
+    <!-- Profile Card (Left) -->
+    <div class="card" style="text-align: center; padding: 2rem 1.5rem;">
+      <div class="avatar-circle" style="width: 72px; height: 72px; font-size: 1.8rem; margin: 0 auto 1rem; background: var(--primary-sidebar); color: #ffffff;">
+        {{ patient.name[:1] }}
+      </div>
+      <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.2rem;">
+        {{ patient.name }}
+      </h2>
+      <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+        {{ patient.email }}
+      </div>
+      <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: var(--radius-full); background: #f0fdfa; color: #0d9488; font-size: 0.78rem; font-weight: 700; border: 1px solid #ccfbf1; margin-bottom: 1.5rem;">
+        {{ icons.icon_shield(class="icon", size=12) }}
+        <span>Verified Patient</span>
+      </div>
+
+      <div style="border-top: 1px solid var(--border-color); padding-top: 1.25rem; text-align: left; display: flex; flex-direction: column; gap: 0.85rem;">
+        <div>
+          <span style="font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Patient ID</span>
+          <div style="font-size: 0.85rem; font-family: monospace; color: var(--text-main); font-weight: 600;">
+            {{ patient.user_id }}
+          </div>
+        </div>
+        <div>
+          <span style="font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Member Since</span>
+          <div style="font-size: 0.85rem; color: var(--text-main);">
+            {{ patient.created_at[:10] }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Personal Details Form (Right) -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          {{ icons.icon_user(class="icon", size=20) }}
+          <span>Personal &amp; Contact Information</span>
+        </div>
+      </div>
+
+      <form action="{{ url_for('profile') }}" method="POST">
+        <!-- Full Name -->
+        <div class="form-group">
+          <label for="name" class="form-label">Full Legal Name</label>
+          <input type="text" class="form-control" id="name" name="name" value="{{ patient.name }}" required>
+        </div>
+
+        <!-- Email Address (Read-only) -->
+        <div class="form-group">
+          <label for="email" class="form-label">Email Address (Sign In ID)</label>
+          <input type="email" class="form-control" id="email" value="{{ patient.email }}" disabled style="background: #f1f5f9; cursor: not-allowed;">
+          <small style="color: var(--text-muted); font-size: 0.76rem;">Email address cannot be modified once verified.</small>
+        </div>
+
+        <!-- Phone Number & Date of Birth -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="phone" class="form-label">Contact Phone Number</label>
+            <input type="text" class="form-control" id="phone" name="phone" placeholder="+1-555-0100" value="{{ patient.phone or '' }}">
+          </div>
+
+          <div class="form-group">
+            <label for="date_of_birth" class="form-label">Date of Birth</label>
+            <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="{{ patient.date_of_birth or '' }}">
+          </div>
+        </div>
+
+        <!-- Gender -->
+        <div class="form-group">
+          <label for="gender" class="form-label">Gender</label>
+          <select class="form-select" id="gender" name="gender">
+            <option value="" {% if not patient.gender %}selected{% endif %}>Select gender...</option>
+            <option value="Female" {% if patient.gender == 'Female' %}selected{% endif %}>Female</option>
+            <option value="Male" {% if patient.gender == 'Male' %}selected{% endif %}>Male</option>
+            <option value="Other" {% if patient.gender == 'Other' %}selected{% endif %}>Other</option>
+            <option value="Prefer not to say" {% if patient.gender == 'Prefer not to say' %}selected{% endif %}>Prefer not to say</option>
+          </select>
+        </div>
+
+        <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+          <button type="submit" class="btn btn-primary">
+            {{ icons.icon_check(class="icon", size=16) }}
+            <span>Save Changes</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

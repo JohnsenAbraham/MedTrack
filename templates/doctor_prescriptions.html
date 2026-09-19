@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Prescriptions – MedTrack{% endblock %}
+
+{% block content %}
+<div style="max-width: 1100px; margin: 0 auto;">
+
+  <!-- Header -->
+  <div style="margin-bottom: 2rem;">
+    <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem; letter-spacing: -0.02em;">
+      Patient Medication Oversight
+    </h1>
+    <p style="font-size: 0.92rem; color: var(--text-muted); margin: 0;">
+      Review active prescriptions, dosages, and adherence schedules for your consulting patients.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        {{ icons.icon_pill(class="icon", size=20) }}
+        <span>Active Prescriptions ({{ prescriptions | length }})</span>
+      </div>
+    </div>
+
+    {% if prescriptions %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Medication</th>
+              <th>Dosage</th>
+              <th>Scheduled Time</th>
+              <th>Frequency</th>
+              <th>Meal Instructions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for rx in prescriptions %}
+              <tr>
+                <td>
+                  <strong style="color: var(--text-main);">{{ rx.patient_name }}</strong>
+                </td>
+                <td>
+                  <strong style="color: var(--primary);">{{ rx.name }}</strong>
+                </td>
+                <td>
+                  <span style="font-size: 0.82rem; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; color: #475569; font-weight: 600;">
+                    {{ rx.dosage }}
+                  </span>
+                </td>
+                <td>
+                  <span class="time-slot-badge">
+                    {{ icons.icon_clock(class="icon", size=13) }}
+                    {{ rx.schedule_time }}
+                  </span>
+                </td>
+                <td>{{ rx.frequency }}</td>
+                <td>
+                  <span style="font-size: 0.85rem; color: var(--text-muted);">
+                    {{ rx.meal_timing }}
+                    {% if rx.notes %} &bull; <em>{{ rx.notes }}</em>{% endif %}
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          {{ icons.icon_pill(class="icon", size=24) }}
+        </div>
+        <p style="font-weight: 600; color: var(--text-main);">No active patient prescriptions</p>
+        <p style="font-size: 0.84rem; color: var(--text-muted);">Medications added by your consulting patients will appear in this oversight view.</p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

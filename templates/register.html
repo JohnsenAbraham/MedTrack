@@ -3,17 +3,18 @@
 {% block title %}Patient Registration – MedTrack{% endblock %}
 
 {% block content %}
-<div class="container auth-wrapper">
-  <div class="card auth-card">
-    <div class="auth-header">
-      <h1>Patient Registration</h1>
-      <p>Create your MedTrack patient account</p>
+<div class="container auth-wrapper" style="max-width: 540px; margin: 3rem auto;">
+  <div class="card auth-card" style="padding: 2.25rem;">
+    <div class="auth-header" style="text-align: center; margin-bottom: 1.5rem;">
+      <div class="brand-badge" style="margin: 0 auto 0.85rem; width: 44px; height: 44px; font-size: 1.3rem;">+</div>
+      <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.35rem;">Patient Registration</h1>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">Create your MedTrack healthcare account</p>
     </div>
 
     <form action="{{ url_for('register') }}" method="POST">
       <!-- Full Name -->
       <div class="form-group">
-        <label for="name" class="form-label">Full Name *</label>
+        <label for="name" class="form-label">Full Legal Name *</label>
         <input type="text" class="form-control" id="name" name="name" placeholder="Enter full name" value="{{ form.get('name', '') }}" required autofocus>
       </div>
 
@@ -57,8 +58,8 @@
       </button>
     </form>
 
-    <div class="auth-footer">
-      Already registered? <a href="{{ url_for('login') }}">Sign in here</a>
+    <div class="auth-footer" style="text-align: center; margin-top: 1.25rem; font-size: 0.88rem; color: var(--text-muted);">
+      Already registered? <a href="{{ url_for('login') }}" style="font-weight: 600;">Sign in here</a>
     </div>
   </div>
 </div>

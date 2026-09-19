@@ -3,24 +3,25 @@
 {% block title %}Record Clinical Diagnosis – MedTrack{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 680px; padding-top: 2rem; padding-bottom: 3rem;">
+<div style="max-width: 700px; margin: 0 auto;">
   <div class="card">
     <div class="card-header">
       <div class="card-title">
-        <span>🩺</span> Clinical Diagnosis Entry
+        {{ icons.icon_document(class="icon", size=20) }}
+        <span>Clinical Diagnosis Entry</span>
       </div>
-      <a href="{{ url_for('doctor_dashboard') }}" style="font-size: 0.85rem;">&larr; Return to Dashboard</a>
+      <a href="{{ url_for('doctor_dashboard') }}" style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">&larr; Return to Dashboard</a>
     </div>
 
     <!-- Appointment & Patient Context -->
-    <div style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem;">
-      <div style="font-size: 0.78rem; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 0.4rem;">
-        Consultation Summary
+    <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.15rem; margin-bottom: 1.5rem;">
+      <div style="font-size: 0.76rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.4rem;">
+        Consultation Context
       </div>
-      <div style="font-size: 0.9rem; line-height: 1.5;">
+      <div style="font-size: 0.9rem; line-height: 1.6;">
         <strong>Patient:</strong> {{ appointment.patient_name }}<br>
         <strong>Date &amp; Time:</strong> {{ appointment.appointment_date }} at {{ appointment.appointment_time }}<br>
-        <strong>Reason:</strong> {{ appointment.reason }}
+        <strong>Chief Complaint:</strong> {{ appointment.reason }}
       </div>
     </div>
 
@@ -38,9 +39,10 @@
       </div>
 
       <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
-        <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-outline">Cancel</a>
+        <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-secondary">Cancel</a>
         <button type="submit" class="btn btn-success">
-          Finalize Diagnosis &amp; Complete Visit &rarr;
+          {{ icons.icon_check(class="icon", size=16) }}
+          <span>Finalize Diagnosis &amp; Complete Visit</span>
         </button>
       </div>
     </form>
