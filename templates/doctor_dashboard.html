@@ -135,11 +135,13 @@
                     {% if apt.status == 'PENDING' %}
                       <!-- Confirm Action -->
                       <form action="{{ url_for('update_appointment_status', appointment_id=apt.appointment_id) }}" method="POST" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <input type="hidden" name="status" value="CONFIRMED">
                         <button type="submit" class="btn btn-primary btn-sm">Confirm</button>
                       </form>
                       <!-- Cancel Action -->
-                      <form action="{{ url_for('update_appointment_status', appointment_id=apt.appointment_id) }}" method="POST" onsubmit="return confirm('Cancel this consultation request?');" style="display:inline;">
+                      <form action="{{ url_for('update_appointment_status', appointment_id=apt.appointment_id) }}" method="POST" data-confirm="Cancel this consultation request?" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <input type="hidden" name="status" value="CANCELLED">
                         <button type="submit" class="btn btn-danger-outline btn-sm">Cancel</button>
                       </form>
@@ -149,14 +151,23 @@
                         {{ icons.icon_eye(class="icon", size=13) }}
                         <span>View Visit</span>
                       </a>
-                      <form action="{{ url_for('update_appointment_status', appointment_id=apt.appointment_id) }}" method="POST" onsubmit="return confirm('Cancel this confirmed appointment?');" style="display:inline;">
+                      <a href="{{ url_for('doctor_new_prescription', appointment_id=apt.appointment_id) }}" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">
+                        {{ icons.icon_pill(class="icon", size=12) }}
+                        <span>Prescribe</span>
+                      </a>
+                      <form action="{{ url_for('update_appointment_status', appointment_id=apt.appointment_id) }}" method="POST" data-confirm="Cancel this confirmed appointment?" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <input type="hidden" name="status" value="CANCELLED">
                         <button type="submit" class="btn btn-danger-outline btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">Cancel</button>
                       </form>
                     {% elif apt.status == 'COMPLETED' %}
                       <a href="{{ url_for('submit_diagnosis', appointment_id=apt.appointment_id) }}" class="btn-table-action">
-                        {{ icons.icon_eye(class="icon", size=13) }}
-                        <span>View Visit</span>
+                        {{ icons.icon_document(class="icon", size=13) }}
+                        <span>Diagnosis</span>
+                      </a>
+                      <a href="{{ url_for('doctor_new_prescription', appointment_id=apt.appointment_id) }}" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">
+                        {{ icons.icon_pill(class="icon", size=12) }}
+                        <span>Prescribe</span>
                       </a>
                     {% else %}
                       <span style="color: var(--text-light); font-size: 0.82rem;">Cancelled</span>

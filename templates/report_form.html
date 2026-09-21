@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Medical Report – MedTrack{% endblock %}
+
+{% block content %}
+<div style="max-width: 680px; margin: 0 auto;">
+
+  <!-- Page Header -->
+  <div style="margin-bottom: 2rem;">
+    <a href="{{ url_for('patient_reports') }}" style="font-size: 0.85rem; font-weight: 600; color: var(--primary); display: inline-flex; align-items: center; gap: 4px; margin-bottom: 0.5rem;">
+      <span>&larr; Back to Medical Reports</span>
+    </a>
+    <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem; letter-spacing: -0.02em;">
+      Upload Diagnostic Report
+    </h1>
+    <p style="font-size: 0.92rem; color: var(--text-muted); margin: 0;">
+      Securely upload laboratory panels, imaging documents, and clinical consultation records (PDF, PNG, JPEG up to 10 MB).
+    </p>
+  </div>
+
+  <div class="card" style="box-shadow: var(--shadow-md);">
+    <form action="{{ url_for('upload_report') }}" method="POST" enctype="multipart/form-data" style="padding: 1.5rem 1.75rem;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+      <!-- Document Title -->
+      <div class="form-group" style="margin-bottom: 1.25rem;">
+        <label for="title" style="display: block; font-size: 0.86rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">
+          Report Title <span style="color: #dc2626;">*</span>
+        </label>
+        <input
+          type="text"
+          id="title"
+          name="title"
+          class="form-control"
+          placeholder="e.g., Complete Blood Count (CBC) Panel, Chest X-Ray"
+          value="{{ form.title if form else '' }}"
+          required
+        />
+      </div>
+
+      <!-- File Upload Input -->
+      <div class="form-group" style="margin-bottom: 1.25rem;">
+        <label for="report_file" style="display: block; font-size: 0.86rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">
+          Medical Document File <span style="color: #dc2626;">*</span>
+        </label>
+        <input
+          type="file"
+          id="report_file"
+          name="report_file"
+          class="form-control"
+          accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
+          required
+          style="padding: 0.5rem 0.75rem;"
+        />
+        <small style="display: block; font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem;">
+          Accepted formats: PDF, PNG, JPG, JPEG. Maximum file size: 10 MB. Server verifies digital signatures and encrypts storage with AES256.
+        </small>
+      </div>
+
+      <!-- Attending Physician (Optional) -->
+      <div class="form-group" style="margin-bottom: 1.25rem;">
+        <label for="doctor_id" style="display: block; font-size: 0.86rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">
+          Associated Doctor (Optional)
+        </label>
+        <select id="doctor_id" name="doctor_id" class="form-control">
+          <option value="">-- No specific doctor --</option>
+          {% for doc in doctors %}
+            <option value="{{ doc.user_id }}" {% if form and form.doctor_id == doc.user_id %}selected{% endif %}>
+              {{ doc.name }} ({{ doc.email }})
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Associated Consultation Visit (Optional) -->
+      {% if appointments %}
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label for="appointment_id" style="display: block; font-size: 0.86rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">
+            Linked Appointment Visit (Optional)
+          </label>
+          <select id="appointment_id" name="appointment_id" class="form-control">
+            <option value="">-- Standalone report --</option>
+            {% for appt in appointments %}
+              <option value="{{ appt.appointment_id }}" {% if form and form.appointment_id == appt.appointment_id %}selected{% endif %}>
+                {{ appt.appointment_date }} at {{ appt.appointment_time }} with {{ appt.doctor_name or 'Doctor' }} ({{ appt.status }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      {% endif %}
+
+      <!-- Clinical Notes -->
+      <div class="form-group" style="margin-bottom: 1.75rem;">
+        <label for="notes" style="display: block; font-size: 0.86rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">
+          Clinical Context / Patient Notes (Optional)
+        </label>
+        <textarea
+          id="notes"
+          name="notes"
+          class="form-control"
+          rows="3"
+          placeholder="e.g., Fasting blood draw results from St. Jude Medical Laboratories."
+        >{{ form.notes if form else '' }}</textarea>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+        <a href="{{ url_for('patient_reports') }}" class="btn btn-secondary">
+          Cancel
+        </a>
+        <button type="submit" class="btn btn-primary">
+          {{ icons.icon_upload(class="icon", size=15) }}
+          <span>Upload &amp; Encrypt Document</span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</div>
+{% endblock %}

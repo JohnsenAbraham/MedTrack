@@ -54,6 +54,7 @@
 
               {% if apt.status == 'PENDING' %}
                 <form action="{{ url_for('update_appointment_status', appointment_id=apt.appointment_id) }}" method="POST" style="display:inline;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                   <input type="hidden" name="status" value="CONFIRMED">
                   <button type="submit" class="btn btn-primary btn-sm">Confirm</button>
                 </form>

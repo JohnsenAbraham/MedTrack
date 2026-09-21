@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}My Medical Reports – MedTrack{% endblock %}
+
+{% block content %}
+<div style="max-width: 1100px; margin: 0 auto;">
+
+  <!-- Header Section -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+    <div>
+      <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem; letter-spacing: -0.02em;">
+        Medical Diagnostic Reports
+      </h1>
+      <p style="font-size: 0.92rem; color: var(--text-muted); margin: 0;">
+        Secure clinical document archive. All medical records are stored with end-to-end server-side encryption.
+      </p>
+    </div>
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      <a href="{{ url_for('upload_report') }}" class="btn btn-primary">
+        {{ icons.icon_plus(class="icon", size=15) }}
+        <span>Upload Report</span>
+      </a>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+        <span>&larr; Dashboard</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Reports Table / List -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        {{ icons.icon_document(class="icon", size=20) }}
+        <span>Archived Diagnostic Documents ({{ reports | length }})</span>
+      </div>
+      <div style="font-size: 0.82rem; color: var(--text-muted);">
+        Secure access via short-lived pre-signed tokens.
+      </div>
+    </div>
+
+    {% if reports %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Report Title</th>
+              <th>File Specs</th>
+              <th>Attending Physician</th>
+              <th>Uploaded Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for rep in reports %}
+              <tr>
+                <td>
+                  <strong style="color: var(--text-main); font-size: 0.94rem;">{{ rep.title }}</strong>
+                  {% if rep.notes %}
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">{{ rep.notes }}</div>
+                  {% endif %}
+                  <div style="font-size: 0.74rem; font-family: monospace; color: var(--text-light); margin-top: 2px;">
+                    ID: {{ rep.report_id }}
+                  </div>
+                </td>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span class="portal-badge" style="font-size: 0.76rem; font-weight: 600;">
+                      {{ rep.file_type.split('/')[-1].upper() if '/' in rep.file_type else rep.file_type }}
+                    </span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">
+                      {{ (rep.file_size / 1024) | round(1) }} KB
+                    </span>
+                  </div>
+                  <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">
+                    {{ rep.file_name }}
+                  </div>
+                </td>
+                <td>
+                  {% if rep.doctor_name %}
+                    <span style="font-size: 0.88rem; font-weight: 600; color: #334155;">{{ rep.doctor_name }}</span>
+                  {% else %}
+                    <span style="font-size: 0.84rem; color: var(--text-muted); font-style: italic;">Self-submitted</span>
+                  {% endif %}
+                  {% if rep.appointment_date %}
+                    <div style="font-size: 0.76rem; color: var(--text-muted);">Visit: {{ rep.appointment_date }}</div>
+                  {% endif %}
+                </td>
+                <td>
+                  <span style="font-size: 0.84rem; color: var(--text-muted);">
+                    {{ rep.uploaded_at[:10] }}
+                  </span>
+                </td>
+                <td>
+                  <div style="display: flex; gap: 6px; align-items: center;">
+                    <a href="{{ url_for('download_report', report_id=rep.report_id) }}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="View or download document">
+                      {{ icons.icon_eye(class="icon", size=13) }}
+                      <span>View</span>
+                    </a>
+                    <form action="{{ url_for('delete_report_route', report_id=rep.report_id) }}" method="POST" style="display: inline;" data-confirm="Permanently delete this medical diagnostic report?">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                      <button type="submit" class="btn btn-outline btn-sm" style="color: #dc2626; border-color: #fecaca;" title="Delete report">
+                        <span>Delete</span>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          {{ icons.icon_document(class="icon", size=24) }}
+        </div>
+        <p style="font-weight: 600; color: var(--text-main);">No medical reports on file</p>
+        <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Upload lab results, imaging studies, and clinical evaluation PDFs for confidential preservation.
+        </p>
+        <a href="{{ url_for('upload_report') }}" class="btn btn-primary btn-sm">
+          <span>Upload First Report</span>
+        </a>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

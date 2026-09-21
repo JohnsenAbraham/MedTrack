@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Prescription Details – MedTrack{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+
+  <!-- Header -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+        <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin: 0; letter-spacing: -0.02em;">
+          Prescription Details
+        </h1>
+        {% if rx.status == 'ACTIVE' %}
+          <span class="portal-badge" style="background: #ecfdf5; color: #047857; font-weight: 700;">
+            ACTIVE
+          </span>
+        {% elif rx.status == 'DISCONTINUED' %}
+          <span class="portal-badge" style="background: #f1f5f9; color: #475569;">
+            DISCONTINUED
+          </span>
+        {% elif rx.status == 'EXPIRED' %}
+          <span class="portal-badge" style="background: #fffbeb; color: #b45309;">
+            EXPIRED
+          </span>
+        {% else %}
+          <span class="portal-badge">
+            {{ rx.status }}
+          </span>
+        {% endif %}
+      </div>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0; font-family: monospace;">
+        Order ID: {{ rx.prescription_id }}
+      </p>
+    </div>
+
+    <div>
+      {% if is_doctor %}
+        <a href="{{ url_for('doctor_prescriptions') }}" class="btn btn-secondary">
+          &larr; All Prescriptions
+        </a>
+      {% else %}
+        <a href="{{ url_for('patient_prescriptions') }}" class="btn btn-secondary">
+          &larr; My Prescriptions
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Main Details Card -->
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-header">
+      <div class="card-title">
+        {{ icons.icon_pill(class="icon", size=20) }}
+        <span>Medication Order Specifications</span>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
+      <div>
+        <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">
+          Medication
+        </div>
+        <div style="font-size: 1.2rem; font-weight: 700; color: var(--primary);">
+          {{ rx.medicine_name }}
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">
+          Dosage &amp; Strength
+        </div>
+        <div style="font-size: 1.05rem; font-weight: 600; color: var(--text-main);">
+          {{ rx.dosage }}
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">
+          Intake Timing
+        </div>
+        <div class="time-slot-badge" style="display: inline-flex;">
+          {{ icons.icon_clock(class="icon", size=13) }}
+          {{ rx.schedule_times }}
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">
+          Valid Duration
+        </div>
+        <div style="font-size: 0.95rem; color: var(--text-main);">
+          {{ rx.issued_date }} &rarr; {{ rx.valid_until or 'Ongoing' }}
+        </div>
+      </div>
+    </div>
+
+    {% if rx.instructions %}
+      <div style="margin-bottom: 1.5rem; background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem;">
+        <div style="font-size: 0.80rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">
+          Clinical Instructions
+        </div>
+        <div style="font-size: 0.92rem; color: #334155; line-height: 1.5;">
+          {{ rx.instructions }}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Clinical Reference Details -->
+    <div style="border-top: 1px solid var(--border-color); padding-top: 1.25rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; font-size: 0.88rem;">
+      <div>
+        <span style="color: var(--text-muted);">Attending Physician:</span>
+        <strong style="color: var(--text-main); display: block;">{{ rx.doctor_name }}</strong>
+        <span style="font-size: 0.78rem; color: var(--text-muted);">{{ rx.doctor_email }}</span>
+      </div>
+
+      <div>
+        <span style="color: var(--text-muted);">Consulting Patient:</span>
+        <strong style="color: var(--text-main); display: block;">{{ rx.patient_name }}</strong>
+        <span style="font-size: 0.78rem; color: var(--text-muted);">{{ rx.patient_email }}</span>
+      </div>
+
+      {% if rx.appointment_date %}
+        <div>
+          <span style="color: var(--text-muted);">Linked Consultation:</span>
+          <strong style="color: var(--text-main); display: block;">{{ rx.appointment_date }} at {{ rx.appointment_time }}</strong>
+          <span style="font-size: 0.76rem; font-family: monospace; color: var(--text-muted);">Appt ID: {{ rx.appointment_id }}</span>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Doctor Action Bar -->
+  {% if is_doctor and rx.status == 'ACTIVE' %}
+    <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+      <form action="{{ url_for('doctor_discontinue_prescription', prescription_id=rx.prescription_id) }}" method="POST" data-confirm="Are you sure you want to discontinue this prescription? The medication will be removed from the patient's active schedule.">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <button type="submit" class="btn btn-danger">
+          Discontinue Prescription
+        </button>
+      </form>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

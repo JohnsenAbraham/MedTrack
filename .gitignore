@@ -55,3 +55,6 @@ uploads/*
 # OS files
 .DS_Store
 Thumbs.db
+
+# Scratch and temporary IDE directories
+scratch/

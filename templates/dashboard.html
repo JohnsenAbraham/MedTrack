@@ -141,7 +141,8 @@
                   <div style="display: flex; gap: 8px; align-items: center;">
                     <a href="{{ url_for('view_appointments') }}" class="btn-table-action">View</a>
                     {% if apt.status in ('PENDING', 'CONFIRMED') %}
-                      <form action="{{ url_for('cancel_appointment', appointment_id=apt.appointment_id) }}" method="POST" onsubmit="return confirm('Cancel this consultation?');" style="display:inline;">
+                      <form action="{{ url_for('cancel_appointment', appointment_id=apt.appointment_id) }}" method="POST" data-confirm="Cancel this consultation?" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <button type="submit" class="btn btn-danger-outline btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">Cancel</button>
                       </form>
                     {% endif %}
@@ -227,12 +228,32 @@
                   Skipped
                 </span>
               {% else %}
-                <span class="badge badge-pending">
-                  <span class="badge-dot"></span>
-                  Pending
-                </span>
+                {% if dose.status == 'DUE' %}
+                  <span class="badge badge-due">
+                    <span class="badge-dot"></span>
+                    Due
+                  </span>
+                {% elif dose.status == 'UPCOMING' %}
+                  <span class="badge badge-upcoming">
+                    <span class="badge-dot"></span>
+                    Upcoming
+                  </span>
+                {% elif dose.status == 'MISSED' %}
+                  <span class="badge badge-missed">
+                    <span class="badge-dot"></span>
+                    Missed
+                  </span>
+                {% else %}
+                  <span class="badge badge-pending">
+                    <span class="badge-dot"></span>
+                    Pending
+                  </span>
+                {% endif %}
                 <form action="{{ url_for('log_dose_intake') }}" method="POST" style="display: inline;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                   <input type="hidden" name="medicine_id" value="{{ dose.medicine_id }}">
+                  <input type="hidden" name="scheduled_date" value="{{ medicine_schedule.date }}">
+                  <input type="hidden" name="scheduled_time" value="{{ dose.schedule_time }}">
                   <input type="hidden" name="status" value="TAKEN">
                   <button type="submit" class="btn btn-sm btn-success">
                     {{ icons.icon_check(class="icon", size=13) }}
@@ -240,7 +261,10 @@
                   </button>
                 </form>
                 <form action="{{ url_for('log_dose_intake') }}" method="POST" style="display: inline;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                   <input type="hidden" name="medicine_id" value="{{ dose.medicine_id }}">
+                  <input type="hidden" name="scheduled_date" value="{{ medicine_schedule.date }}">
+                  <input type="hidden" name="scheduled_time" value="{{ dose.schedule_time }}">
                   <input type="hidden" name="status" value="SKIPPED">
                   <button type="submit" class="btn btn-sm btn-secondary">
                     Skip
@@ -250,6 +274,7 @@
 
               <!-- Amazon SNS Simulated Dose Alert -->
               <form action="{{ url_for('trigger_dose_reminder', medicine_id=dose.medicine_id) }}" method="POST" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <button type="submit" class="btn btn-sm btn-secondary" title="Dispatch simulated Amazon SNS reminder notification">
                   {{ icons.icon_bell(class="icon", size=13) }}
                   Test Alert

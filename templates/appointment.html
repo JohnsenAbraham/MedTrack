@@ -16,6 +16,7 @@
     </div>
 
     <form action="{{ url_for('book_appointment') }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       <!-- Select Doctor -->
       <div class="form-group">
         <label for="doctor_id" class="form-label">Select Attending Doctor *</label>

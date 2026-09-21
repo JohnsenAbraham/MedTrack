@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Issue Prescription – MedTrack{% endblock %}
+
+{% block content %}
+<div style="max-width: 680px; margin: 0 auto;">
+
+  <div class="card">
+    <div class="card-header" style="text-align: center; margin-bottom: 1.5rem; justify-content: center; flex-direction: column;">
+      <div class="metric-icon-box teal" style="margin: 0 auto 0.75rem;">
+        {{ icons.icon_pill(class="icon", size=24) }}
+      </div>
+      <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem;">
+        Issue Clinical Prescription
+      </h1>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">
+        Prescribe medication for your patient. An active dose schedule will be generated automatically in their personal portal.
+      </p>
+    </div>
+
+    <form action="{{ url_for('doctor_new_prescription') }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+      <!-- Patient & Appointment Context -->
+      {% if appointment %}
+        <input type="hidden" name="patient_id" value="{{ appointment.patient_id }}"/>
+        <input type="hidden" name="appointment_id" value="{{ appointment.appointment_id }}"/>
+        <div class="alert alert-info" style="margin-bottom: 1.25rem; font-size: 0.88rem;">
+          <strong>Consultation Reference:</strong> {{ appointment.patient_name }} &bull; Visit on {{ appointment.appointment_date }} at {{ appointment.appointment_time }}
+        </div>
+      {% else %}
+        <div class="form-group">
+          <label for="patient_id" class="form-label">Select Patient *</label>
+          <select class="form-select" id="patient_id" name="patient_id" required autofocus>
+            <option value="">-- Choose Consulting Patient --</option>
+            {% for pt in patients %}
+              <option value="{{ pt.user_id }}" {% if selected_patient_id == pt.user_id %}selected{% endif %}>
+                {{ pt.name }} ({{ pt.email }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        {% if selected_appointment_id %}
+          <input type="hidden" name="appointment_id" value="{{ selected_appointment_id }}"/>
+        {% endif %}
+      {% endif %}
+
+      <!-- Medicine Name -->
+      <div class="form-group">
+        <label for="medicine_name" class="form-label">Medication Name *</label>
+        <input type="text" class="form-control" id="medicine_name" name="medicine_name" placeholder="e.g. Amoxicillin, Atorvastatin, Metformin" required>
+      </div>
+
+      <!-- Dosage & Scheduled Time -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dosage" class="form-label">Dosage &amp; Strength *</label>
+          <input type="text" class="form-control" id="dosage" name="dosage" placeholder="e.g. 500mg Capsule, 1 Tablet" required>
+        </div>
+
+        <div class="form-group">
+          <label for="schedule_time" class="form-label">Scheduled Intake Time(s) *</label>
+          <input type="text" class="form-control" id="schedule_time" name="schedule_time" placeholder="e.g. 08:00 AM, 08:00 PM" value="08:00 AM" required>
+          <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">Comma-separate multiple daily doses (e.g. 08:00 AM, 08:00 PM).</div>
+        </div>
+      </div>
+
+      <!-- Frequency & Meal Timing -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="frequency" class="form-label">Frequency *</label>
+          <select class="form-select" id="frequency" name="frequency" required>
+            <option value="Daily" selected>Daily (Every Day)</option>
+            <option value="Twice Daily">Twice Daily (Morning &amp; Night)</option>
+            <option value="Three Times Daily">Three Times Daily</option>
+            <option value="Every 8 Hours">Every 8 Hours</option>
+            <option value="As Needed (PRN)">As Needed (PRN)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="meal_timing" class="form-label">Meal Instruction *</label>
+          <select class="form-select" id="meal_timing" name="meal_timing" required>
+            <option value="After Food" selected>After Food</option>
+            <option value="Before Food">Before Food</option>
+            <option value="With Food">With Food</option>
+            <option value="Empty Stomach">Empty Stomach</option>
+            <option value="Anytime">Anytime</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Valid Until Date (Optional) -->
+      <div class="form-group">
+        <label for="valid_until" class="form-label">Valid Until / Course End Date (Optional)</label>
+        <input type="date" class="form-control" id="valid_until" name="valid_until" min="{{ today }}">
+        <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">Leave blank for ongoing maintenance medications.</div>
+      </div>
+
+      <!-- Clinical Instructions -->
+      <div class="form-group">
+        <label for="instructions" class="form-label">Clinical Instructions &amp; Patient Notes</label>
+        <textarea class="form-control" id="instructions" name="instructions" rows="2" placeholder="e.g. Complete full 7-day course. Take with plenty of water. Avoid alcohol."></textarea>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+        <a href="{{ url_for('doctor_prescriptions') }}" class="btn btn-secondary">
+          Cancel
+        </a>
+        <button type="submit" class="btn btn-primary" style="flex: 1;">
+          {{ icons.icon_check(class="icon", size=16) }}
+          <span>Issue &amp; Add to Patient Schedule</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

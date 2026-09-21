@@ -30,7 +30,6 @@
           class="form-control form-control-sm" 
           placeholder="Filter patients by name, phone, or email..."
           style="padding-left: 2.2rem;"
-          onkeyup="filterPatients()"
           {% if request.args.get('search') == '1' %}autofocus{% endif %}
         >
         <div style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">
@@ -91,9 +90,14 @@
                   </span>
                 </td>
                 <td>
-                  <a href="{{ url_for('doctor_reports') }}" class="btn btn-secondary btn-sm">
-                    View Records
-                  </a>
+                  <div style="display: flex; gap: 6px; align-items: center;">
+                    <a href="{{ url_for('doctor_patient_reports', patient_id=pt.user_id) }}" class="btn btn-primary btn-sm">
+                      Reports
+                    </a>
+                    <a href="{{ url_for('doctor_reports') }}" class="btn btn-secondary btn-sm">
+                      Diagnoses
+                    </a>
+                  </div>
                 </td>
               </tr>
             {% endfor %}
@@ -113,28 +117,4 @@
 
 </div>
 
-<script>
-  function filterPatients() {
-    const input = document.getElementById('patientSearchInput');
-    const filter = input.value.toLowerCase().trim();
-    const table = document.getElementById('patientsTable');
-    if (!table) return;
-    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-    let visibleCount = 0;
-
-    for (let i = 0; i < rows.length; i++) {
-      const text = rows[i].textContent || rows[i].innerText;
-      if (text.toLowerCase().indexOf(filter) > -1) {
-        rows[i].style.display = '';
-        visibleCount++;
-      } else {
-        rows[i].style.display = 'none';
-      }
-    }
-    const countBadge = document.getElementById('patientCountBadge');
-    if (countBadge) {
-      countBadge.textContent = visibleCount + ' Matching Patient' + (visibleCount !== 1 ? 's' : '');
-    }
-  }
-</script>
 {% endblock %}

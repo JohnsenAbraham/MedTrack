@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: >
   MedTrack - Enterprise Hospital EHR & Cloud Management Platform.
   Provisions a Multi-AZ VPC, EC2 WSGI Host (Gunicorn/Nginx), DynamoDB Multi-Table NoSQL,
-  SNS Push Alerts with SQS Dead-Letter-Queue, IAM Least-Privilege Role, and CloudWatch Alarms.
+  SNS Push Alerts, IAM Least-Privilege Role, and CloudWatch Alarms.
 
 Parameters:
   EnvironmentName:
@@ -16,15 +16,32 @@ Parameters:
     AllowedValues: [t3.micro, t3.small, t3.medium, m5.large]
     Description: EC2 instance type for application hosting
 
-  AdminEmail:
-    Type: String
-    Default: admin@medtrack.health
-    Description: Email address for SNS emergency clinical alerts subscription
-
   KeyName:
     Type: String
     Default: medtrack-key
     Description: Existing EC2 KeyPair for SSH access
+
+  SSHLocation:
+    Type: String
+    Default: 0.0.0.0/0
+    AllowedPattern: '(\d{1,3}\.){3}\d{1,3}/\d{1,2}'
+    ConstraintDescription: Must be a valid CIDR range of the form x.x.x.x/x.
+    Description: The IP address range that can be used to SSH to the EC2 instance. Default is 0.0.0.0/0; restrict to authorized administrative CIDR in production for least privilege.
+
+  DomainName:
+    Type: String
+    Default: ""
+    Description: >
+      Optional fully qualified domain name (FQDN) for MedTrack (e.g. medtrack.example.com).
+      Deployment prerequisite: A registered DNS A-record must point to the EC2 Public IP.
+      If empty, server runs in HTTP mode until domain and TLS certificates are configured.
+
+  AmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id'
+    Description: >
+      SSM parameter path or explicit EC2 AMI ID for Ubuntu 22.04 LTS (HVM amd64).
+      Defaults to Canonical's official regional SSM parameter for Ubuntu 22.04 LTS.
 
 Resources:
   # =========================================================================
@@ -108,8 +125,8 @@ Resources:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: 0.0.0.0/0
-          Description: SSH Admin access
+          CidrIp: !Ref SSHLocation
+          Description: SSH Admin access (restricted by administrative CIDR)
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
@@ -145,6 +162,7 @@ Resources:
                   - dynamodb:Query
                   - dynamodb:Scan
                   - dynamodb:DescribeTable
+                  - dynamodb:TransactWriteItems
                 Resource:
                   - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/MedTrack_*
                   - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/MedTrack_*/index/*
@@ -163,6 +181,13 @@ Resources:
                   - logs:PutLogEvents
                   - logs:DescribeLogStreams
                 Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/ec2/medtrack-*
+              - Sid: S3ReportsAccess
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource: !Sub ${ReportsBucket.Arn}/*
 
   MedTrackInstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -172,7 +197,7 @@ Resources:
         - !Ref MedTrackEC2Role
 
   # =========================================================================
-  # 4. Amazon DynamoDB Tables (NoSQL Data Tier)
+  # 4. Amazon DynamoDB Tables (NoSQL Data Tier - 8 Core Tables)
   # =========================================================================
   UsersTable:
     Type: AWS::DynamoDB::Table
@@ -199,6 +224,60 @@ Resources:
       SSESpecification:
         SSEEnabled: true
 
+  MedicinesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: MedTrack_Medicines
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: medicine_id
+          AttributeType: S
+        - AttributeName: patient_id
+          AttributeType: S
+        - AttributeName: created_at
+          AttributeType: S
+      KeySchema:
+        - AttributeName: medicine_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: PatientIndex
+          KeySchema:
+            - AttributeName: patient_id
+              KeyType: HASH
+            - AttributeName: created_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  IntakeLogsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: MedTrack_IntakeLogs
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: log_id
+          AttributeType: S
+        - AttributeName: patient_id
+          AttributeType: S
+        - AttributeName: log_date
+          AttributeType: S
+      KeySchema:
+        - AttributeName: log_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: PatientDateIndex
+          KeySchema:
+            - AttributeName: patient_id
+              KeyType: HASH
+            - AttributeName: log_date
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
   AppointmentsTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -209,6 +288,10 @@ Resources:
           AttributeType: S
         - AttributeName: patient_id
           AttributeType: S
+        - AttributeName: doctor_id
+          AttributeType: S
+        - AttributeName: appointment_date
+          AttributeType: S
       KeySchema:
         - AttributeName: appointment_id
           KeyType: HASH
@@ -217,6 +300,53 @@ Resources:
           KeySchema:
             - AttributeName: patient_id
               KeyType: HASH
+            - AttributeName: appointment_date
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: DoctorIndex
+          KeySchema:
+            - AttributeName: doctor_id
+              KeyType: HASH
+            - AttributeName: appointment_date
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  PrescriptionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: MedTrack_Prescriptions
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: prescription_id
+          AttributeType: S
+        - AttributeName: patient_id
+          AttributeType: S
+        - AttributeName: doctor_id
+          AttributeType: S
+        - AttributeName: issued_date
+          AttributeType: S
+      KeySchema:
+        - AttributeName: prescription_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: PatientIndex
+          KeySchema:
+            - AttributeName: patient_id
+              KeyType: HASH
+            - AttributeName: issued_date
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: DoctorIndex
+          KeySchema:
+            - AttributeName: doctor_id
+              KeyType: HASH
+            - AttributeName: issued_date
+              KeyType: RANGE
           Projection:
             ProjectionType: ALL
       PointInTimeRecoverySpecification:
@@ -232,6 +362,10 @@ Resources:
           AttributeType: S
         - AttributeName: patient_id
           AttributeType: S
+        - AttributeName: doctor_id
+          AttributeType: S
+        - AttributeName: created_at
+          AttributeType: S
       KeySchema:
         - AttributeName: diagnosis_id
           KeyType: HASH
@@ -240,6 +374,43 @@ Resources:
           KeySchema:
             - AttributeName: patient_id
               KeyType: HASH
+            - AttributeName: created_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: DoctorIndex
+          KeySchema:
+            - AttributeName: doctor_id
+              KeyType: HASH
+            - AttributeName: created_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  ReportsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: MedTrack_Reports
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: report_id
+          AttributeType: S
+        - AttributeName: patient_id
+          AttributeType: S
+        - AttributeName: uploaded_at
+          AttributeType: S
+      KeySchema:
+        - AttributeName: report_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: PatientIndex
+          KeySchema:
+            - AttributeName: patient_id
+              KeyType: HASH
+            - AttributeName: uploaded_at
+              KeyType: RANGE
           Projection:
             ProjectionType: ALL
       PointInTimeRecoverySpecification:
@@ -255,6 +426,8 @@ Resources:
           AttributeType: S
         - AttributeName: patient_id
           AttributeType: S
+        - AttributeName: created_at
+          AttributeType: S
       KeySchema:
         - AttributeName: notification_id
           KeyType: HASH
@@ -263,47 +436,39 @@ Resources:
           KeySchema:
             - AttributeName: patient_id
               KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-
-  AuditLogsTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: MedTrack_AuditLogs
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: log_id
-          AttributeType: S
-        - AttributeName: actor_id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: log_id
-          KeyType: HASH
-      GlobalSecondaryIndexes:
-        - IndexName: ActorIndex
-          KeySchema:
-            - AttributeName: actor_id
-              KeyType: HASH
+            - AttributeName: created_at
+              KeyType: RANGE
           Projection:
             ProjectionType: ALL
 
   # =========================================================================
-  # 5. Amazon SNS Push Engine & Dead-Letter Queue (SQS)
+  # 5. Amazon SNS Push Engine (Fan-Out Only)
   # =========================================================================
-  MedTrackDeadLetterQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: MedTrack-Alerts-DLQ
-      MessageRetentionPeriod: 1209600 # 14 days
-
   MedTrackSNSTopic:
     Type: AWS::SNS::Topic
     Properties:
       TopicName: MedTrack-Alerts
       DisplayName: MedTrack Clinical Notification Alerts
-      Subscription:
-        - Endpoint: !Ref AdminEmail
-          Protocol: email
+
+  # =========================================================================
+  # 5b. Amazon S3 Private Medical Reports Bucket (Phase 8)
+  # =========================================================================
+  ReportsBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Name
+          Value: !Sub MedTrack-${EnvironmentName}-Reports
 
   # =========================================================================
   # 6. AWS EC2 Production Compute Host
@@ -311,6 +476,7 @@ Resources:
   MedTrackEC2Instance:
     Type: AWS::EC2::Instance
     Properties:
+      ImageId: !Ref AmiId
       InstanceType: !Ref InstanceType
       IamInstanceProfile: !Ref MedTrackInstanceProfile
       SubnetId: !Ref PublicSubnet1
@@ -324,7 +490,7 @@ Resources:
           #!/bin/bash
           set -e
           apt update && apt upgrade -y
-          apt install -y python3-pip python3-venv nginx git curl
+          apt install -y python3-pip python3-venv nginx git curl certbot python3-certbot-nginx
 
           # Deploy Application
           mkdir -p /var/www/medtrack
@@ -339,14 +505,23 @@ Resources:
           MOCK_AWS=false
           AWS_REGION=${AWS::Region}
           DYNAMODB_USERS_TABLE=MedTrack_Users
+          DYNAMODB_MEDICINES_TABLE=MedTrack_Medicines
+          DYNAMODB_INTAKE_LOGS_TABLE=MedTrack_IntakeLogs
           DYNAMODB_APPOINTMENTS_TABLE=MedTrack_Appointments
+          DYNAMODB_PRESCRIPTIONS_TABLE=MedTrack_Prescriptions
           DYNAMODB_DIAGNOSES_TABLE=MedTrack_Diagnoses
+          DYNAMODB_REPORTS_TABLE=MedTrack_Reports
           DYNAMODB_NOTIFICATIONS_TABLE=MedTrack_Notifications
           SNS_TOPIC_ARN=${MedTrackSNSTopic}
+          S3_REPORTS_BUCKET=${ReportsBucket}
           SECRET_KEY=$(openssl rand -hex 32)
+          SESSION_COOKIE_SECURE=false
+          USE_PROXY_FIX=false
+          DOMAIN_NAME=${DomainName}
+          APP_TIMEZONE=Asia/Kolkata
           EOT
 
-          # Systemd Service Daemon
+          # Systemd Service Daemon (Gunicorn bound strictly to localhost:8000)
           cat <<EOT > /etc/systemd/system/medtrack.service
           [Unit]
           Description=MedTrack Healthcare Gunicorn Service
@@ -367,7 +542,14 @@ Resources:
           systemctl daemon-reload
           systemctl enable --now medtrack
 
-          # Nginx Reverse Proxy Config
+          # Configure Autonomous Medicine Reminder Scheduler systemd units
+          if [ -f /var/www/medtrack/systemd/medtrack-scheduler.service ]; then
+              cp /var/www/medtrack/systemd/medtrack-scheduler.* /etc/systemd/system/
+              systemctl daemon-reload
+              systemctl enable --now medtrack-scheduler.timer
+          fi
+
+          # Nginx Reverse Proxy Config (Initial HTTP mode proxying to Gunicorn localhost)
           cat <<EOT > /etc/nginx/sites-available/medtrack
           server {
               listen 80;
@@ -378,6 +560,7 @@ Resources:
                   proxy_set_header Host \$host;
                   proxy_set_header X-Real-IP \$remote_addr;
                   proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto \$scheme;
               }
           }
           EOT
@@ -386,15 +569,133 @@ Resources:
           rm -f /etc/nginx/sites-enabled/default
           systemctl restart nginx
 
+          # Provision TLS Activation Script (activates HTTPS & 301 redirect once valid domain/cert prerequisites are met)
+          cat <<'EOF' > /usr/local/bin/medtrack-enable-tls.sh
+          #!/bin/bash
+          set -e
+
+          TARGET_DOMAIN="${1}"
+          if [ -z "$TARGET_DOMAIN" ]; then
+              TARGET_DOMAIN=$(grep '^DOMAIN_NAME=' /var/www/medtrack/.env 2>/dev/null | cut -d'=' -f2- || true)
+          fi
+
+          # (a) Domain argument validation
+          if [ -z "$TARGET_DOMAIN" ]; then
+              echo "ERROR: No domain supplied. Usage: $0 <domain-name> (or configure DOMAIN_NAME in /var/www/medtrack/.env)" >&2
+              exit 1
+          fi
+
+          echo "Beginning TLS enablement for domain: $TARGET_DOMAIN"
+
+          # (b) DNS prerequisite validation
+          EC2_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 || true)
+          DOMAIN_IP=$(getent ahosts "$TARGET_DOMAIN" | awk '{print $1}' | head -n 1 || true)
+
+          if [ -n "$EC2_IP" ] && [ -n "$DOMAIN_IP" ] && [ "$EC2_IP" != "$DOMAIN_IP" ]; then
+              echo "ERROR: DNS prerequisite not met. $TARGET_DOMAIN resolves to $DOMAIN_IP, but this instance is $EC2_IP." >&2
+              echo "Ensure DNS A-record propagates to $EC2_IP before running TLS activation." >&2
+              exit 1
+          fi
+
+          # (c) Certificate acquisition via Certbot (non-interactive)
+          echo "Attempting Let's Encrypt certificate acquisition for $TARGET_DOMAIN..."
+          if ! certbot certonly --nginx -d "$TARGET_DOMAIN" --non-interactive --agree-tos --register-unsafely-without-email; then
+              echo "ERROR: Certbot certificate issuance failed. Preserving existing working HTTP configuration." >&2
+              exit 1
+          fi
+
+          CERT_FILE="/etc/letsencrypt/live/$TARGET_DOMAIN/fullchain.pem"
+          KEY_FILE="/etc/letsencrypt/live/$TARGET_DOMAIN/privkey.pem"
+
+          # (d) Certificate-file existence validation
+          if [ ! -f "$CERT_FILE" ] || [ ! -f "$KEY_FILE" ]; then
+              echo "ERROR: Certificate files not found at $CERT_FILE and $KEY_FILE. Preserving HTTP configuration." >&2
+              exit 1
+          fi
+
+          # (e) Generate candidate HTTPS Nginx configuration in a temporary file
+          TMP_CONF="/etc/nginx/sites-available/medtrack.tls.tmp"
+          cat <<NGINX_EOF > "$TMP_CONF"
+          server {
+              listen 80;
+              server_name $TARGET_DOMAIN _;
+              return 301 https://\$host\$request_uri;
+          }
+
+          server {
+              listen 443 ssl;
+              server_name $TARGET_DOMAIN;
+
+              ssl_certificate $CERT_FILE;
+              ssl_certificate_key $KEY_FILE;
+              ssl_protocols TLSv1.2 TLSv1.3;
+              ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384';
+              ssl_prefer_server_ciphers on;
+              ssl_session_cache shared:SSL:10m;
+              ssl_session_timeout 1d;
+              ssl_session_tickets off;
+
+              location / {
+                  proxy_pass http://127.0.0.1:8000;
+                  proxy_set_header Host \$host;
+                  proxy_set_header X-Real-IP \$remote_addr;
+                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto https;
+              }
+          }
+          NGINX_EOF
+
+          # (f) nginx -t validation BEFORE replacing active configuration
+          cp /etc/nginx/sites-available/medtrack /etc/nginx/sites-available/medtrack.http.bak
+          cp "$TMP_CONF" /etc/nginx/sites-available/medtrack
+          rm -f "$TMP_CONF"
+
+          if ! nginx -t; then
+              echo "ERROR: Nginx syntax validation failed for HTTPS configuration. Rolling back to HTTP." >&2
+              cp /etc/nginx/sites-available/medtrack.http.bak /etc/nginx/sites-available/medtrack
+              nginx -t && systemctl reload nginx || true
+              exit 1
+          fi
+
+          # (g, h, i, j, k) Activate secure settings upon verified valid configuration
+          sed -i 's/^SESSION_COOKIE_SECURE=.*/SESSION_COOKIE_SECURE=true/' /var/www/medtrack/.env
+          sed -i 's/^USE_PROXY_FIX=.*/USE_PROXY_FIX=true/' /var/www/medtrack/.env
+
+          systemctl restart medtrack
+          systemctl reload nginx
+          echo "SUCCESS: MedTrack TLS successfully activated for $TARGET_DOMAIN."
+          EOF
+          chmod +x /usr/local/bin/medtrack-enable-tls.sh
+
+          # Conditional TLS activation at stack launch if DomainName is configured and resolves to host
+          if [ -n "${DomainName}" ]; then
+              EC2_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 || true)
+              DOMAIN_IP=$(getent ahosts "${DomainName}" | awk '{print $1}' | head -n 1 || true)
+              if [ "$EC2_IP" = "$DOMAIN_IP" ] && [ -n "$DOMAIN_IP" ]; then
+                  /usr/local/bin/medtrack-enable-tls.sh "${DomainName}" || true
+              else
+                  echo "DNS prerequisite not yet met for ${DomainName}. Running in HTTP mode."
+              fi
+          fi
+
 Outputs:
   InstancePublicIP:
     Description: Public IP address of the deployed MedTrack server
     Value: !GetAtt MedTrackEC2Instance.PublicIp
 
   ApplicationURL:
-    Description: HTTP URL to access MedTrack
+    Description: HTTP URL to access MedTrack server (HTTP until TLS is activated via domain and certificate)
     Value: !Sub http://${MedTrackEC2Instance.PublicIp}
+
+  ConfiguredDomainName:
+    Description: Configured domain name for future HTTPS activation
+    Value: !Ref DomainName
 
   SNSTopicArn:
     Description: Amazon SNS Topic ARN for patient notifications
     Value: !Ref MedTrackSNSTopic
+
+  ReportsBucketName:
+    Description: Private Amazon S3 Bucket for Medical Diagnostic Reports
+    Value: !Ref ReportsBucket
+

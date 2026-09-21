@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Prescriptions – MedTrack{% endblock %}
+{% block title %}My Prescriptions – MedTrack{% endblock %}
 
 {% block content %}
 <div style="max-width: 1100px; margin: 0 auto;">
@@ -9,18 +9,18 @@
   <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
     <div>
       <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem; letter-spacing: -0.02em;">
-        Clinical Prescription Oversight
+        My Clinical Prescriptions
       </h1>
       <p style="font-size: 0.92rem; color: var(--text-muted); margin: 0;">
-        Review active and historical clinical prescriptions issued under your medical practice.
+        Official medical prescriptions issued by your attending doctors. Active doses sync automatically with your daily medication schedule.
       </p>
     </div>
     <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-      <a href="{{ url_for('doctor_new_prescription') }}" class="btn btn-primary">
-        {{ icons.icon_plus(class="icon", size=15) }}
-        <span>Issue Prescription</span>
+      <a href="{{ url_for('view_medicines') }}" class="btn btn-primary">
+        {{ icons.icon_pill(class="icon", size=15) }}
+        <span>Medicine Cabinet</span>
       </a>
-      <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-secondary">
+      <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
         <span>&larr; Dashboard</span>
       </a>
     </div>
@@ -29,11 +29,11 @@
   <div class="card">
     <div class="card-header">
       <div class="card-title">
-        {{ icons.icon_pill(class="icon", size=20) }}
-        <span>Issued Prescriptions ({{ prescriptions | length }})</span>
+        {{ icons.icon_document(class="icon", size=20) }}
+        <span>Doctor Prescriptions ({{ prescriptions | length }})</span>
       </div>
       <div style="font-size: 0.82rem; color: var(--text-muted);">
-        Official prescriptions issued to your consulting patients.
+        Certified physician orders.
       </div>
     </div>
 
@@ -42,22 +42,22 @@
         <table class="table">
           <thead>
             <tr>
-              <th>Patient</th>
+              <th>Attending Physician</th>
               <th>Medication &amp; Dosage</th>
-              <th>Schedule</th>
+              <th>Dose Schedule</th>
               <th>Status</th>
               <th>Issued / Valid Until</th>
-              <th style="text-align: right;">Actions</th>
+              <th style="text-align: right;">Details</th>
             </tr>
           </thead>
           <tbody>
             {% for rx in prescriptions %}
               <tr>
                 <td>
-                  <strong style="color: var(--text-main);">{{ rx.patient_name }}</strong>
+                  <strong style="color: var(--text-main);">{{ rx.doctor_name }}</strong>
                   {% if rx.appointment_date %}
                     <div style="font-size: 0.76rem; color: var(--text-muted);">
-                      Visit: {{ rx.appointment_date }}
+                      Consultation: {{ rx.appointment_date }}
                     </div>
                   {% endif %}
                 </td>
@@ -103,18 +103,10 @@
                     Valid until: {{ rx.valid_until or 'Ongoing' }}
                   </div>
                 </td>
-                <td style="text-align: right; white-space: nowrap;">
-                  <a href="{{ url_for('doctor_prescription_detail', prescription_id=rx.prescription_id) }}" class="btn btn-secondary btn-sm" style="margin-right: 4px;">
-                    Details
+                <td style="text-align: right;">
+                  <a href="{{ url_for('patient_prescription_detail', prescription_id=rx.prescription_id) }}" class="btn btn-secondary btn-sm">
+                    View Order
                   </a>
-                  {% if rx.status == 'ACTIVE' %}
-                    <form action="{{ url_for('doctor_discontinue_prescription', prescription_id=rx.prescription_id) }}" method="POST" style="display: inline;" data-confirm="Are you sure you want to discontinue this prescription? The medication will be deactivated from the patient's active schedule.">
-                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                      <button type="submit" class="btn btn-danger btn-sm">
-                        Discontinue
-                      </button>
-                    </form>
-                  {% endif %}
                 </td>
               </tr>
             {% endfor %}
@@ -124,11 +116,11 @@
     {% else %}
       <div class="empty-state">
         <div class="empty-state-icon">
-          {{ icons.icon_pill(class="icon", size=24) }}
+          {{ icons.icon_document(class="icon", size=24) }}
         </div>
-        <p style="font-weight: 600; color: var(--text-main);">No prescriptions issued yet</p>
+        <p style="font-weight: 600; color: var(--text-main);">No clinical prescriptions on file</p>
         <p style="font-size: 0.84rem; color: var(--text-muted);">
-          Issue a clinical prescription for any consulting patient using the button above.
+          Prescriptions issued by your attending doctors following appointments will be cataloged here automatically.
         </p>
       </div>
     {% endif %}

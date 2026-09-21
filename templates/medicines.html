@@ -85,19 +85,27 @@
                   <div style="display: flex; gap: 8px; align-items: center;">
                     <!-- Amazon SNS Test Reminder Button -->
                     <form action="{{ url_for('trigger_dose_reminder', medicine_id=med.medicine_id) }}" method="POST" style="display: inline;">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                       <button type="submit" class="btn btn-secondary btn-sm" title="Dispatch simulated dose reminder">
                         {{ icons.icon_bell(class="icon", size=13) }}
                         <span>Test Alert</span>
                       </button>
                     </form>
 
-                    <!-- Delete Button -->
-                    <form action="{{ url_for('delete_medicine_route', medicine_id=med.medicine_id) }}" method="POST" onsubmit="return confirm('Remove {{ med.name }} from your prescriptions?');" style="display: inline;">
-                      <button type="submit" class="btn btn-danger-outline btn-sm">
-                        {{ icons.icon_trash(class="icon", size=13) }}
-                        <span>Remove</span>
-                      </button>
-                    </form>
+                    <!-- Delete Button for OTC; Clinical Badge for Prescribed -->
+                    {% if med.prescription_id %}
+                      <span class="portal-badge" style="background: #ecfdf5; color: #047857; font-size: 0.76rem; font-weight: 600;" title="Prescribed by physician; managed via clinical orders">
+                        Rx Prescribed
+                      </span>
+                    {% else %}
+                      <form action="{{ url_for('delete_medicine_route', medicine_id=med.medicine_id) }}" method="POST" data-confirm="Remove {{ med.name }} from your medicine cabinet?" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn btn-danger-outline btn-sm">
+                          {{ icons.icon_trash(class="icon", size=13) }}
+                          <span>Remove</span>
+                        </button>
+                      </form>
+                    {% endif %}
                   </div>
                 </td>
               </tr>

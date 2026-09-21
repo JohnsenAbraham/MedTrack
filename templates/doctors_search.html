@@ -46,7 +46,7 @@
 
       <!-- Specialty Filter -->
       <div style="min-width: 200px;">
-        <select name="specialty" class="form-select" onchange="this.form.submit()">
+        <select name="specialty" class="form-select" data-auto-submit="true">
           <option value="">All Specialties</option>
           <option value="General" {% if specialty == 'General' %}selected{% endif %}>General Practice / Physician</option>
           <option value="Cardiology" {% if specialty == 'Cardiology' %}selected{% endif %}>Cardiology</option>
@@ -82,7 +82,7 @@
     {% if doctors %}
       <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem;">
         {% for doc in doctors %}
-          <div style="background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.35rem; display: flex; flex-direction: column; justify-content: space-between; transition: var(--transition);" onmouseover="this.style.borderColor='#cbd5e1'" onmouseout="this.style.borderColor='var(--border-color)'">
+          <div class="doctor-search-card">
             <div>
               <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 0.85rem;">
                 <div style="display: flex; align-items: center; gap: 12px;">

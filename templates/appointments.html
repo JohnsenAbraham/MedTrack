@@ -13,12 +13,12 @@
       </div>
       <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
         <!-- Status Filter Chips -->
-        <div style="display: flex; gap: 4px; background: #f1f5f9; padding: 3px; border-radius: 8px;">
-          <button type="button" class="btn-filter active" onclick="filterStatus('ALL', this)">All</button>
-          <button type="button" class="btn-filter" onclick="filterStatus('PENDING', this)">Pending</button>
-          <button type="button" class="btn-filter" onclick="filterStatus('CONFIRMED', this)">Confirmed</button>
-          <button type="button" class="btn-filter" onclick="filterStatus('COMPLETED', this)">Completed</button>
-          <button type="button" class="btn-filter" onclick="filterStatus('CANCELLED', this)">Cancelled</button>
+        <div class="status-filter-group" style="display: flex; gap: 4px; background: #f1f5f9; padding: 3px; border-radius: 8px;">
+          <button type="button" class="btn-filter active" data-filter-status="ALL">All</button>
+          <button type="button" class="btn-filter" data-filter-status="PENDING">Pending</button>
+          <button type="button" class="btn-filter" data-filter-status="CONFIRMED">Confirmed</button>
+          <button type="button" class="btn-filter" data-filter-status="COMPLETED">Completed</button>
+          <button type="button" class="btn-filter" data-filter-status="CANCELLED">Cancelled</button>
         </div>
         <a href="{{ url_for('book_appointment') }}" class="btn-dark-green btn-sm">
           {{ icons.icon_calendar_plus(class="icon", size=14) }}
@@ -70,7 +70,8 @@
                 <td><small style="color: var(--text-muted);">{{ apt.created_at[:10] }}</small></td>
                 <td>
                   {% if apt.status in ('PENDING', 'CONFIRMED') %}
-                    <form action="{{ url_for('cancel_appointment', appointment_id=apt.appointment_id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this appointment?');" style="display:inline;">
+                    <form action="{{ url_for('cancel_appointment', appointment_id=apt.appointment_id) }}" method="POST" data-confirm="Are you sure you want to cancel this appointment?" style="display:inline;">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                       <button type="submit" class="btn btn-danger-outline btn-sm">Cancel</button>
                     </form>
                   {% else %}
@@ -95,47 +96,4 @@
 
 </div>
 
-<style>
-  .btn-filter {
-    background: transparent;
-    border: none;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: var(--transition);
-  }
-  .btn-filter.active {
-    background: #ffffff;
-    color: var(--text-main);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  }
-</style>
-
-<script>
-  function filterStatus(status, btn) {
-    const buttons = document.querySelectorAll('.btn-filter');
-    buttons.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-
-    const table = document.getElementById('appointmentsTable');
-    if (!table) return;
-    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-
-    for (let i = 0; i < rows.length; i++) {
-      if (status === 'ALL') {
-        rows[i].style.display = '';
-      } else {
-        const text = rows[i].textContent || rows[i].innerText;
-        if (text.toUpperCase().indexOf(status) > -1) {
-          rows[i].style.display = '';
-        } else {
-          rows[i].style.display = 'none';
-        }
-      }
-    }
-  }
-</script>
 {% endblock %}

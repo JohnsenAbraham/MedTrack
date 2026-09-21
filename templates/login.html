@@ -11,24 +11,28 @@
       <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">Access your patient consultations, prescriptions, or clinical workspace</p>
     </div>
 
-    <!-- Quick Demo Logins Box -->
+    {% if demo_mode %}
+    <!-- Quick Demo Logins Box (Rendered only when DEMO_MODE=True in development) -->
     <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 0.85rem 1rem; margin-bottom: 1.25rem;">
       <div style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.05em;">
         Quick Demo Sign In
       </div>
       <div style="display: flex; gap: 0.5rem;">
-        <button type="button" class="btn btn-secondary btn-sm" style="flex: 1;" onclick="fillDemo('patient.demo@medtrack.local', 'PatientPass123!')">
+        <button type="button" class="btn btn-secondary btn-sm" style="flex: 1;" data-demo-email="patient.demo@medtrack.local" data-demo-password="PatientPass123!">
           {{ icons.icon_user(class="icon", size=14) }}
           <span>Patient Demo</span>
         </button>
-        <button type="button" class="btn btn-secondary btn-sm" style="flex: 1;" onclick="fillDemo('doctor.vance@medtrack.local', 'DoctorPass123!')">
+        <button type="button" class="btn btn-secondary btn-sm" style="flex: 1;" data-demo-email="doctor.vance@medtrack.local" data-demo-password="DoctorPass123!">
           {{ icons.icon_stethoscope(class="icon", size=14) }}
           <span>Doctor Demo</span>
         </button>
       </div>
     </div>
+    {% endif %}
 
     <form action="{{ url_for('login') }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
       <!-- Email Address -->
       <div class="form-group">
         <label for="email" class="form-label">Email Address</label>
@@ -51,11 +55,4 @@
     </div>
   </div>
 </div>
-
-<script>
-  function fillDemo(email, pwd) {
-    document.getElementById('email').value = email;
-    document.getElementById('password').value = pwd;
-  }
-</script>
 {% endblock %}

@@ -19,6 +19,7 @@
     </div>
 
     <form action="{{ url_for('add_medicine') }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       <!-- Medicine Name -->
       <div class="form-group">
         <label for="name" class="form-label">Medicine Name *</label>

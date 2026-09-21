@@ -26,6 +26,7 @@
     </div>
 
     <form action="{{ url_for('submit_diagnosis', appointment_id=appointment.appointment_id) }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       <!-- Diagnosis Date -->
       <div class="form-group">
         <label for="date" class="form-label">Consultation Date *</label>

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Error {{ error_code }} – MedTrack{% endblock %}
+
+{% block content %}
+<div style="max-width: 620px; margin: 3rem auto; text-align: center;">
+  <div class="card" style="padding: 3rem 2rem; border-top: 4px solid var(--accent-red, #ef4444); box-shadow: var(--shadow-lg);">
+    
+    <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 50%; background: #fee2e2; color: #dc2626; margin-bottom: 1.5rem;">
+      {{ icons.icon_cross(class="icon", size=32) }}
+    </div>
+
+    <div style="font-size: 0.85rem; font-weight: 800; color: #dc2626; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem;">
+      HTTP Status {{ error_code }}
+    </div>
+
+    <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin-bottom: 1rem; letter-spacing: -0.02em;">
+      {{ error_title }}
+    </h1>
+
+    <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 2rem;">
+      {{ error_message }}
+    </p>
+
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+      {% if is_authenticated %}
+        <a href="{{ url_for('doctor_dashboard' if user_role == 'doctor' else 'dashboard') }}" class="btn btn-primary">
+          {{ icons.icon_dashboard(class="icon", size=16) }}
+          <span>Return to Dashboard</span>
+        </a>
+      {% else %}
+        <a href="{{ url_for('login') }}" class="btn btn-primary">
+          {{ icons.icon_user(class="icon", size=16) }}
+          <span>Sign In</span>
+        </a>
+        <a href="{{ url_for('index') }}" class="btn btn-outline">
+          <span>Go to Home</span>
+        </a>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

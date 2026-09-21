@@ -21,16 +21,39 @@ Covers all 16 mandatory scenarios specified in the SkillWallet project requireme
 
 import unittest
 import datetime
+import tempfile
+import shutil
+import os
 from app import app, db, sns
 from config import Config
 
 class MedTrackTestCase(unittest.TestCase):
     """Integration and scenario tests for MedTrack healthcare application."""
 
+    @classmethod
+    def setUpClass(cls):
+        """Create an isolated temporary copy of the canonical database for test execution."""
+        cls.temp_fd, cls.temp_db_path = tempfile.mkstemp(suffix="_test_app.db")
+        os.close(cls.temp_fd)
+        shutil.copy2(Config.LOCAL_DB_PATH, cls.temp_db_path)
+        cls.orig_db_path = db.db_path
+        db.db_path = cls.temp_db_path
+
+    @classmethod
+    def tearDownClass(cls):
+        """Restore original database path and remove temporary database file."""
+        db.db_path = cls.orig_db_path
+        if os.path.exists(cls.temp_db_path):
+            try:
+                os.remove(cls.temp_db_path)
+            except Exception:
+                pass
+
     def setUp(self):
         app.config["TESTING"] = True
         app.config["WTF_CSRF_ENABLED"] = False
         app.config["SECRET_KEY"] = "test-secret-key-college-demo"
+        app.config["DEMO_MODE"] = True
         self.client = app.test_client()
 
         self.test_email = f"patient_{int(datetime.datetime.now().timestamp())}@example.com"
@@ -127,7 +150,7 @@ class MedTrackTestCase(unittest.TestCase):
     def test_06_logout(self):
         """6. Verify logout terminates user session."""
         self.client.get("/demo-login/patient")
-        response = self.client.get("/logout", follow_redirects=True)
+        response = self.client.post("/logout", follow_redirects=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"signed out safely", response.data)
 

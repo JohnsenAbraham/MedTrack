@@ -1,0 +1,16 @@
+[Unit]
+Description=MedTrack Autonomous Medicine Reminder Scheduler Worker
+After=network.target
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/medtrack
+EnvironmentFile=/var/www/medtrack/.env
+ExecStart=/var/www/medtrack/venv/bin/python -m workers.medicine_scheduler
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

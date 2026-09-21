@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Reports: {{ patient.name }} – MedTrack{% endblock %}
+
+{% block content %}
+<div style="max-width: 1100px; margin: 0 auto;">
+
+  <!-- Header -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+    <div>
+      <a href="{{ url_for('doctor_patients') }}" style="font-size: 0.85rem; font-weight: 600; color: var(--primary); display: inline-flex; align-items: center; gap: 4px; margin-bottom: 0.5rem;">
+        <span>&larr; Return to Patient Roster</span>
+      </a>
+      <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem; letter-spacing: -0.02em;">
+        Medical Reports &bull; {{ patient.name }}
+      </h1>
+      <p style="font-size: 0.92rem; color: var(--text-muted); margin: 0;">
+        Confidential diagnostic documents for patient record <span style="font-family: monospace; font-weight: 600;">{{ patient.user_id }}</span>.
+      </p>
+    </div>
+    <div>
+      <a href="{{ url_for('doctor_patients') }}" class="btn btn-secondary">
+        <span>&larr; Patient Roster</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Reports Table -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        {{ icons.icon_document(class="icon", size=20) }}
+        <span>Patient Diagnostic Archive ({{ reports | length }})</span>
+      </div>
+      <div style="font-size: 0.82rem; color: var(--text-muted);">
+        Physician authorized clinical access.
+      </div>
+    </div>
+
+    {% if reports %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Report Title</th>
+              <th>File Type / Size</th>
+              <th>Uploaded Date</th>
+              <th>Attending Provider</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for rep in reports %}
+              <tr>
+                <td>
+                  <strong style="color: var(--text-main); font-size: 0.94rem;">{{ rep.title }}</strong>
+                  {% if rep.notes %}
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">{{ rep.notes }}</div>
+                  {% endif %}
+                  <div style="font-size: 0.74rem; font-family: monospace; color: var(--text-light); margin-top: 2px;">
+                    ID: {{ rep.report_id }}
+                  </div>
+                </td>
+                <td>
+                  <span class="portal-badge" style="font-size: 0.76rem; font-weight: 600;">
+                    {{ rep.file_type.split('/')[-1].upper() if '/' in rep.file_type else rep.file_type }}
+                  </span>
+                  <span style="font-size: 0.8rem; color: var(--text-muted); margin-left: 6px;">
+                    {{ (rep.file_size / 1024) | round(1) }} KB
+                  </span>
+                  <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">
+                    {{ rep.file_name }}
+                  </div>
+                </td>
+                <td>
+                  <span style="font-size: 0.84rem; color: var(--text-muted);">
+                    {{ rep.uploaded_at[:10] }}
+                  </span>
+                </td>
+                <td>
+                  {% if rep.doctor_name %}
+                    <span style="font-size: 0.86rem; color: #334155; font-weight: 600;">{{ rep.doctor_name }}</span>
+                  {% else %}
+                    <span style="font-size: 0.82rem; color: var(--text-muted); font-style: italic;">Patient uploaded</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{{ url_for('download_report', report_id=rep.report_id) }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" title="View or download document">
+                    {{ icons.icon_eye(class="icon", size=13) }}
+                    <span>Access Report</span>
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          {{ icons.icon_document(class="icon", size=24) }}
+        </div>
+        <p style="font-weight: 600; color: var(--text-main);">No reports found for this patient</p>
+        <p style="font-size: 0.84rem; color: var(--text-muted);">
+          When the patient uploads diagnostic documents or reports are attached to consultations, they will appear here.
+        </p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

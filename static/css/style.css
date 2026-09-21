@@ -721,6 +721,21 @@ a:hover {
   color: #f59f00;
 }
 
+.badge-due {
+  background-color: #fff9db;
+  color: #f59f00;
+}
+
+.badge-upcoming {
+  background-color: #e7f5ff;
+  color: #1971c2;
+}
+
+.badge-missed {
+  background-color: #ffe3e3;
+  color: #e03131;
+}
+
 .badge-confirmed {
   background-color: #e6fcf5;
   color: #0ca678;
@@ -1089,4 +1104,38 @@ a:hover {
   .form-row {
     grid-template-columns: 1fr;
   }
+}
+
+/* Phase 6: Unobtrusive Filter & Card Hover Styles */
+.btn-filter {
+  background: transparent;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-filter.active {
+  background: #ffffff;
+  color: var(--text-main);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.doctor-search-card {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.35rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: var(--transition);
+}
+
+.doctor-search-card:hover {
+  border-color: #cbd5e1;
 }

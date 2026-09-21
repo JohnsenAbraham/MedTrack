@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="MedTrack – AWS Cloud-Enabled Healthcare Management System. Student demonstration web application.">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{% block title %}MedTrack – Connected Healthcare & Patient Portal{% endblock %}</title>
 
   <!-- Google Fonts: Plus Jakarta Sans & Inter -->
@@ -84,7 +85,7 @@
                 </a>
               </li>
               <li>
-                <a href="{{ url_for('doctor_prescriptions') }}" class="sidebar-link {% if request.endpoint == 'doctor_prescriptions' %}active{% endif %}">
+                <a href="{{ url_for('doctor_prescriptions') }}" class="sidebar-link {% if request.endpoint in ('doctor_prescriptions', 'doctor_new_prescription', 'doctor_prescription_detail') %}active{% endif %}">
                   <div class="sidebar-link-content">
                     {{ icons.icon_pill(class="icon", size=18) }}
                     <span>Prescriptions</span>
@@ -122,6 +123,22 @@
                   <div class="sidebar-link-content">
                     {{ icons.icon_document(class="icon", size=18) }}
                     <span>Medical Records</span>
+                  </div>
+                </a>
+              </li>
+              <li>
+                <a href="{{ url_for('patient_prescriptions') }}" class="sidebar-link {% if request.endpoint in ('patient_prescriptions', 'patient_prescription_detail') %}active{% endif %}">
+                  <div class="sidebar-link-content">
+                    {{ icons.icon_pill(class="icon", size=18) }}
+                    <span>Prescriptions</span>
+                  </div>
+                </a>
+              </li>
+              <li>
+                <a href="{{ url_for('patient_reports') }}" class="sidebar-link {% if request.endpoint in ('patient_reports', 'upload_report') %}active{% endif %}">
+                  <div class="sidebar-link-content">
+                    {{ icons.icon_document(class="icon", size=18) }}
+                    <span>Medical Reports</span>
                   </div>
                 </a>
               </li>
@@ -195,10 +212,13 @@
 
       <!-- Sidebar Footer / Logout -->
       <div class="sidebar-footer">
-        <a href="{{ url_for('logout') }}" class="sidebar-signout">
-          {{ icons.icon_logout(class="icon", size=18) }}
-          <span>Sign Out</span>
-        </a>
+        <form action="{{ url_for('logout') }}" method="POST" style="margin: 0; width: 100%;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <button type="submit" class="sidebar-signout" style="background: none; border: none; width: 100%; text-align: left; cursor: pointer; font-family: inherit; font-size: inherit;">
+            {{ icons.icon_logout(class="icon", size=18) }}
+            <span>Sign Out</span>
+          </button>
+        </form>
       </div>
 
     </aside>
