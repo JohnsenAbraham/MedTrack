@@ -4,6 +4,7 @@ Student demonstration web application for AWS Cloud Practitioner / SkillWallet.
 """
 
 import os
+import re
 import uuid
 import datetime
 from zoneinfo import ZoneInfo
@@ -377,12 +378,26 @@ def profile():
         phone = request.form.get("phone", "").strip()
         date_of_birth = request.form.get("date_of_birth", "").strip()
         gender = request.form.get("gender", "").strip()
+        caregiver_name = request.form.get("caregiver_name", "").strip()
+        caregiver_phone = request.form.get("caregiver_phone", "").strip()
+        caregiver_email = request.form.get("caregiver_email", "").strip()
+
+        if caregiver_phone and not re.match(r"^[\+]?[(]?[0-9]{1,4}[)]?[-\s\./0-9]{6,20}$", caregiver_phone):
+            flash("Please enter a valid caregiver phone number.", "warning")
+            return redirect(url_for("profile"))
+
+        if caregiver_email and ("@" not in caregiver_email or "." not in caregiver_email or not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", caregiver_email)):
+            flash("Please enter a valid caregiver email address.", "warning")
+            return redirect(url_for("profile"))
 
         db.update_user(g.user["user_id"], {
             "name": name,
             "phone": phone,
             "date_of_birth": date_of_birth,
-            "gender": gender
+            "gender": gender,
+            "caregiver_name": caregiver_name,
+            "caregiver_phone": caregiver_phone,
+            "caregiver_email": caregiver_email
         })
         g.user = db.get_user_by_id(g.user["user_id"])
         flash("Profile information updated successfully.", "success")
@@ -393,7 +408,7 @@ def profile():
         diagnoses = db.get_diagnoses_by_doctor(g.user["user_id"])
         return render_template("doctor_profile.html", doctor=g.user, appointments=appointments, diagnoses=diagnoses)
 
-    return render_template("profile.html", patient=g.user)
+    return render_template("profile.html", patient=g.user, user=g.user)
 
 @app.route("/schedule")
 @app.route("/patient/schedule")

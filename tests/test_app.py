@@ -394,5 +394,140 @@ class MedTrackTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Medication Intake History", response.data)
 
+    def test_22_profile_caregiver_update(self):
+        """22. TEST A — Profile caregiver update: save caregiver_name, caregiver_phone, caregiver_email."""
+        self.client.get("/demo-login/patient")
+        patient = db.get_user_by_email("patient.demo@medtrack.local")
+
+        post_data = {
+            "name": patient["name"],
+            "phone": patient.get("phone", ""),
+            "date_of_birth": patient.get("date_of_birth", ""),
+            "gender": patient.get("gender", ""),
+            "caregiver_name": "Test Caregiver",
+            "caregiver_phone": "+91 9876543210",
+            "caregiver_email": "caregiver@example.com"
+        }
+        res = self.client.post("/profile", data=post_data, follow_redirects=True)
+        self.assertEqual(res.status_code, 200)
+
+        updated = db.get_user_by_id(patient["user_id"])
+        self.assertEqual(updated["caregiver_name"], "Test Caregiver")
+        self.assertEqual(updated["caregiver_phone"], "+91 9876543210")
+        self.assertEqual(updated["caregiver_email"], "caregiver@example.com")
+
+    def test_23_profile_get_roundtrip(self):
+        """23. TEST B — Profile GET round-trip: verify response contains saved caregiver values."""
+        self.client.get("/demo-login/patient")
+        patient = db.get_user_by_email("patient.demo@medtrack.local")
+
+        db.update_user(patient["user_id"], {
+            "caregiver_name": "Test Caregiver",
+            "caregiver_phone": "+91 9876543210",
+            "caregiver_email": "caregiver@example.com"
+        })
+
+        res = self.client.get("/profile")
+        self.assertEqual(res.status_code, 200)
+        html = res.data.decode("utf-8")
+        self.assertIn("Test Caregiver", html)
+        self.assertIn("+91 9876543210", html)
+        self.assertIn("caregiver@example.com", html)
+
+    def test_24_profile_caregiver_update_existing(self):
+        """24. TEST C — Update existing caregiver data: change values and verify database contains new values."""
+        self.client.get("/demo-login/patient")
+        patient = db.get_user_by_email("patient.demo@medtrack.local")
+
+        post_data = {
+            "name": patient["name"],
+            "phone": patient.get("phone", ""),
+            "date_of_birth": patient.get("date_of_birth", ""),
+            "gender": patient.get("gender", ""),
+            "caregiver_name": "Updated Caregiver",
+            "caregiver_phone": "+1-555-0199",
+            "caregiver_email": "updated.caregiver@example.com"
+        }
+        res = self.client.post("/profile", data=post_data, follow_redirects=True)
+        self.assertEqual(res.status_code, 200)
+
+        updated = db.get_user_by_id(patient["user_id"])
+        self.assertEqual(updated["caregiver_name"], "Updated Caregiver")
+        self.assertEqual(updated["caregiver_phone"], "+1-555-0199")
+        self.assertEqual(updated["caregiver_email"], "updated.caregiver@example.com")
+
+    def test_25_profile_caregiver_clear_data(self):
+        """25. TEST D — Clear caregiver data: submit empty values and verify database values are cleared."""
+        self.client.get("/demo-login/patient")
+        patient = db.get_user_by_email("patient.demo@medtrack.local")
+
+        db.update_user(patient["user_id"], {
+            "caregiver_name": "Initial Caregiver",
+            "caregiver_phone": "+1-555-0199",
+            "caregiver_email": "initial@example.com"
+        })
+
+        clear_data = {
+            "name": patient["name"],
+            "phone": patient.get("phone", ""),
+            "date_of_birth": patient.get("date_of_birth", ""),
+            "gender": patient.get("gender", ""),
+            "caregiver_name": "",
+            "caregiver_phone": "",
+            "caregiver_email": ""
+        }
+        res = self.client.post("/profile", data=clear_data, follow_redirects=True)
+        self.assertEqual(res.status_code, 200)
+
+        updated = db.get_user_by_id(patient["user_id"])
+        self.assertEqual(updated["caregiver_name"], "")
+        self.assertEqual(updated["caregiver_phone"], "")
+        self.assertEqual(updated["caregiver_email"], "")
+
+    def test_26_profile_authorization_isolation(self):
+        """26. TEST E — Authorization isolation: patient cannot update another patient's profile using user_id."""
+        self.client.get("/demo-login/patient")
+        doctor = db.get_user_by_id("doc-001")
+        original_doc_name = doctor["name"]
+
+        post_data = {
+            "user_id": doctor["user_id"],
+            "name": "Malicious Name Attempt",
+            "caregiver_name": "Hacked Caregiver"
+        }
+        res = self.client.post("/profile", data=post_data, follow_redirects=True)
+        self.assertEqual(res.status_code, 200)
+
+        doctor_after = db.get_user_by_id(doctor["user_id"])
+        self.assertEqual(doctor_after["name"], original_doc_name)
+        self.assertNotEqual(doctor_after.get("caregiver_name"), "Hacked Caregiver")
+
+    def test_27_profile_caregiver_validation(self):
+        """27. TEST F — Validation: invalid caregiver phone or email is rejected with warning."""
+        self.client.get("/demo-login/patient")
+        patient = db.get_user_by_email("patient.demo@medtrack.local")
+
+        # Invalid phone format rejected
+        invalid_phone_data = {
+            "name": patient["name"],
+            "caregiver_name": "Caregiver",
+            "caregiver_phone": "invalid-phone-abc",
+            "caregiver_email": "valid@example.com"
+        }
+        res = self.client.post("/profile", data=invalid_phone_data, follow_redirects=True)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b"Please enter a valid caregiver phone number.", res.data)
+
+        # Invalid email format rejected
+        invalid_email_data = {
+            "name": patient["name"],
+            "caregiver_name": "Caregiver",
+            "caregiver_phone": "+1-555-0199",
+            "caregiver_email": "not-an-email"
+        }
+        res = self.client.post("/profile", data=invalid_email_data, follow_redirects=True)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b"Please enter a valid caregiver email address.", res.data)
+
 if __name__ == "__main__":
     unittest.main()

@@ -59,6 +59,7 @@
       </div>
 
       <form action="{{ url_for('profile') }}" method="POST">
+        {% set user = user if user is defined and user else patient %}
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <!-- Full Name -->
         <div class="form-group">
@@ -96,6 +97,33 @@
             <option value="Other" {% if patient.gender == 'Other' %}selected{% endif %}>Other</option>
             <option value="Prefer not to say" {% if patient.gender == 'Prefer not to say' %}selected{% endif %}>Prefer not to say</option>
           </select>
+        </div>
+
+        <!-- Caregiver / Emergency Contact -->
+        <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color, #e2e8f0);">
+          <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-main); margin-bottom: 0.25rem;">
+            Caregiver / Emergency Contact
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Primary contact details for designated emergency representative or caregiver.
+          </div>
+
+          <div class="form-group">
+            <label for="caregiver_name" class="form-label">Caregiver Name</label>
+            <input type="text" class="form-control" id="caregiver_name" name="caregiver_name" placeholder="Full name of caregiver" value="{{ user.caregiver_name or '' }}">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="caregiver_phone" class="form-label">Caregiver Phone</label>
+              <input type="tel" class="form-control" id="caregiver_phone" name="caregiver_phone" placeholder="+1-555-0199" value="{{ user.caregiver_phone or '' }}">
+            </div>
+
+            <div class="form-group">
+              <label for="caregiver_email" class="form-label">Caregiver Email</label>
+              <input type="email" class="form-control" id="caregiver_email" name="caregiver_email" placeholder="caregiver@example.com" value="{{ user.caregiver_email or '' }}">
+            </div>
+          </div>
         </div>
 
         <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">

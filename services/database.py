@@ -694,7 +694,10 @@ class DatabaseService:
 
         fields = []
         params = []
-        for key in ("name", "phone", "date_of_birth", "gender"):
+        for key in (
+            "name", "phone", "date_of_birth", "gender",
+            "caregiver_name", "caregiver_phone", "caregiver_email"
+        ):
             if key in update_data:
                 fields.append(f"{key} = ?")
                 params.append(update_data[key])
