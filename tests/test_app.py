@@ -621,5 +621,125 @@ class MedTrackTestCase(unittest.TestCase):
         unauthorized_diag = next((d for d in diags if d.get("appointment_id") == appt["appointment_id"]), None)
         self.assertIsNone(unauthorized_diag)
 
+    def test_31_def004_completed_appointment_get_readonly(self):
+        """31. DEF-004 A: GET on completed appointment displays existing diagnosis in read-only mode without form."""
+        patient = db.get_user_by_email("patient.demo@medtrack.local")
+        doc = db.get_user_by_email("doctor.vance@medtrack.local")
+
+        appt = db.create_appointment({
+            "patient_id": patient["user_id"],
+            "doctor_id": doc["user_id"],
+            "appointment_date": datetime.date.today().isoformat(),
+            "appointment_time": "10:30 AM",
+            "reason": "DEF-004 Readonly Check",
+            "status": "CONFIRMED"
+        })
+
+        self.client.get("/demo-login/doctor")
+        # Submit valid first diagnosis
+        post_res = self.client.post(f"/doctor/diagnosis/new/{appt['appointment_id']}", data={
+            "date": datetime.date.today().isoformat(),
+            "diagnosis": "Initial clinical evaluation for DEF-004 read-only test."
+        }, follow_redirects=True)
+        self.assertEqual(post_res.status_code, 200)
+
+        # Confirm appointment is COMPLETED
+        appt_after = db.get_appointment_by_id(appt["appointment_id"])
+        self.assertEqual(appt_after["status"], "COMPLETED")
+
+        # GET on completed appointment
+        get_res = self.client.get(f"/doctor/diagnosis/new/{appt['appointment_id']}")
+        self.assertEqual(get_res.status_code, 200)
+
+        # Assert existing diagnosis text is displayed
+        self.assertIn(b"Initial clinical evaluation for DEF-004 read-only test.", get_res.data)
+        # Assert read-only badge/heading is displayed
+        self.assertIn(b"Clinical Diagnosis Record (Completed)", get_res.data)
+        self.assertIn(b"Completed Visit", get_res.data)
+        # Assert Return to Dashboard action is present
+        self.assertIn(b"Return to Dashboard", get_res.data)
+
+        # Assert submission form and button are NOT present
+        self.assertNotIn(b"Finalize Diagnosis &amp; Complete Visit", get_res.data)
+        self.assertNotIn(b"Finalize Diagnosis & Complete Visit", get_res.data)
+        self.assertNotIn(b"<textarea", get_res.data)
+
+    def test_32_def004_completed_appointment_duplicate_post_rejected(self):
+        """32. DEF-004 B: Duplicate POST to completed appointment is rejected, counts unchanged, status unchanged."""
+        patient = db.get_user_by_email("patient.demo@medtrack.local")
+        doc = db.get_user_by_email("doctor.vance@medtrack.local")
+
+        appt = db.create_appointment({
+            "patient_id": patient["user_id"],
+            "doctor_id": doc["user_id"],
+            "appointment_date": datetime.date.today().isoformat(),
+            "appointment_time": "11:30 AM",
+            "reason": "DEF-004 Duplicate POST Check",
+            "status": "CONFIRMED"
+        })
+
+        self.client.get("/demo-login/doctor")
+        # Legitimate first diagnosis
+        self.client.post(f"/doctor/diagnosis/new/{appt['appointment_id']}", data={
+            "date": datetime.date.today().isoformat(),
+            "diagnosis": "Original primary diagnosis record."
+        }, follow_redirects=True)
+
+        # Record counts before duplicate POST
+        diags_before = len(db.get_diagnoses_by_patient(patient["user_id"]))
+        notifs_before = len(db.get_notifications_by_patient(patient["user_id"]))
+
+        # Attempt second diagnosis submission to same completed appointment
+        dup_res = self.client.post(f"/doctor/diagnosis/new/{appt['appointment_id']}", data={
+            "date": datetime.date.today().isoformat(),
+            "diagnosis": "Illegitimate duplicate diagnosis entry."
+        }, follow_redirects=True)
+
+        self.assertEqual(dup_res.status_code, 200)
+        self.assertIn(b"Clinical diagnosis has already been submitted", dup_res.data)
+
+        # Assert diagnosis count is unchanged
+        diags_after = len(db.get_diagnoses_by_patient(patient["user_id"]))
+        self.assertEqual(diags_after, diags_before)
+
+        # Assert notification count is unchanged
+        notifs_after = len(db.get_notifications_by_patient(patient["user_id"]))
+        self.assertEqual(notifs_after, notifs_before)
+
+        # Assert appointment remains COMPLETED
+        appt_final = db.get_appointment_by_id(appt["appointment_id"])
+        self.assertEqual(appt_final["status"], "COMPLETED")
+
+        # Assert original diagnosis text remains unchanged and single
+        diags_for_appt = [d for d in db.get_diagnoses_by_patient(patient["user_id"]) if d.get("appointment_id") == appt["appointment_id"]]
+        self.assertEqual(len(diags_for_appt), 1)
+        self.assertEqual(diags_for_appt[0]["diagnosis"], "Original primary diagnosis record.")
+
+    def test_33_def004_completed_appointment_safe_fallback_when_no_diagnosis_record(self):
+        """33. DEF-004 Edge Case: Completed appointment without diagnosis record displays safe read-only message."""
+        patient = db.get_user_by_email("patient.demo@medtrack.local")
+        doc = db.get_user_by_email("doctor.vance@medtrack.local")
+
+        # Create appointment directly in COMPLETED status without a diagnosis record
+        appt = db.create_appointment({
+            "patient_id": patient["user_id"],
+            "doctor_id": doc["user_id"],
+            "appointment_date": datetime.date.today().isoformat(),
+            "appointment_time": "03:00 PM",
+            "reason": "Legacy completed consultation without diagnosis",
+            "status": "COMPLETED"
+        })
+
+        self.client.get("/demo-login/doctor")
+        res = self.client.get(f"/doctor/diagnosis/new/{appt['appointment_id']}")
+        self.assertEqual(res.status_code, 200)
+
+        # Safe fallback message displayed
+        self.assertIn(b"No written diagnosis text was recorded for this completed appointment.", res.data)
+        # Entry form not rendered
+        self.assertNotIn(b"Finalize Diagnosis &amp; Complete Visit", res.data)
+        self.assertNotIn(b"<textarea", res.data)
+        self.assertIn(b"Return to Dashboard", res.data)
+
 if __name__ == "__main__":
     unittest.main()

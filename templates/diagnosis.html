@@ -8,7 +8,7 @@
     <div class="card-header">
       <div class="card-title">
         {{ icons.icon_document(class="icon", size=20) }}
-        <span>Clinical Diagnosis Entry</span>
+        <span>{% if read_only %}Clinical Diagnosis Record (Completed){% else %}Clinical Diagnosis Entry{% endif %}</span>
       </div>
       <a href="{{ url_for('doctor_dashboard') }}" style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">&larr; Return to Dashboard</a>
     </div>
@@ -25,28 +25,79 @@
       </div>
     </div>
 
-    <form action="{{ url_for('submit_diagnosis', appointment_id=appointment.appointment_id) }}" method="POST">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-      <!-- Diagnosis Date -->
-      <div class="form-group">
-        <label for="date" class="form-label">Consultation Date *</label>
-        <input type="date" class="form-control" id="date" name="date" value="{{ today }}" required>
-      </div>
+    {% if read_only %}
+      <div style="margin-top: 1rem;">
+        {% if existing_diagnosis %}
+          <div style="background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem; flex-wrap: wrap; gap: 8px;">
+              <div>
+                <span class="portal-badge" style="font-size: 0.8rem; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;">
+                  {{ icons.icon_check(class="icon", size=13) }} Completed Visit
+                </span>
+                {% if existing_diagnosis.diagnosis_id %}
+                  <span style="font-size: 0.76rem; color: var(--text-muted); margin-left: 8px; font-family: monospace;">
+                    Record ID: {{ existing_diagnosis.diagnosis_id }}
+                  </span>
+                {% endif %}
+              </div>
+              {% if existing_diagnosis.date %}
+                <span class="portal-badge" style="font-size: 0.78rem;">
+                  Date: {{ existing_diagnosis.date }}
+                </span>
+              {% endif %}
+            </div>
+            <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;">
+              Clinical Assessment &amp; Diagnosis
+            </div>
+            <div style="font-size: 0.94rem; color: #334155; line-height: 1.6; white-space: pre-line;">
+              {{ existing_diagnosis.diagnosis }}
+            </div>
+            {% if existing_diagnosis.created_at %}
+              <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-light); text-align: right;">
+                Recorded on {{ existing_diagnosis.created_at[:10] }}
+              </div>
+            {% endif %}
+          </div>
+        {% else %}
+          <div class="empty-state" style="padding: 2rem 1.5rem; margin-bottom: 1.5rem;">
+            <div class="empty-state-icon">
+              {{ icons.icon_document(class="icon", size=24) }}
+            </div>
+            <p style="font-weight: 600; color: var(--text-main); margin-bottom: 4px;">Appointment is completed</p>
+            <p style="font-size: 0.84rem; color: var(--text-muted); margin: 0;">No written diagnosis text was recorded for this completed appointment.</p>
+          </div>
+        {% endif %}
 
-      <!-- Clinical Diagnosis & Treatment Details -->
-      <div class="form-group">
-        <label for="diagnosis" class="form-label">Clinical Findings, Diagnosis &amp; Recommendations *</label>
-        <textarea class="form-control" id="diagnosis" name="diagnosis" rows="5" placeholder="Enter clinical assessment, diagnostic impression, treatment plan, and prescription instructions..." required></textarea>
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+          <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-primary">
+            Return to Dashboard
+          </a>
+        </div>
       </div>
+    {% else %}
+      <form action="{{ url_for('submit_diagnosis', appointment_id=appointment.appointment_id) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <!-- Diagnosis Date -->
+        <div class="form-group">
+          <label for="date" class="form-label">Consultation Date *</label>
+          <input type="date" class="form-control" id="date" name="date" value="{{ today }}" required>
+        </div>
 
-      <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
-        <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-secondary">Cancel</a>
-        <button type="submit" class="btn btn-success">
-          {{ icons.icon_check(class="icon", size=16) }}
-          <span>Finalize Diagnosis &amp; Complete Visit</span>
-        </button>
-      </div>
-    </form>
+        <!-- Clinical Diagnosis & Treatment Details -->
+        <div class="form-group">
+          <label for="diagnosis" class="form-label">Clinical Findings, Diagnosis &amp; Recommendations *</label>
+          <textarea class="form-control" id="diagnosis" name="diagnosis" rows="5" placeholder="Enter clinical assessment, diagnostic impression, treatment plan, and prescription instructions..." required></textarea>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+          <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-secondary">Cancel</a>
+          <button type="submit" class="btn btn-success">
+            {{ icons.icon_check(class="icon", size=16) }}
+            <span>Finalize Diagnosis &amp; Complete Visit</span>
+          </button>
+        </div>
+      </form>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

@@ -890,6 +890,35 @@ def submit_diagnosis(appointment_id):
         flash("Unauthorized: You are not the assigned physician for this appointment.", "danger")
         return redirect(url_for("doctor_dashboard"))
 
+    # DEF-004: State-safe handling for COMPLETED appointments
+    if appointment.get("status") == "COMPLETED":
+        if request.method == "POST":
+            flash("Clinical diagnosis has already been submitted for this completed appointment.", "warning")
+            return redirect(url_for("doctor_dashboard"))
+
+        # GET: retrieve existing diagnosis for this appointment
+        existing_diagnosis = None
+        doctor_diags = db.get_diagnoses_by_doctor(g.user["user_id"])
+        for d in doctor_diags:
+            if d.get("appointment_id") == appointment_id:
+                existing_diagnosis = d
+                break
+        if not existing_diagnosis and appointment.get("patient_id"):
+            patient_diags = db.get_diagnoses_by_patient(appointment["patient_id"])
+            for d in patient_diags:
+                if d.get("appointment_id") == appointment_id:
+                    existing_diagnosis = d
+                    break
+
+        today = get_current_date()
+        return render_template(
+            "diagnosis.html",
+            appointment=appointment,
+            existing_diagnosis=existing_diagnosis,
+            read_only=True,
+            today=today
+        )
+
     if request.method == "POST":
         diagnosis_text = request.form.get("diagnosis", "").strip()
         date_str = request.form.get("date", "").strip() or get_current_date()
