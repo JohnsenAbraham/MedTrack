@@ -1768,18 +1768,26 @@ class DatabaseService:
         times = []
         if schedule_times_val:
             if isinstance(schedule_times_val, list):
-                times = [str(t).strip() for t in schedule_times_val if str(t).strip()]
+                for item in schedule_times_val:
+                    for t in str(item).split(","):
+                        if t.strip():
+                            times.append(t.strip())
             elif isinstance(schedule_times_val, str):
                 try:
                     parsed = json.loads(schedule_times_val)
                     if isinstance(parsed, list):
-                        times = [str(t).strip() for t in parsed if str(t).strip()]
+                        for item in parsed:
+                            for t in str(item).split(","):
+                                if t.strip():
+                                    times.append(t.strip())
                     elif isinstance(parsed, str) and parsed.strip():
-                        times = [parsed.strip()]
+                        for t in parsed.split(","):
+                            if t.strip():
+                                times.append(t.strip())
                 except Exception:
                     times = [t.strip() for t in schedule_times_val.split(",") if t.strip()]
         if not times and legacy_schedule_time:
-            times = [str(legacy_schedule_time).strip()]
+            times = [t.strip() for t in str(legacy_schedule_time).split(",") if t.strip()]
         if not times:
             times = ["08:00"]
         return times

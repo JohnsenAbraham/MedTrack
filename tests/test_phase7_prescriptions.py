@@ -984,6 +984,110 @@ class Phase7PrescriptionsTestCase(unittest.TestCase):
             db.update_prescription_status(rx["prescription_id"], "NONEXISTENT_STATUS")
         self.assertIn("invalid prescription status", str(ctx.exception).lower())
 
+    # =========================================================================
+    # 7. DEF-002 Regression: Multi-Dose Prescription Schedule Parsing (Tests 38 - 40)
+    # =========================================================================
+
+    def test_38_prescription_form_multi_dose_comma_separated_parsing(self):
+        """38. [DEF-002] Submitting comma-separated schedule_time via form parses into independent times."""
+        doc = db.get_user_by_email("doctor.vance@medtrack.local")
+        pat = db.get_user_by_email("patient.demo@medtrack.local")
+        appt = self.get_or_create_appointment(doc["user_id"], pat["user_id"], "CONFIRMED")
+
+        self.login_as_doctor_vance()
+        token = self.get_csrf_token(path="/doctor/prescriptions/new")
+
+        # Submit with schedule_time (singular form name for backward compatibility)
+        res = self.client.post("/doctor/prescriptions/new", data={
+            "patient_id": pat["user_id"],
+            "appointment_id": appt["appointment_id"],
+            "medicine_name": "DEF002 Form Drug",
+            "dosage": "100mg",
+            "schedule_time": "08:00 AM, 02:00 PM, 08:00 PM",
+            "frequency": "Three Times Daily",
+            "meal_timing": "After Food",
+            "csrf_token": token
+        }, follow_redirects=True)
+        self.assertEqual(res.status_code, 200)
+
+        # Retrieve prescription from DB and verify exact list representation
+        rx_list = [r for r in db.get_prescriptions_by_patient(pat["user_id"]) if r["medicine_name"] == "DEF002 Form Drug"]
+        self.assertEqual(len(rx_list), 1)
+        rx = rx_list[0]
+        parsed_times = json.loads(rx["schedule_times"])
+        self.assertEqual(parsed_times, ["08:00 AM", "02:00 PM", "08:00 PM"])
+
+        # Also verify linked medicine schedule_times matches
+        med = db.get_medicine_by_id(f"med_rx_{rx['prescription_id']}")
+        self.assertIsNotNone(med)
+        med_times = json.loads(med["schedule_times"])
+        self.assertEqual(med_times, ["08:00 AM", "02:00 PM", "08:00 PM"])
+
+    def test_39_prescription_multi_dose_creates_three_independent_patient_doses(self):
+        """39. [DEF-002] Three-dose prescription creates three independent dose slots in patient schedule."""
+        doc = db.get_user_by_email("doctor.vance@medtrack.local")
+        pat = db.get_user_by_email("patient.demo@medtrack.local")
+        appt = self.get_or_create_appointment(doc["user_id"], pat["user_id"], "CONFIRMED")
+
+        rx = db.create_prescription(
+            doctor_id=doc["user_id"],
+            patient_id=pat["user_id"],
+            appointment_id=appt["appointment_id"],
+            medicine_name="DEF002 Multi-Dose Tablet",
+            dosage="20mg",
+            schedule_times=["08:00 AM, 02:00 PM, 08:00 PM"]  # tests list containing comma-separated string
+        )
+
+        # Verify normalizer split the list element
+        self.assertEqual(json.loads(rx["schedule_times"]), ["08:00 AM", "02:00 PM", "08:00 PM"])
+
+        schedule = db.get_patient_schedule(pat["user_id"])
+        drug_doses = [d for d in schedule["doses"] if d["name"] == "DEF002 Multi-Dose Tablet"]
+        self.assertEqual(len(drug_doses), 3)
+
+        dose_times = [d["schedule_time"] for d in drug_doses]
+        self.assertEqual(set(dose_times), {"08:00 AM", "02:00 PM", "08:00 PM"})
+
+    def test_40_prescription_multi_dose_independent_intake_recording(self):
+        """40. [DEF-002] Taking 08:00 AM dose does not mark 02:00 PM or 08:00 PM doses as taken."""
+        doc = db.get_user_by_email("doctor.vance@medtrack.local")
+        pat = db.get_user_by_email("patient.demo@medtrack.local")
+        appt = self.get_or_create_appointment(doc["user_id"], pat["user_id"], "CONFIRMED")
+
+        rx = db.create_prescription(
+            doctor_id=doc["user_id"],
+            patient_id=pat["user_id"],
+            appointment_id=appt["appointment_id"],
+            medicine_name="DEF002 Intake Drug",
+            dosage="50mg",
+            schedule_times=["08:00 AM", "02:00 PM", "08:00 PM"]
+        )
+        med_id = f"med_rx_{rx['prescription_id']}"
+
+        # Record intake for ONLY the 08:00 AM dose
+        today_str = datetime.date.today().isoformat()
+        db.record_intake(
+            patient_id=pat["user_id"],
+            medicine_id=med_id,
+            status="TAKEN",
+            scheduled_date=today_str,
+            scheduled_time="08:00 AM"
+        )
+
+        schedule = db.get_patient_schedule(pat["user_id"], target_date=today_str)
+        drug_doses = {d["schedule_time"]: d["status"] for d in schedule["doses"] if d["name"] == "DEF002 Intake Drug"}
+
+        self.assertIn("08:00 AM", drug_doses)
+        self.assertIn("02:00 PM", drug_doses)
+        self.assertIn("08:00 PM", drug_doses)
+
+        # 08:00 AM must be TAKEN
+        self.assertEqual(drug_doses["08:00 AM"], "TAKEN")
+
+        # 02:00 PM and 08:00 PM must NOT be TAKEN
+        self.assertNotEqual(drug_doses["02:00 PM"], "TAKEN")
+        self.assertNotEqual(drug_doses["08:00 PM"], "TAKEN")
+
 
 if __name__ == "__main__":
     unittest.main()

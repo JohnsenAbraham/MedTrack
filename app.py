@@ -988,10 +988,9 @@ def doctor_new_prescription():
             return redirect(url_for("doctor_new_prescription", patient_id=patient_id, appointment_id=appointment_id or ""))
 
         # Determine schedule times list
-        if schedule_times_input:
-            times = [t.strip() for t in schedule_times_input.split(",") if t.strip()]
-        elif schedule_time:
-            times = [schedule_time]
+        raw_schedule = schedule_times_input or schedule_time
+        if raw_schedule:
+            times = [t.strip() for t in raw_schedule.split(",") if t.strip()]
         else:
             times = ["08:00 AM"]
 
