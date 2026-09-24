@@ -901,6 +901,7 @@ def submit_diagnosis(appointment_id):
         diagnosis_record = {
             "patient_id": appointment["patient_id"],
             "doctor_id": g.user["user_id"],
+            "appointment_id": appointment_id,
             "diagnosis": diagnosis_text,
             "date": date_str
         }

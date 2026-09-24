@@ -840,6 +840,7 @@ class DatabaseService:
             "diagnosis_id": diag_id,
             "patient_id": diagnosis_data["patient_id"],
             "doctor_id": diagnosis_data["doctor_id"],
+            "appointment_id": diagnosis_data.get("appointment_id"),
             "diagnosis": diagnosis_data["diagnosis"],
             "date": date_str,
             "created_at": created_at,
@@ -853,11 +854,11 @@ class DatabaseService:
         with self._get_sqlite_conn() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO diagnoses (diagnosis_id, patient_id, doctor_id, diagnosis, date, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO diagnoses (diagnosis_id, patient_id, doctor_id, appointment_id, diagnosis, date, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (
                 record["diagnosis_id"], record["patient_id"], record["doctor_id"],
-                record["diagnosis"], record["date"], record["created_at"]
+                record["appointment_id"], record["diagnosis"], record["date"], record["created_at"]
             ))
             conn.commit()
         return record

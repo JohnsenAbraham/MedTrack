@@ -284,6 +284,7 @@ class MedTrackTestCase(unittest.TestCase):
         diags = db.get_diagnoses_by_patient(patient["user_id"])
         self.assertGreaterEqual(len(diags), 1)
         self.assertIn("Mild allergic rhinitis", diags[0]["diagnosis"])
+        self.assertEqual(diags[0]["appointment_id"], appt["appointment_id"])
 
     def test_14_diagnosis_viewing(self):
         """14. Verify patient can view their own diagnosis records."""
@@ -528,6 +529,97 @@ class MedTrackTestCase(unittest.TestCase):
         res = self.client.post("/profile", data=invalid_email_data, follow_redirects=True)
         self.assertEqual(res.status_code, 200)
         self.assertIn(b"Please enter a valid caregiver email address.", res.data)
+
+    def test_28_def003_diagnosis_appointment_fk_link(self):
+        """28. DEF-003 A-C: Diagnosis created via route links appointment_id, completes appointment, scopes patient."""
+        patient = db.get_user_by_email("patient.demo@medtrack.local")
+        doc = db.get_user_by_email("doctor.vance@medtrack.local")
+
+        appt = db.create_appointment({
+            "patient_id": patient["user_id"],
+            "doctor_id": doc["user_id"],
+            "appointment_date": datetime.date.today().isoformat(),
+            "appointment_time": "11:00 AM",
+            "reason": "Cardiac consultation",
+            "status": "CONFIRMED"
+        })
+
+        self.client.get("/demo-login/doctor")
+        response = self.client.post(f"/doctor/diagnosis/new/{appt['appointment_id']}", data={
+            "date": datetime.date.today().isoformat(),
+            "diagnosis": "Mild sinus bradycardia observed. Routine monitoring recommended."
+        }, follow_redirects=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Clinical diagnosis saved", response.data)
+
+        # A. Verify diagnosis record has appointment_id populated
+        diags = db.get_diagnoses_by_patient(patient["user_id"])
+        matching_diag = next((d for d in diags if d.get("appointment_id") == appt["appointment_id"]), None)
+        self.assertIsNotNone(matching_diag, "Diagnosis record must contain the linked appointment_id")
+        self.assertEqual(matching_diag["appointment_id"], appt["appointment_id"])
+
+        # B. Verify appointment transitioned to COMPLETED
+        updated_appt = db.get_appointment_by_id(appt["appointment_id"])
+        self.assertEqual(updated_appt["status"], "COMPLETED")
+
+        # C. Verify patient_id matches the appointment patient
+        self.assertEqual(matching_diag["patient_id"], patient["user_id"])
+        self.assertEqual(matching_diag["doctor_id"], doc["user_id"])
+
+    def test_29_def003_create_diagnosis_backward_compatibility(self):
+        """29. DEF-003 F: Direct create_diagnosis() without appointment_id stores NULL safely."""
+        patient = db.get_user_by_email("patient.demo@medtrack.local")
+        doc = db.get_user_by_email("doctor.vance@medtrack.local")
+
+        created = db.create_diagnosis({
+            "patient_id": patient["user_id"],
+            "doctor_id": doc["user_id"],
+            "diagnosis": "Legacy format diagnosis entry without appointment reference",
+            "date": datetime.date.today().isoformat()
+        })
+
+        self.assertIsNone(created.get("appointment_id"))
+
+        # Verify from database that appointment_id is NULL
+        diags = db.get_diagnoses_by_patient(patient["user_id"])
+        legacy_diag = next((d for d in diags if d["diagnosis_id"] == created["diagnosis_id"]), None)
+        self.assertIsNotNone(legacy_diag)
+        self.assertIsNone(legacy_diag.get("appointment_id"))
+
+    def test_30_def003_diagnosis_doctor_authorization_enforced(self):
+        """30. DEF-003 D,G: Doctor cannot diagnose an appointment assigned to a different doctor."""
+        patient = db.get_user_by_email("patient.demo@medtrack.local")
+        other_doc = db.get_user_by_id("doc-002")  # Dr. Emily Chen
+
+        # Appointment assigned to doc-002
+        appt = db.create_appointment({
+            "patient_id": patient["user_id"],
+            "doctor_id": other_doc["user_id"],
+            "appointment_date": datetime.date.today().isoformat(),
+            "appointment_time": "02:00 PM",
+            "reason": "Dermatology review",
+            "status": "CONFIRMED"
+        })
+
+        # Log in as doc-001 (Dr. Marcus Vance)
+        self.client.get("/demo-login/doctor")
+        response = self.client.post(f"/doctor/diagnosis/new/{appt['appointment_id']}", data={
+            "date": datetime.date.today().isoformat(),
+            "diagnosis": "Attempted unauthorized diagnosis entry"
+        }, follow_redirects=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Unauthorized: You are not the assigned physician", response.data)
+
+        # Appointment remains CONFIRMED, not COMPLETED
+        appt_after = db.get_appointment_by_id(appt["appointment_id"])
+        self.assertEqual(appt_after["status"], "CONFIRMED")
+
+        # No diagnosis created for this appointment
+        diags = db.get_diagnoses_by_patient(patient["user_id"])
+        unauthorized_diag = next((d for d in diags if d.get("appointment_id") == appt["appointment_id"]), None)
+        self.assertIsNone(unauthorized_diag)
 
 if __name__ == "__main__":
     unittest.main()
