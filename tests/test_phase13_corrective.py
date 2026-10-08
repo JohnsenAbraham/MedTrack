@@ -1,6 +1,6 @@
 """
 MedTrack Phase 13 Corrective Engineering Test Suite:
-1. CloudFormation EC2 AMI / ImageId mechanism and Ubuntu 22.04 LTS verification
+1. CloudFormation EC2 AMI / ImageId mechanism and Amazon Linux 2023 verification
 2. Operating System documentation consistency across README and architecture specs
 3. APP_TIMEZONE consistency and deterministic UTC vs Asia/Kolkata date boundary tests
 4. DynamoDB pagination helpers, multi-page continuation, LastEvaluatedKey handling, and scheduler scan safety
@@ -28,10 +28,10 @@ class TestPhase13CloudFormation(unittest.TestCase):
             cls.cfn_content = f.read()
 
     def test_01_cfn_ami_parameter_defined(self):
-        """1. CloudFormation defines AmiId parameter with Ubuntu 22.04 SSM resolution."""
+        """1. CloudFormation defines AmiId parameter with Amazon Linux 2023 SSM resolution."""
         self.assertIn("AmiId:", self.cfn_content)
         self.assertIn("AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>", self.cfn_content)
-        self.assertIn("/aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id", self.cfn_content)
+        self.assertIn("/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64", self.cfn_content)
 
     def test_02_cfn_ec2_instance_references_image_id(self):
         """2. MedTrackEC2Instance explicitly declares ImageId referencing !Ref AmiId."""
@@ -41,12 +41,12 @@ class TestPhase13CloudFormation(unittest.TestCase):
         ec2_block = self.cfn_content[ec2_start:ec2_start + 400]
         self.assertIn("ImageId: !Ref AmiId", ec2_block)
 
-    def test_03_cfn_userdata_remains_ubuntu_apt_compatible(self):
-        """3. UserData preserves Ubuntu 22.04 apt package management and toolchain."""
-        self.assertIn("apt update && apt upgrade -y", self.cfn_content)
-        self.assertIn("apt install -y python3-pip python3-venv nginx git curl certbot python3-certbot-nginx", self.cfn_content)
-        self.assertNotIn("dnf install", self.cfn_content)
-        self.assertNotIn("yum install", self.cfn_content)
+    def test_03_cfn_userdata_remains_amazon_linux_dnf_compatible(self):
+        """3. UserData preserves Amazon Linux 2023 dnf package management and toolchain."""
+        self.assertIn("dnf update -y", self.cfn_content)
+        self.assertIn("dnf install -y python3 python3-pip nginx git curl", self.cfn_content)
+        self.assertNotIn("apt update", self.cfn_content)
+        self.assertNotIn("apt install", self.cfn_content)
 
     def test_04_cfn_no_broken_substitutions_or_prohibited_resources(self):
         """4. CloudFormation template contains no broken variable substitutions and no forbidden architecture."""
@@ -62,7 +62,7 @@ class TestPhase13CloudFormation(unittest.TestCase):
 
 
 class TestPhase13OSConsistency(unittest.TestCase):
-    """Verify consistent documentation of Ubuntu 22.04 LTS across all active repository docs."""
+    """Verify consistent documentation of Amazon Linux 2023 across all active repository docs."""
 
     @classmethod
     def setUpClass(cls):
@@ -78,22 +78,19 @@ class TestPhase13OSConsistency(unittest.TestCase):
         with open(cls.tf_path, "r", encoding="utf-8") as f:
             cls.tf_content = f.read()
 
-    def test_05_readme_specifies_ubuntu_2204(self):
-        """5. README specifies Ubuntu 22.04 LTS and contains no stale Amazon Linux references."""
-        self.assertIn("Amazon EC2 running Ubuntu 22.04 LTS", self.readme_content)
-        self.assertIn("Amazon EC2 virtual machine running Ubuntu 22.04 LTS", self.readme_content)
-        self.assertNotIn("Amazon Linux 2023", self.readme_content)
-        self.assertNotIn("AL2023", self.readme_content)
+    def test_05_readme_specifies_amazon_linux_2023(self):
+        """5. README specifies Amazon Linux 2023 for Troven lab deployment."""
+        self.assertIn("Amazon EC2 running Amazon Linux 2023 (Troven AWS lab)", self.readme_content)
+        self.assertIn("Amazon EC2 virtual machine running Amazon Linux 2023 (Troven AWS lab)", self.readme_content)
 
-    def test_06_architecture_specifies_ubuntu_2204(self):
-        """6. docs/architecture.md specifies Ubuntu 22.04 LTS for EC2 compute host."""
-        self.assertIn("running Ubuntu 22.04 LTS", self.arch_content)
-        self.assertNotIn("Amazon Linux 2023", self.arch_content)
+    def test_06_architecture_specifies_amazon_linux_2023(self):
+        """6. docs/architecture.md specifies Amazon Linux 2023 for EC2 compute host."""
+        self.assertIn("running Amazon Linux 2023 (Troven AWS lab)", self.arch_content)
 
     def test_07_terraform_and_cloudformation_os_parity(self):
-        """7. Terraform and CloudFormation IaC definitions both target Ubuntu 22.04 LTS."""
-        self.assertIn("ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*", self.tf_content)
-        self.assertIn("099720109477", self.tf_content)  # Canonical owner ID
+        """7. Terraform and CloudFormation IaC definitions both target Amazon Linux 2023."""
+        self.assertIn("al2023-ami-2023.*-x86_64", self.tf_content)
+        self.assertIn("137112412989", self.tf_content)  # Amazon owner ID
 
 
 class TestPhase13TimezoneConsistency(unittest.TestCase):

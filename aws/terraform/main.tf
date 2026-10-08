@@ -34,7 +34,7 @@ variable "environment" {
 
 variable "instance_type" {
   type        = string
-  default     = "t3.small"
+  default     = "t3.micro"
   description = "EC2 instance type for application hosting"
 }
 
@@ -566,21 +566,21 @@ resource "aws_iam_instance_profile" "app_profile" {
 # -------------------------------------------------------------
 # 7. EC2 Production Compute Host
 # -------------------------------------------------------------
-data "aws_ami" "ubuntu" {
+data "aws_ami" "al2023" {
   most_recent = true
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+    values = ["al2023-ami-2023.*-x86_64"]
   }
   filter {
     name   = "virtualization-type"
     values = ["hvm"]
   }
-  owners = ["099720109477"] # Canonical
+  owners = ["137112412989"] # Amazon
 }
 
 resource "aws_instance" "server" {
-  ami                    = data.aws_ami.ubuntu.id
+  ami                    = data.aws_ami.al2023.id
   instance_type          = var.instance_type
   key_name               = var.key_name
   subnet_id              = aws_subnet.public_1.id
@@ -590,8 +590,8 @@ resource "aws_instance" "server" {
   user_data = <<-EOF
     #!/bin/bash
     set -e
-    apt update && apt upgrade -y
-    apt install -y python3-pip python3-venv nginx git curl certbot python3-certbot-nginx
+    dnf update -y
+    dnf install -y python3 python3-pip nginx git curl
 
     # Deploy Application
     mkdir -p /var/www/medtrack
@@ -629,8 +629,8 @@ resource "aws_instance" "server" {
     After=network.target
 
     [Service]
-    User=www-data
-    Group=www-data
+    User=nginx
+    Group=nginx
     WorkingDirectory=/var/www/medtrack
     Environment="PATH=/var/www/medtrack/venv/bin"
     ExecStart=/var/www/medtrack/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 app:app --access-logfile - --error-logfile -
@@ -639,7 +639,7 @@ resource "aws_instance" "server" {
     WantedBy=multi-user.target
     EOT
 
-    chown -R www-data:www-data /var/www/medtrack
+    chown -R nginx:nginx /var/www/medtrack
     systemctl daemon-reload
     systemctl enable --now medtrack
 
@@ -651,7 +651,7 @@ resource "aws_instance" "server" {
     fi
 
     # Nginx Reverse Proxy Config (Initial HTTP mode proxying to Gunicorn localhost)
-    cat <<EOT > /etc/nginx/sites-available/medtrack
+    cat <<EOT > /etc/nginx/conf.d/medtrack.conf
     server {
         listen 80;
         server_name _;
@@ -666,8 +666,9 @@ resource "aws_instance" "server" {
     }
     EOT
 
-    ln -sf /etc/nginx/sites-available/medtrack /etc/nginx/sites-enabled/
-    rm -f /etc/nginx/sites-enabled/default
+    # Disable default server block in main nginx.conf if present to prevent port 80 conflict
+    sed -i '/server {/,/}/d' /etc/nginx/nginx.conf 2>/dev/null || true
+    systemctl enable --now nginx
     systemctl restart nginx
 
     # Provision TLS Activation Script (activates HTTPS & 301 redirect once valid domain/cert prerequisites are met)
@@ -715,7 +716,7 @@ resource "aws_instance" "server" {
     fi
 
     # (e) Generate candidate HTTPS Nginx configuration in a temporary file
-    TMP_CONF="/etc/nginx/sites-available/medtrack.tls.tmp"
+    TMP_CONF="/etc/nginx/conf.d/medtrack.tls.tmp"
     cat <<NGINX_EOF > "$$TMP_CONF"
     server {
         listen 80;
@@ -747,13 +748,13 @@ resource "aws_instance" "server" {
     NGINX_EOF
 
     # (f) nginx -t validation BEFORE replacing active configuration
-    cp /etc/nginx/sites-available/medtrack /etc/nginx/sites-available/medtrack.http.bak
-    cp "$$TMP_CONF" /etc/nginx/sites-available/medtrack
+    cp /etc/nginx/conf.d/medtrack.conf /etc/nginx/conf.d/medtrack.http.bak
+    cp "$$TMP_CONF" /etc/nginx/conf.d/medtrack.conf
     rm -f "$$TMP_CONF"
 
     if ! nginx -t; then
         echo "ERROR: Nginx syntax validation failed for HTTPS configuration. Rolling back to HTTP." >&2
-        cp /etc/nginx/sites-available/medtrack.http.bak /etc/nginx/sites-available/medtrack
+        cp /etc/nginx/conf.d/medtrack.http.bak /etc/nginx/conf.d/medtrack.conf
         nginx -t && systemctl reload nginx || true
         exit 1
     fi

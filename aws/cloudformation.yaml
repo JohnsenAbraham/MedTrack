@@ -12,7 +12,7 @@ Parameters:
 
   InstanceType:
     Type: String
-    Default: t3.small
+    Default: t3.micro
     AllowedValues: [t3.micro, t3.small, t3.medium, m5.large]
     Description: EC2 instance type for application hosting
 
@@ -38,10 +38,10 @@ Parameters:
 
   AmiId:
     Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
-    Default: '/aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id'
+    Default: '/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64'
     Description: >
-      SSM parameter path or explicit EC2 AMI ID for Ubuntu 22.04 LTS (HVM amd64).
-      Defaults to Canonical's official regional SSM parameter for Ubuntu 22.04 LTS.
+      SSM parameter path or explicit EC2 AMI ID for Amazon Linux 2023 (HVM x86_64).
+      Defaults to AWS's official regional SSM parameter for Amazon Linux 2023.
 
 Resources:
   # =========================================================================
@@ -489,8 +489,8 @@ Resources:
         Fn::Base64: !Sub |
           #!/bin/bash
           set -e
-          apt update && apt upgrade -y
-          apt install -y python3-pip python3-venv nginx git curl certbot python3-certbot-nginx
+          dnf update -y
+          dnf install -y python3 python3-pip nginx git curl
 
           # Deploy Application
           mkdir -p /var/www/medtrack
@@ -528,8 +528,8 @@ Resources:
           After=network.target
 
           [Service]
-          User=www-data
-          Group=www-data
+          User=nginx
+          Group=nginx
           WorkingDirectory=/var/www/medtrack
           Environment="PATH=/var/www/medtrack/venv/bin"
           ExecStart=/var/www/medtrack/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 app:app --access-logfile - --error-logfile -
@@ -538,7 +538,7 @@ Resources:
           WantedBy=multi-user.target
           EOT
 
-          chown -R www-data:www-data /var/www/medtrack
+          chown -R nginx:nginx /var/www/medtrack
           systemctl daemon-reload
           systemctl enable --now medtrack
 
@@ -550,7 +550,7 @@ Resources:
           fi
 
           # Nginx Reverse Proxy Config (Initial HTTP mode proxying to Gunicorn localhost)
-          cat <<EOT > /etc/nginx/sites-available/medtrack
+          cat <<EOT > /etc/nginx/conf.d/medtrack.conf
           server {
               listen 80;
               server_name _;
@@ -565,8 +565,9 @@ Resources:
           }
           EOT
 
-          ln -sf /etc/nginx/sites-available/medtrack /etc/nginx/sites-enabled/
-          rm -f /etc/nginx/sites-enabled/default
+          # Disable default server block in main nginx.conf if present to prevent port 80 conflict
+          sed -i '/server {/,/}/d' /etc/nginx/nginx.conf 2>/dev/null || true
+          systemctl enable --now nginx
           systemctl restart nginx
 
           # Provision TLS Activation Script (activates HTTPS & 301 redirect once valid domain/cert prerequisites are met)
@@ -614,7 +615,7 @@ Resources:
           fi
 
           # (e) Generate candidate HTTPS Nginx configuration in a temporary file
-          TMP_CONF="/etc/nginx/sites-available/medtrack.tls.tmp"
+          TMP_CONF="/etc/nginx/conf.d/medtrack.tls.tmp"
           cat <<NGINX_EOF > "$TMP_CONF"
           server {
               listen 80;
@@ -646,13 +647,13 @@ Resources:
           NGINX_EOF
 
           # (f) nginx -t validation BEFORE replacing active configuration
-          cp /etc/nginx/sites-available/medtrack /etc/nginx/sites-available/medtrack.http.bak
-          cp "$TMP_CONF" /etc/nginx/sites-available/medtrack
+          cp /etc/nginx/conf.d/medtrack.conf /etc/nginx/conf.d/medtrack.http.bak
+          cp "$TMP_CONF" /etc/nginx/conf.d/medtrack.conf
           rm -f "$TMP_CONF"
 
           if ! nginx -t; then
               echo "ERROR: Nginx syntax validation failed for HTTPS configuration. Rolling back to HTTP." >&2
-              cp /etc/nginx/sites-available/medtrack.http.bak /etc/nginx/sites-available/medtrack
+              cp /etc/nginx/conf.d/medtrack.http.bak /etc/nginx/conf.d/medtrack.conf
               nginx -t && systemctl reload nginx || true
               exit 1
           fi

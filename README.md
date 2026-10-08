@@ -112,7 +112,7 @@ medicine_scheduler.py
 - **Cloud Database**: Amazon DynamoDB (8 physical NoSQL tables with GSIs)
 - **Document Storage**: Amazon S3 (Private bucket with SSE-AES256 encryption)
 - **Messaging & Notifications**: Amazon SNS (`MedTrack-Alerts` standard topic)
-- **Cloud Hosting & OS**: Amazon EC2 running Ubuntu 22.04 LTS
+- **Cloud Hosting & OS**: Amazon EC2 running Amazon Linux 2023 (Troven AWS lab)
 - **Infrastructure as Code**: AWS CloudFormation (`aws/cloudformation.yaml`) and Terraform (`aws/terraform/main.tf`)
 - **Security & IAM**: EC2 IAM Instance Profile with IMDSv2, CSRF protection, strict CSP, and session rotation
 
@@ -226,7 +226,7 @@ MedTrack provides two equivalent, production-grade Infrastructure-as-Code (IaC) 
 - **Terraform**: [`aws/terraform/main.tf`](aws/terraform/main.tf)
 
 Both options provision identical infrastructure:
-- Amazon EC2 virtual machine running Ubuntu 22.04 LTS.
+- Amazon EC2 virtual machine running Amazon Linux 2023 (Troven AWS lab).
 - IAM Instance Role granting scoped least-privilege permissions to DynamoDB, S3, and SNS via IMDSv2.
 - 8 on-demand Amazon DynamoDB tables with configured GSIs.
 - Private Amazon S3 bucket (`ReportsBucket`) with complete public access block and SSE-AES256 encryption.
@@ -366,7 +366,7 @@ MedTrack/
 ## 17. Production Deployment & Direct EC2 TLS
 
 ### Production Stack Overview:
-In production, MedTrack runs on an Ubuntu 22.04 LTS EC2 instance managed by systemd:
+In production / Troven lab deployment, MedTrack runs on an Amazon Linux 2023 EC2 instance managed by systemd:
 - Nginx listens on port 80 (HTTP) and port 443 (HTTPS).
 - Gunicorn runs behind Nginx:
   ```bash

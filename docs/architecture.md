@@ -229,7 +229,7 @@ For development, testing, and offline evaluation:
 ## 10. Production AWS Architecture (`MOCK_AWS=false`)
 
 When deployed to AWS:
-- **Compute**: Single Amazon EC2 instance (e.g. `t3.micro` / `t3.small`) running Ubuntu 22.04 LTS.
+- **Compute**: Single Amazon EC2 instance (e.g. `t3.micro` / `t3.small`) running Amazon Linux 2023 (Troven AWS lab).
 - **Web Stack**: Nginx (ports 80/443) reverse-proxying to Gunicorn (3 workers, bound to `127.0.0.1:8000`).
 - **Security Group**: Inbound rules restricted to port 80 (HTTP), port 443 (HTTPS), and configurable SSH CIDR (`SSHLocation`, e.g. operator IP).
 - **IAM Instance Profile**: Attached to EC2 to grant temporary STS credentials automatically via IMDSv2.
