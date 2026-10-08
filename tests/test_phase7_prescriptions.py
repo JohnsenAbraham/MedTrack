@@ -144,7 +144,7 @@ class Phase7PrescriptionsTestCase(unittest.TestCase):
             dosage="1 Capsule",
             schedule_times=["08:00 AM", "08:00 PM"],
             instructions="Take after food. Complete full 7-day course.",
-            valid_until="2026-10-01"
+            valid_until=(datetime.date.today() + datetime.timedelta(days=30)).isoformat()
         )
 
         self.assertIsNotNone(rx)

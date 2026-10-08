@@ -1,6 +1,6 @@
 /* ==========================================================================
    MedTrack — Connected Healthcare & Clinical Portal Design System
-   Professional Left-Sidebar SaaS Workspace & Emerald/Teal Theme
+   Theme: SAGE CLINICAL (Light Healthcare SaaS Palette)
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -10,51 +10,57 @@
   --font-serif: 'Newsreader', Georgia, serif;
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-  /* Brand Emerald / Teal Palette (Exact Reference) */
-  --primary: #0d9488;
-  --primary-hover: #0f766e;
-  --primary-dark: #06231d;
-  --primary-sidebar: #07231d;
-  --primary-sidebar-hover: #0e352c;
-  --primary-sidebar-active: #14b8a6;
-  --primary-dark-btn: #0a3d33;
-  --primary-dark-btn-hover: #062922;
-  --primary-light: #f0fdfa;
-  --primary-border: #ccfbf1;
-  --secondary: #0284c7;
-  --secondary-hover: #0369a1;
-  --secondary-light: #f0f9ff;
-  
+  /* Sage Clinical Palette */
+  --primary: #557A68;                /* Muted sage green */
+  --primary-hover: #446354;          /* Slightly deeper sage */
+  --primary-dark: #355548;           /* Deep forest/sage */
+  --primary-dark-hover: #284237;
+  --primary-sidebar: #263830;        /* Refined deep forest sage for clinical sidebar */
+  --primary-sidebar-hover: #32473D;
+  --primary-sidebar-active: #557A68;
+  --primary-dark-btn: #355548;       /* Primary action buttons */
+  --primary-dark-btn-hover: #284237;
+  --primary-light: #F0F4F1;          /* Very subtle sage tint */
+  --primary-border: #D0DDD2;         /* Soft sage-tinted border */
+  --secondary: #789486;              /* Soft eucalyptus */
+  --secondary-hover: #658173;
+  --secondary-light: #F4F7F5;
+  --accent-subtle: #E8EFE9;          /* Subtle sage accent */
+
   /* Status Colors */
-  --status-pending-text: #92400e;
-  --status-pending-bg: #fef3c7;
-  --status-confirmed-text: #0ca678;
-  --status-confirmed-bg: #e6fcf5;
-  --status-completed-text: #0ca678;
-  --status-completed-bg: #e6fcf5;
-  --status-cancelled-text: #e03131;
-  --status-cancelled-bg: #ffe3e3;
+  --status-pending-text: #8C652D;
+  --status-pending-bg: #FAF3E7;
+  --status-confirmed-text: #3C6647;
+  --status-confirmed-bg: #E8EFE9;
+  --status-completed-text: #3C6647;
+  --status-completed-bg: #E8EFE9;
+  --status-cancelled-text: #964747;
+  --status-cancelled-bg: #FDF2F2;
+
+  --status-success: #4F7D5C;
+  --status-warning: #A77B3D;
+  --status-danger: #A85C5C;
 
   /* Surfaces & Borders */
-  --bg-app: #f7faf9;
-  --bg-card: #ffffff;
-  --border-color: #e2e8f0;
-  --border-focus: #0d9488;
+  --bg-app: #F6F7F2;                 /* Warm, very light sage/ivory */
+  --bg-card: #FFFFFF;                /* Clean white card surface */
+  --border-color: #DDE4DE;           /* Soft muted border */
+  --border-focus: #557A68;
 
   /* Text Colors */
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --text-light: #94a3b8;
-  --text-inverse: #ffffff;
+  --text-main: #26332D;              /* Charcoal with green undertone */
+  --text-muted: #66736D;             /* Muted sage-slate */
+  --text-light: #8E9C95;
+  --text-inverse: #FFFFFF;
 
   /* Radii & Shadows */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-full: 9999px;
-  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04);
-  --shadow-md: 0 4px 14px -2px rgba(15, 23, 42, 0.06);
-  --shadow-lg: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+  --shadow-sm: 0 1px 3px rgba(38, 51, 45, 0.04);
+  --shadow-md: 0 4px 14px -2px rgba(38, 51, 45, 0.06);
+  --shadow-lg: 0 10px 25px -5px rgba(38, 51, 45, 0.08);
   --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -85,8 +91,9 @@ a:hover {
   color: var(--primary-hover);
 }
 
-.serif-heading {
+h1.serif-heading, .serif-heading {
   font-family: var(--font-serif);
+  color: var(--text-main) !important;
   letter-spacing: -0.015em;
 }
 
@@ -102,12 +109,12 @@ a:hover {
    PUBLIC NAVIGATION (Home, Login, Register)
    ========================================================================== */
 .site-header {
-  background: #ffffff;
+  background: #FFFFFF;
   border-bottom: 1px solid var(--border-color);
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+  box-shadow: 0 2px 8px rgba(38, 51, 45, 0.03);
 }
 
 .nav-wrapper {
@@ -127,15 +134,15 @@ a:hover {
 .brand-badge {
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg, var(--primary), #0f766e);
-  color: #ffffff;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #FFFFFF;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
   font-size: 1.2rem;
-  box-shadow: 0 3px 8px rgba(13, 148, 136, 0.25);
+  box-shadow: 0 3px 8px rgba(85, 122, 104, 0.25);
 }
 
 .brand-text {
@@ -147,7 +154,7 @@ a:hover {
 .brand-title {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--text-main);
   letter-spacing: -0.02em;
 }
 
@@ -176,7 +183,7 @@ a:hover {
   gap: 6px;
 }
 .nav-link:hover, .nav-link.active {
-  color: var(--primary);
+  color: var(--primary-dark);
 }
 
 .nav-actions {
@@ -198,7 +205,7 @@ a:hover {
   width: 250px;
   min-width: 250px;
   background-color: var(--primary-sidebar);
-  color: #ffffff;
+  color: #FFFFFF;
   display: flex;
   flex-direction: column;
   position: sticky;
@@ -206,12 +213,12 @@ a:hover {
   height: 100vh;
   overflow-y: auto;
   z-index: 90;
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .sidebar-header {
   padding: 1.35rem 1.25rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .sidebar-brand {
@@ -219,26 +226,27 @@ a:hover {
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  color: #ffffff;
+  color: #FFFFFF;
 }
 
 .sidebar-brand-badge {
   width: 34px;
   height: 34px;
-  background: var(--primary-sidebar-active);
-  color: #ffffff;
+  background: var(--primary);
+  color: #FFFFFF;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
   font-size: 1.15rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .sidebar-brand-name {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #ffffff;
+  color: #FFFFFF;
   letter-spacing: -0.01em;
 }
 
@@ -253,7 +261,7 @@ a:hover {
 .sidebar-section-title {
   font-size: 0.68rem;
   font-weight: 700;
-  color: #5ea496;
+  color: #8CA598;
   text-transform: uppercase;
   letter-spacing: 0.09em;
   padding: 0 0.6rem;
@@ -273,7 +281,7 @@ a:hover {
   justify-content: space-between;
   padding: 0.6rem 0.8rem;
   border-radius: 8px;
-  color: #cbd5e1;
+  color: #CBD7D0;
   font-size: 0.88rem;
   font-weight: 500;
   text-decoration: none;
@@ -287,32 +295,32 @@ a:hover {
 }
 
 .sidebar-link .icon {
-  color: #94a3b8;
+  color: #94A69D;
   transition: var(--transition);
   flex-shrink: 0;
 }
 
 .sidebar-link:hover {
   background: var(--primary-sidebar-hover);
-  color: #ffffff;
+  color: #FFFFFF;
 }
 .sidebar-link:hover .icon {
-  color: #ffffff;
+  color: #FFFFFF;
 }
 
 .sidebar-link.active {
   background: var(--primary-sidebar-active);
-  color: #ffffff;
+  color: #FFFFFF;
   font-weight: 700;
-  box-shadow: 0 3px 10px rgba(20, 184, 166, 0.25);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
 }
 .sidebar-link.active .icon {
-  color: #ffffff;
+  color: #FFFFFF;
 }
 
 .sidebar-badge {
-  background: var(--primary-sidebar-active);
-  color: #07231d;
+  background: var(--accent-subtle);
+  color: var(--primary-dark);
   font-size: 0.72rem;
   font-weight: 800;
   padding: 2px 7px;
@@ -321,13 +329,13 @@ a:hover {
   text-align: center;
 }
 .sidebar-link.active .sidebar-badge {
-  background: #ffffff;
-  color: #07231d;
+  background: #FFFFFF;
+  color: var(--primary-dark);
 }
 
 .sidebar-footer {
   padding: 1rem 0.85rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   margin-top: auto;
 }
 
@@ -335,7 +343,7 @@ a:hover {
   display: flex;
   align-items: center;
   gap: 9px;
-  color: #94a3b8;
+  color: #A4B5AC;
   font-size: 0.88rem;
   font-weight: 600;
   padding: 0.5rem 0.6rem;
@@ -344,8 +352,8 @@ a:hover {
   text-decoration: none;
 }
 .sidebar-signout:hover {
-  color: #f87171;
-  background: rgba(239, 68, 68, 0.1);
+  color: #E89898;
+  background: rgba(168, 92, 92, 0.15);
 }
 .sidebar-signout .icon {
   color: inherit;
@@ -367,7 +375,7 @@ a:hover {
   align-items: center;
   justify-content: space-between;
   padding: 1rem 2.25rem;
-  background: #ffffff;
+  background: #FFFFFF;
   border-bottom: 1px solid var(--border-color);
   position: sticky;
   top: 0;
@@ -384,7 +392,7 @@ a:hover {
   font-family: var(--font-serif);
   font-size: 1.45rem;
   font-weight: 700;
-  color: #07231d;
+  color: var(--text-main);
   letter-spacing: -0.01em;
 }
 
@@ -395,9 +403,9 @@ a:hover {
   letter-spacing: 0.07em;
   padding: 3px 10px;
   border-radius: var(--radius-full);
-  background: #f0fdfa;
-  color: #0f766e;
-  border: 1px solid #ccfbf1;
+  background: var(--accent-subtle);
+  color: var(--primary-dark);
+  border: 1px solid #CFDCD1;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -414,15 +422,15 @@ a:hover {
   transition: var(--transition);
 }
 .user-profile-badge:hover {
-  background: #f1f5f9;
+  background: #EFF3F0;
 }
 
 .avatar-circle {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #08201a;
-  color: #ffffff;
+  background: var(--primary-dark);
+  color: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -454,11 +462,11 @@ a:hover {
 }
 
 /* ==========================================================================
-   BUTTONS (Exact Match with Reference Dashboard)
+   BUTTONS
    ========================================================================== */
 .btn-dark-green {
   background: var(--primary-dark-btn);
-  color: #ffffff;
+  color: #FFFFFF;
   border-radius: 8px;
   font-weight: 600;
   font-size: 0.88rem;
@@ -470,18 +478,18 @@ a:hover {
   cursor: pointer;
   transition: var(--transition);
   text-decoration: none;
-  box-shadow: 0 2px 5px rgba(10, 61, 51, 0.15);
+  box-shadow: 0 2px 5px rgba(53, 85, 72, 0.15);
 }
 .btn-dark-green:hover {
   background: var(--primary-dark-btn-hover);
-  color: #ffffff;
+  color: #FFFFFF;
   transform: translateY(-1px);
 }
 
 .btn-outline-white {
-  background: #ffffff;
-  color: #1e293b;
-  border: 1px solid #cbd5e1;
+  background: #FFFFFF;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   font-weight: 600;
   font-size: 0.88rem;
@@ -494,14 +502,14 @@ a:hover {
   text-decoration: none;
 }
 .btn-outline-white:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
+  background: #F6F7F2;
+  border-color: var(--secondary);
 }
 
 .btn-table-action {
-  background: #ffffff;
-  color: #1e293b;
-  border: 1px solid #e2e8f0;
+  background: #FFFFFF;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 4px 14px;
   font-size: 0.82rem;
@@ -514,8 +522,8 @@ a:hover {
   gap: 4px;
 }
 .btn-table-action:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--accent-subtle);
+  border-color: var(--secondary);
 }
 
 .btn {
@@ -545,23 +553,23 @@ a:hover {
 
 .btn-primary {
   background-color: var(--primary);
-  color: #ffffff;
-  box-shadow: 0 2px 4px rgba(13, 148, 136, 0.18);
+  color: #FFFFFF;
+  box-shadow: 0 2px 4px rgba(85, 122, 104, 0.18);
 }
 .btn-primary:hover {
   background-color: var(--primary-hover);
-  color: #ffffff;
+  color: #FFFFFF;
   transform: translateY(-1px);
 }
 
 .btn-secondary {
-  background-color: #f1f5f9;
-  color: #334155;
-  border-color: #cbd5e1;
+  background-color: var(--accent-subtle);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
 }
 .btn-secondary:hover {
-  background-color: #e2e8f0;
-  color: #0f172a;
+  background-color: #DDE4DE;
+  color: var(--text-main);
 }
 
 .btn-outline {
@@ -571,30 +579,30 @@ a:hover {
 }
 .btn-outline:hover {
   background-color: var(--primary);
-  color: #ffffff;
+  color: #FFFFFF;
 }
 
 .btn-success {
-  background-color: #059669;
-  color: #ffffff;
+  background-color: var(--status-success);
+  color: #FFFFFF;
 }
 .btn-success:hover {
-  background-color: #047857;
-  color: #ffffff;
+  background-color: #3E6448;
+  color: #FFFFFF;
 }
 
 .btn-danger-outline {
   background: transparent;
-  color: #dc2626;
-  border: 1px solid #fca5a5;
+  color: var(--status-danger);
+  border: 1px solid #E5C3C3;
 }
 .btn-danger-outline:hover {
-  background-color: #fee2e2;
-  color: #b91c1c;
+  background-color: #FDF4F4;
+  color: #8F4646;
 }
 
 /* ==========================================================================
-   CARDS & METRICS (Exact Match with Reference Dashboard)
+   CARDS & METRICS
    ========================================================================== */
 .card {
   background: var(--bg-card);
@@ -618,17 +626,17 @@ a:hover {
   font-family: var(--font-serif);
   font-size: 1.35rem;
   font-weight: 700;
-  color: #07231d;
+  color: var(--text-main);
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 .card-title .icon {
-  color: #07231d;
+  color: var(--primary);
 }
 
-/* 4-Metric Row (Exact 4 Cards from Reference) */
+/* 4-Metric Row */
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -648,7 +656,7 @@ a:hover {
 }
 
 .metric-card {
-  background: #ffffff;
+  background: #FFFFFF;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 1.35rem 1.4rem;
@@ -660,7 +668,7 @@ a:hover {
 }
 .metric-card:hover {
   box-shadow: var(--shadow-md);
-  border-color: #cbd5e1;
+  border-color: #C6D4C8;
 }
 
 .metric-data {
@@ -669,9 +677,11 @@ a:hover {
 }
 
 .metric-label {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
-  font-weight: 600;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   margin-bottom: 0.4rem;
 }
 
@@ -679,7 +689,7 @@ a:hover {
   font-size: 2.1rem;
   font-weight: 800;
   line-height: 1.1;
-  color: #0f172a;
+  color: var(--text-main);
 }
 
 .metric-icon-box {
@@ -691,10 +701,18 @@ a:hover {
   justify-content: center;
   flex-shrink: 0;
 }
-.metric-icon-box.teal { background: #e6fcf5; color: #0ca678; }
-.metric-icon-box.blue { background: #e0f2fe; color: #0284c7; }
-.metric-icon-box.amber { background: #fef3c7; color: #d97706; }
-.metric-icon-box.emerald { background: #e6fcf5; color: #0ca678; }
+.metric-icon-box.teal, .metric-icon-box.emerald {
+  background: #E8EFE9;
+  color: var(--status-success);
+}
+.metric-icon-box.blue {
+  background: #E8ECEF;
+  color: #506877;
+}
+.metric-icon-box.amber {
+  background: #FAF3E7;
+  color: var(--status-warning);
+}
 
 /* ==========================================================================
    STATUS BADGES & PILLS
@@ -707,6 +725,7 @@ a:hover {
   border-radius: var(--radius-full);
   font-size: 0.75rem;
   font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .badge-dot {
@@ -716,45 +735,34 @@ a:hover {
   background-color: currentColor;
 }
 
-.badge-pending {
-  background-color: #fff9db;
-  color: #f59f00;
-}
-
-.badge-due {
-  background-color: #fff9db;
-  color: #f59f00;
+.badge-pending, .badge-due {
+  background-color: #FAF3E7;
+  color: #8C652D;
+  border: 1px solid #ECD9B9;
 }
 
 .badge-upcoming {
-  background-color: #e7f5ff;
-  color: #1971c2;
+  background-color: #E8ECEF;
+  color: #3E5666;
+  border: 1px solid #CCD8E0;
 }
 
-.badge-missed {
-  background-color: #ffe3e3;
-  color: #e03131;
+.badge-missed, .badge-cancelled {
+  background-color: #FDF2F2;
+  color: #964747;
+  border: 1px solid #F3CACA;
 }
 
-.badge-confirmed {
-  background-color: #e6fcf5;
-  color: #0ca678;
-}
-
-.badge-completed {
-  background-color: #e6fcf5;
-  color: #0ca678;
-}
-
-.badge-cancelled {
-  background-color: #ffe3e3;
-  color: #e03131;
+.badge-confirmed, .badge-completed {
+  background-color: #E8EFE9;
+  color: #3C6647;
+  border: 1px solid #CADCCA;
 }
 
 .specialization-pill {
-  background: #f8fafc;
-  color: #334155;
-  border: 1px solid #e2e8f0;
+  background: #F4F6F4;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
   font-size: 0.78rem;
   font-weight: 600;
   padding: 3px 10px;
@@ -779,7 +787,7 @@ a:hover {
 
 .table th {
   background-color: transparent;
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -789,14 +797,14 @@ a:hover {
 }
 
 .table td {
-  padding: 1.1rem 1rem;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 1.05rem 1rem;
+  border-bottom: 1px solid #EFF3F0;
   color: var(--text-main);
   vertical-align: middle;
 }
 
 .table tr:hover td {
-  background-color: #fafbfc;
+  background-color: #F9FAF8;
 }
 
 .table tr:last-child td {
@@ -807,8 +815,8 @@ a:hover {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #e6fcf5;
-  color: #0ca678;
+  background: #E8EFE9;
+  color: var(--primary-dark);
   font-weight: 700;
   font-size: 0.82rem;
   display: inline-flex;
@@ -827,19 +835,20 @@ a:hover {
   padding: 0.85rem 1.15rem;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  background: #ffffff;
+  background: #FFFFFF;
   flex-wrap: wrap;
   gap: 0.75rem;
   transition: var(--transition);
 }
 .schedule-item:hover {
-  border-color: #cbd5e1;
+  border-color: #C6D4C8;
+  background: #FAFBF9;
 }
 
 .time-slot-badge {
-  background: #f0fdfa;
-  color: #0f766e;
-  border: 1px solid #ccfbf1;
+  background: #E8EFE9;
+  color: var(--primary-dark);
+  border: 1px solid #D0DDD1;
   padding: 5px 10px;
   border-radius: var(--radius-sm);
   font-weight: 700;
@@ -851,7 +860,7 @@ a:hover {
 
 .progress-bar-container {
   width: 100%;
-  background-color: #e2e8f0;
+  background-color: #E5EDE6;
   border-radius: var(--radius-full);
   height: 8px;
   overflow: hidden;
@@ -859,7 +868,7 @@ a:hover {
 }
 
 .progress-bar-fill {
-  background: linear-gradient(90deg, #14b8a6, #0d9488);
+  background: linear-gradient(90deg, var(--secondary), var(--primary));
   height: 100%;
   border-radius: var(--radius-full);
   transition: width 0.4s ease;
@@ -869,8 +878,8 @@ a:hover {
    HERO SECTION (LANDING PAGE)
    ========================================================================== */
 .hero-section {
-  background: linear-gradient(135deg, #07231d 0%, #0d9488 100%);
-  color: #ffffff;
+  background: linear-gradient(135deg, #263830 0%, #355548 60%, #466A58 100%);
+  color: #FFFFFF;
   padding: 4.5rem 0;
   position: relative;
   overflow: hidden;
@@ -894,8 +903,8 @@ a:hover {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #5eead4;
+  background: rgba(255, 255, 255, 0.1);
+  color: #D8E6DD;
   padding: 5px 14px;
   border-radius: var(--radius-full);
   font-size: 0.82rem;
@@ -911,15 +920,16 @@ a:hover {
   line-height: 1.15;
   letter-spacing: -0.02em;
   margin-bottom: 1rem;
+  color: #FFFFFF !important;
 }
 .hero-title span {
-  color: #5eead4;
+  color: #D0E5D7;
 }
 
 .hero-desc {
   font-size: 1.05rem;
   line-height: 1.65;
-  color: #ccfbf1;
+  color: #E4ECE6;
   margin-bottom: 1.75rem;
   max-width: 580px;
 }
@@ -933,8 +943,8 @@ a:hover {
 .hero-image-wrapper {
   border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: 0 20px 45px -10px rgba(7, 35, 29, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 45px -10px rgba(27, 43, 35, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 .hero-image-wrapper img {
   width: 100%;
@@ -950,7 +960,7 @@ a:hover {
 }
 
 .feature-card {
-  background: #ffffff;
+  background: #FFFFFF;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 1.75rem;
@@ -960,14 +970,14 @@ a:hover {
 .feature-card:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-md);
-  border-color: #cbd5e1;
+  border-color: #C6D4C8;
 }
 
 .feature-icon-box {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: #f0fdfa;
+  background: var(--accent-subtle);
   color: var(--primary);
   display: flex;
   align-items: center;
@@ -1006,10 +1016,10 @@ a:hover {
   align-items: center;
   gap: 10px;
 }
-.alert-success { background-color: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
-.alert-danger { background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-.alert-warning { background-color: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
-.alert-info { background-color: #f0f9ff; color: #075985; border: 1px solid #bae6fd; }
+.alert-success { background-color: #EDF5EE; color: #2B5336; border: 1px solid #C4DFC8; }
+.alert-danger { background-color: #FDF2F2; color: #8C3E3E; border: 1px solid #F5C6C6; }
+.alert-warning { background-color: #FAF4E8; color: #7E561E; border: 1px solid #EEDBB9; }
+.alert-info { background-color: #EEF4F6; color: #2D596B; border: 1px solid #CBE0E8; }
 
 .form-group {
   margin-bottom: 1.25rem;
@@ -1030,14 +1040,14 @@ a:hover {
   font-family: inherit;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  background-color: #ffffff;
+  background-color: #FFFFFF;
   color: var(--text-main);
   transition: var(--transition);
 }
 .form-control:focus, .form-select:focus {
   outline: none;
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+  box-shadow: 0 0 0 3px rgba(85, 122, 104, 0.18);
 }
 
 .form-row {
@@ -1056,8 +1066,8 @@ a:hover {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: #f1f5f9;
-  color: #94a3b8;
+  background: #E8EFE9;
+  color: var(--secondary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1066,7 +1076,7 @@ a:hover {
 
 /* Footer */
 .site-footer {
-  background: #ffffff;
+  background: #FFFFFF;
   border-top: 1px solid var(--border-color);
   padding: 24px 0;
   font-size: 0.84rem;
@@ -1106,7 +1116,7 @@ a:hover {
   }
 }
 
-/* Phase 6: Unobtrusive Filter & Card Hover Styles */
+/* Filter & Card Hover Styles */
 .btn-filter {
   background: transparent;
   border: none;
@@ -1120,13 +1130,14 @@ a:hover {
 }
 
 .btn-filter.active {
-  background: #ffffff;
-  color: var(--text-main);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  background: #FFFFFF;
+  color: var(--primary-dark);
+  box-shadow: 0 1px 3px rgba(38, 51, 45, 0.08);
+  border: 1px solid var(--border-color);
 }
 
 .doctor-search-card {
-  background: #ffffff;
+  background: #FFFFFF;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: 1.35rem;
@@ -1137,5 +1148,44 @@ a:hover {
 }
 
 .doctor-search-card:hover {
-  border-color: #cbd5e1;
+  border-color: #C6D4C8;
+}
+
+/* ==========================================================================
+   TEMPLATE COMPATIBILITY & SAGE CLINICAL OVERRIDES
+   Harmonizes hardcoded inline colors in legacy template markup
+   ========================================================================== */
+div[style*="background: #f0fdfa"],
+span[style*="background: #f0fdfa"] {
+  background: var(--accent-subtle) !important;
+  color: var(--primary-dark) !important;
+  border-color: var(--border-color) !important;
+}
+
+span[style*="background: #ecfdf5"] {
+  background: #E8EFE9 !important;
+  color: #3C6647 !important;
+}
+
+span[style*="background: #fffbeb"] {
+  background: #FAF3E7 !important;
+  color: #8C652D !important;
+}
+
+span[style*="background: #eff6ff"] {
+  background: #E8ECEF !important;
+  color: #3E5666 !important;
+}
+
+div[style*="background: #f8fafc"],
+div[style*="background: #f1f5f9"] {
+  background: #FAFBF9 !important;
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background-color: #F0F3F0 !important;
+  color: var(--text-muted) !important;
+  border-color: var(--border-color) !important;
 }
